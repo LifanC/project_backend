@@ -6,68 +6,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD</title>
 </head>
-<script src="/urlDemo/jquery.min.js"></script>
+<script src="/jquery.min.js"></script>
 <script>
+    var http = "http://localhost:8080/api/";
     $(document).ready(function () {
         $("#btn1").click(function () {
             let user = {
-                name: 'ChatGPT',
-                data: 'testxxxxxxxxYY'
+                name: $("#inp1").val(),
+                data: $("#inp2").val()
             }
-            createUser(user);
+
+            $.ajax({
+                url: http + 'createUser',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(user),
+                dataType: 'json',
+                success: handleSuccess,
+                error: handleError,
+                complete: handleComplete
+            });
         });
         $("#btn2").click(function () {
             let user = {
-                name: 'ChatGPT'
+                name: $("#inp1").val()
             }
-            queryUser(user);
+
+            $.ajax({
+                url: http + 'queryUser',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(user),
+                dataType: 'json',
+                success: handleSuccess,
+                error: handleError,
+                complete: handleComplete
+            });
         });
         $("#btn3").click(function () {
             let user = {
-                name: 'ChatGPT'
+                name: $("#inp1").val()
             }
-            deleteUser(user);
+
+            $.ajax({
+                url: http + 'deleteUser',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(user),
+                dataType: 'json',
+                success: handleSuccess,
+                error: handleError,
+                complete: handleComplete
+            });
         });
     });
-
-    function createUser(user) {
-        $.ajax({
-            url: 'http://localhost:8080/api/createUser',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(user),
-            dataType: 'json',
-            success: handleSuccess,
-            error: handleError,
-            complete: handleComplete
-        });
-    }
-
-    function queryUser(user) {
-        $.ajax({
-            url: 'http://localhost:8080/api/queryUser',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(user),
-            dataType: 'json',
-            success: handleSuccess,
-            error: handleError,
-            complete: handleComplete
-        });
-    }
-
-    function deleteUser(user) {
-        $.ajax({
-            url: 'http://localhost:8080/api/deleteUser',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(user),
-            dataType: 'json',
-            success: handleSuccess,
-            error: handleError,
-            complete: handleComplete
-        });
-    }
 
     // 成功回應
     function handleSuccess(response) {
@@ -88,6 +80,11 @@
 </script>
 
 <body>
+    <div>
+        <input id="inp1" value="ChatGPT" />Name
+        <br>
+        <input id="inp2" value="test" />Data
+    </div>
     <button id="btn1">新增</button>
     <button id="btn2">查詢</button>
     <button id="btn3">刪除</button>

@@ -13,6 +13,6 @@ public interface UserMapper {
 
     Object select(Map<String, Object> map);
 
-    void delete(Map<String, Object> map);
+    int delete(Map<String, Object> map);
 
 }

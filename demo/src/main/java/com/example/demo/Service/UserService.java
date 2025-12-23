@@ -8,5 +8,5 @@ public interface UserService {
 
     Object query(String name);
 
-    void delete(String name);
+    int delete(String name);
 }

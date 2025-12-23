@@ -18,6 +18,12 @@ public class UsersController {
     @Resource
     private UserService userService;
 
+    @GetMapping("login")
+    public String login() {
+        logger.info("login: success");
+        return "login: success";
+    }
+
     @PostMapping("createUser")
     public Map<String, Object> createUser(@RequestBody Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
@@ -56,9 +62,14 @@ public class UsersController {
     public Map<String, Object> deleteUser(@RequestBody Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
         result.put("data", map);
-        result.put("status", "success");
-        result.put("message", "users 刪除成功");
-        userService.delete(map.get("name").toString());
+        int del = userService.delete(map.get("name").toString());
+        if (del > 0) {
+            result.put("status", "success");
+            result.put("message", "users 刪除成功");
+        } else {
+            result.put("status", "fail");
+            result.put("message", "users 查無資料");
+        }
         logger.info("deleteUser: {}", result);
         return result;
     }

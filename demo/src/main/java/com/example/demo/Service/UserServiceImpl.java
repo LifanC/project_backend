@@ -53,13 +53,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void delete(String name) {
+    public int delete(String name) {
         Object user = redisService.get(name);
         if (user != null) {
             redisService.delete(name);
         }
         Map<String, Object> map = new HashMap<>();
         map.put("name", name);
-        userMapper.delete(map);
+        return userMapper.delete(map);
     }
 }
