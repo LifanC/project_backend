@@ -2,7 +2,7 @@ package com.example.demo.Mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.Map;
+import java.util.*;
 
 @Mapper
 public interface UserMapper {
@@ -11,7 +11,7 @@ public interface UserMapper {
 
     void update(Map<String, Object> map);
 
-    Object select(Map<String, Object> map);
+    List<Object> select(Map<String, Object> map);
 
     int delete(Map<String, Object> map);
 

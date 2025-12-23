@@ -28,13 +28,12 @@ public class UsersController {
     public Map<String, Object> createUser(@RequestBody Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
         logger.info("data: {}", map);
-        boolean judge = userService.createUser(map.get("name").toString(), map.get("data").toString());
+        boolean judge = userService.createUser(map);
+        result.put("status", "success");
         if (judge) {
-            result.put("status", "success");
-            result.put("message", "users 存取成功");
+            result.put("message", "users 新增成功");
         } else {
-            result.put("status", "fail");
-            result.put("message", "users 存取失敗");
+            result.put("message", "users 資料已存在更改成功");
         }
         logger.info("createUser: {}", result);
         return result;
@@ -44,7 +43,7 @@ public class UsersController {
     public Map<String, Object> queryUser(@RequestBody Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
         result.put("data", map);
-        Object resultData = userService.query(map.get("name").toString());
+        Object resultData = userService.query(map);
         if (resultData != null) {
             result.put("status", "success");
             result.put("message", "users 查詢成功");
@@ -62,7 +61,7 @@ public class UsersController {
     public Map<String, Object> deleteUser(@RequestBody Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
         result.put("data", map);
-        int del = userService.delete(map.get("name").toString());
+        int del = userService.delete(map);
         if (del > 0) {
             result.put("status", "success");
             result.put("message", "users 刪除成功");

@@ -8,17 +8,16 @@
     <update id="update">
         update interviewworks.user
         set data = #{data}
-        where name like #{name}
+        where name = #{name}
     </update>
     <select id="select" resultType="java.util.Map">
         select *
         from interviewWorks.user
-        where name like #{name}
-        order by name desc
+        where name = #{name}
     </select>
     <delete id="delete">
         delete
         from interviewworks.user
-        where name like #{name}
+        where name = #{name}
     </delete>
 </mapper>

@@ -8,14 +8,15 @@
 </head>
 <script src="/jquery.min.js"></script>
 <script>
-    var http = "http://localhost:8080/api/";
+    var http = 'http://localhost:8080/api/';
     $(document).ready(function () {
+        $('#inp1').val('ChatGPT1')
+        $('#inp2').val('test001')
         $("#btn1").click(function () {
             let user = {
-                name: $("#inp1").val(),
-                data: $("#inp2").val()
+                name: $('#inp1').val(),
+                data: $('#inp2').val()
             }
-
             $.ajax({
                 url: http + 'createUser',
                 type: 'POST',
@@ -27,11 +28,10 @@
                 complete: handleComplete
             });
         });
-        $("#btn2").click(function () {
+        $('#btn2').click(function () {
             let user = {
-                name: $("#inp1").val()
+                name: $('#inp1').val()
             }
-
             $.ajax({
                 url: http + 'queryUser',
                 type: 'POST',
@@ -43,11 +43,10 @@
                 complete: handleComplete
             });
         });
-        $("#btn3").click(function () {
+        $('#btn3').click(function () {
             let user = {
-                name: $("#inp1").val()
+                name: $('#inp1').val()
             }
-
             $.ajax({
                 url: http + 'deleteUser',
                 type: 'POST',
@@ -59,21 +58,26 @@
                 complete: handleComplete
             });
         });
+        $('#btn4').click(function () {
+            $('#test1, #test2, #test3').html('');
+        });
     });
 
     // 成功回應
     function handleSuccess(response) {
-        $("#test1").html("回應成功: " + JSON.stringify(response));
+        $('#test1').html('回應成功: ' + JSON.stringify(response));
+        $('#test2').html('');
     }
 
     // 錯誤回應
     function handleError(xhr, status, error) {
-        $("#test2").html("AJAX 錯誤: " + error);
+        $('#test1').html('');
+        $('#test2').html('AJAX 錯誤: ' + error);
     }
 
     // 請求完成
     function handleComplete() {
-        $("#test3").html('請求完成');
+        $('#test3').html('請求完成');
     }
 
 
@@ -81,13 +85,14 @@
 
 <body>
     <div>
-        <input id="inp1" value="ChatGPT" />Name
+        <input id="inp1" />Name
         <br>
-        <input id="inp2" value="test" />Data
+        <input id="inp2" />Data
     </div>
     <button id="btn1">新增</button>
     <button id="btn2">查詢</button>
     <button id="btn3">刪除</button>
+    <button id="btn4">清除</button>
     <p id="test1"></p>
     <p id="test2"></p>
     <p id="test3"></p>
