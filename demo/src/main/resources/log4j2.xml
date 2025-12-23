@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <!--        <Property name="APP_NAME">LogFile</Property>-->
+        <!--        <Property name="LOG_FILE_PATH">/project2.0/${APP_NAME}/$${date:yyyy-MM-dd}</Property>-->
+        <!--設置 Log 輸出格式-->
+        <Property name="PATTERN_FORMAT">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n</Property>
+    </Properties>
+
+    <Appenders>
+        <!--輸出到 Console-->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${PATTERN_FORMAT}"/>
+        </Console>
+
+        <!--輸出 info log 到文件-->
+        <!--        <RollingFile name="RollingInfoFile" fileName="${LOG_FILE_PATH}/info.log"-->
+        <!--                     filePattern="${LOG_FILE_PATH}/$${date:yyyyMM}/info-%d{yyyyMMdd}-%i.log.gz">-->
+        <!--            &lt;!&ndash;控制台只輸出 level 及以上級別的信息（onMatch），其他的直接拒絕（onMismatch）&ndash;&gt;-->
+        <!--            <Filters>-->
+        <!--                <ThresholdFilter level="warn" onMatch="DENY" onMismatch="NEUTRAL"/>-->
+        <!--                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>-->
+        <!--            </Filters>-->
+
+        <!--            <PatternLayout>-->
+        <!--                <pattern>${PATTERN_FORMAT}</pattern>-->
+        <!--            </PatternLayout>-->
+
+        <!--            <Policies>-->
+        <!--                &lt;!&ndash;當系統重啟/日期更新/超過10000M將覆蓋文件&ndash;&gt;-->
+        <!--                <OnStartupTriggeringPolicy/>-->
+        <!--                <SizeBasedTriggeringPolicy size="10000 MB"/>-->
+        <!--                <TimeBasedTriggeringPolicy/>-->
+        <!--            </Policies>-->
+        <!--        </RollingFile>-->
+
+        <!--輸出 warn Log 到檔案-->
+        <!--        <RollingFile name="RollingWarnFile" fileName="${LOG_FILE_PATH}/warn.log"-->
+        <!--                     filePattern="${LOG_FILE_PATH}/$${date:yyyyMM}/warn-%d{yyyyMMdd}-%i.log.gz">-->
+        <!--            &lt;!&ndash;只輸出 level 及以上級別的信息（onMatch），其他的直接拒絕（onMismatch）&ndash;&gt;-->
+        <!--            <Filters>-->
+        <!--                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>-->
+        <!--                <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>-->
+        <!--            </Filters>-->
+
+        <!--            <PatternLayout>-->
+        <!--                <pattern>${PATTERN_FORMAT}</pattern>-->
+        <!--            </PatternLayout>-->
+
+        <!--            <Policies>-->
+        <!--                <OnStartupTriggeringPolicy/>-->
+        <!--                <SizeBasedTriggeringPolicy size="500 MB"/>-->
+        <!--                <TimeBasedTriggeringPolicy/>-->
+        <!--            </Policies>-->
+        <!--        </RollingFile>-->
+
+        <!--輸出 error Log 到檔案-->
+        <!--        <RollingFile name="RollingErrorFile" fileName="${LOG_FILE_PATH}/error.log"-->
+        <!--                     filePattern="${LOG_FILE_PATH}/$${date:yyyyMM}/error-%d{yyyyMMdd}-%i.log.gz">-->
+        <!--            &lt;!&ndash;只輸出 level 及以上級別的信息（onMatch），其他的直接拒絕（onMismatch）&ndash;&gt;-->
+        <!--            <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>-->
+
+        <!--            <PatternLayout>-->
+        <!--                <pattern>${PATTERN_FORMAT}</pattern>-->
+        <!--            </PatternLayout>-->
+
+        <!--            <Policies>-->
+        <!--                <OnStartupTriggeringPolicy/>-->
+        <!--                <SizeBasedTriggeringPolicy size="500 MB"/>-->
+        <!--                <TimeBasedTriggeringPolicy/>-->
+        <!--            </Policies>-->
+        <!--        </RollingFile>-->
+    </Appenders>
+
+    <Loggers>
+        <!--過濾掉 spring 和 mybatis 的一些無用的 log-->
+        <Logger name="org.springframework" level="INFO"/>
+        <Logger name="org.mybatis" level="INFO"/>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <!--            <AppenderRef ref="RollingInfoFile"/>-->
+            <!--            <AppenderRef ref="RollingWarnFile"/>-->
+            <!--            <AppenderRef ref="RollingErrorFile"/>-->
+        </Root>
+    </Loggers>
+</Configuration>

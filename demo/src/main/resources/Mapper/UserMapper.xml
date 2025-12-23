@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.UserMapper">
+    <insert id="create">
+        INSERT INTO interviewWorks.user (name, data)
+        VALUES (#{name}, #{data});
+    </insert>
+    <update id="update">
+        update interviewworks.user
+        set data = #{data}
+        where name like #{name}
+    </update>
+    <select id="select" resultType="java.util.Map">
+        select *
+        from interviewWorks.user
+        where name like #{name}
+        order by name desc
+    </select>
+    <delete id="delete">
+        delete
+        from interviewworks.user
+        where name like #{name}
+    </delete>
+</mapper>
