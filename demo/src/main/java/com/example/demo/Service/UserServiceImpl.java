@@ -8,10 +8,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 @Transactional
@@ -22,15 +22,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @CachePut(value = "user", key = "#map['name']")
-    public boolean createUser(Map<String, Object> map) {
-        boolean judge = true;
+    public Map<String, Object> createUser(Map<String, Object> map) {
+        Date date = new Date();
+        LocalDate localDate = date.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+        int rocYear = localDate.getYear() - 1911;
+        String result = String.format(
+                "%03d%02d%02d",
+                rocYear,
+                localDate.getMonthValue(),
+                localDate.getDayOfMonth()
+        );
+        map.put("update_date", result);
+        map.put("timestamp", date);
         try {
             userMapper.create(map);
         } catch (Exception e) {
             userMapper.update(map);
-            judge = false;
         }
-        return judge;
+        return map;
     }
 
     @Override
@@ -40,21 +51,7 @@ public class UserServiceImpl implements UserService {
         if (userList.isEmpty()) {
             return Collections.emptyMap();
         };
-
-        Map<String, Object> userMap = (Map<String, Object>) userList.get(0);
-
-        return userMap.entrySet()
-                .stream()
-                .sorted((e1, e2) -> {
-                    String name1 = e1.getKey();
-                    String name2 = e2.getKey();
-                    return name2.compareTo(name1); // DESC
-                })
-                .collect(
-                        LinkedHashMap::new,  // 保留排序順序
-                        (m, e) -> m.put(e.getKey(), e.getValue()),
-                        LinkedHashMap::putAll
-                );
+        return (Map<String, Object>) userList.getFirst();
     }
 
     @Override
