@@ -1,12 +1,14 @@
 package com.example.demo.Service;
 
 import com.example.demo.Mapper.UserMapper;
-import com.example.demo.redis.RedisService;
 import jakarta.annotation.Resource;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,12 +20,9 @@ public class UserServiceImpl implements UserService {
     @Resource
     private UserMapper userMapper;
 
-    @Resource
-    private RedisService redisService;
-
     @Override
+    @CachePut(value = "user", key = "#map['name']")
     public boolean createUser(Map<String, Object> map) {
-        redisService.set(map.get("name").toString(), map);
         boolean judge = true;
         try {
             userMapper.create(map);
@@ -35,20 +34,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Object query(Map<String, Object> map) {
-        Object user = redisService.get(map.get("name").toString());
-        Map<String, Object> userMap = new HashMap<>();
-        if (user != null) {
-            userMap = (Map<String, Object>) user;
-        } else {
-            List<Object> userList = userMapper.select(map);
-            if (!userList.isEmpty()) {
-                userMap = (Map<String, Object>) userList.getFirst();
-            }
-        }
-        if (userMap.isEmpty()) {
-            return null;
-        }
+    @Cacheable(value = "user", key = "#map['name']")
+    public Map<String, Object> query(Map<String, Object> map) {
+        List<Object> userList = userMapper.select(map);
+        if (userList.isEmpty()) {
+            return Collections.emptyMap();
+        };
+
+        Map<String, Object> userMap = (Map<String, Object>) userList.get(0);
+
         return userMap.entrySet()
                 .stream()
                 .sorted((e1, e2) -> {
@@ -64,11 +58,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CacheEvict(
+            value = "user",
+            key = "#map['name']",
+            beforeInvocation = true
+    )
     public int delete(Map<String, Object> map) {
-        Object user = redisService.get(map.get("name").toString());
-        if (user != null) {
-            redisService.delete(map.get("name").toString());
-        }
         return userMapper.delete(map);
     }
 }

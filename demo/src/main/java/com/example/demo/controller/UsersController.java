@@ -43,8 +43,8 @@ public class UsersController {
     public Map<String, Object> queryUser(@RequestBody Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
         result.put("data", map);
-        Object resultData = userService.query(map);
-        if (resultData != null) {
+        Map<String, Object> resultData = userService.query(map);
+        if (!resultData.isEmpty()) {
             result.put("status", "success");
             result.put("message", "users 查詢成功");
             result.put("result", resultData);

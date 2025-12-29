@@ -7,7 +7,7 @@ public interface UserService {
 
     boolean createUser(Map<String, Object> map);
 
-    Object query(Map<String, Object> map);
+    Map<String, Object> query(Map<String, Object> map);
 
     int delete(Map<String, Object> map);
 }
