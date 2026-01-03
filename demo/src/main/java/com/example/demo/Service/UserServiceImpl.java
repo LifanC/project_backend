@@ -143,6 +143,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
     public void logout(String token) {
         logger.info("{} : {}", tokens, token);
         stringRedisTemplate.delete(tokens);
