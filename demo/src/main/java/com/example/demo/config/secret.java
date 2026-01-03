@@ -40,9 +40,9 @@ public class secret {
                 localDate.getDayOfMonth()
         );
         userMapper.delNoSecret(dateFormat);
-        List<Map<String, Object>> list1 =
-                userMapper.getSecret(dateFormat.substring(0, 5));
-        if (list1.isEmpty()) {
+        String dateFormatStr = dateFormat.substring(0, 5);
+        List<Map<String, Object>> list = userMapper.getSecret(dateFormatStr);
+        if (list.isEmpty()) {
             SecureRandom random = new SecureRandom();
             byte[] bytes = new byte[32]; // 256 bits
             random.nextBytes(bytes);

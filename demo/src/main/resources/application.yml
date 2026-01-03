@@ -19,9 +19,6 @@ spring:
     username: root
     password: 1234
 
-# jdbc:h2:file:C:/A_TestSpring/project_backend/testdb;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
-# testdb.mv.db
-
 mybatis:
   mapper-locations: classpath:Mapper/*.xml  #注意：一定要對應mapper映射xml文件的所在路徑
   configuration:
