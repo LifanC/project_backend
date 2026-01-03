@@ -1,18 +1,21 @@
 package com.example.demo.Mapper;
 
-import org.apache.ibatis.annotations.Mapper;
+import org.mybatis.spring.annotation.MapperScan;
 
 import java.util.*;
 
-@Mapper
+@MapperScan
 public interface UserMapper {
+
+    Map<String, Object> select(Map<String, Object> map);
 
     void create(Map<String, Object> map);
 
-    void update(Map<String, Object> map);
+    void delNoSecret(String dateFormat);
 
-    List<Object> select(Map<String, Object> map);
+    List<Map<String, Object>> getSecret(String dateFormatStr);
 
-    int delete(Map<String, Object> map);
+    void createSecret(String secretNum, String dateFormat);
 
+    Map<String, Object> getSecretOnly(String dateFormat);
 }

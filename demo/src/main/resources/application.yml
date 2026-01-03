@@ -1,3 +1,6 @@
+jwt:
+  expiration: 60  # 單位秒
+
 server:
   port: 8080
   servlet:

@@ -4,98 +4,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD</title>
+    <title>註冊/登入</title>
 </head>
 <script src="/jquery.min.js"></script>
 <script>
     var http = 'http://localhost:8080/api/';
     $(document).ready(function () {
-        $('#inp1').val('ChatGPT1')
-        $('#inp2').val('test001')
-        $("#btn1").click(function () {
-            let user = {
-                name: $('#inp1').val(),
-                data: $('#inp2').val()
-            }
+        // 註冊
+        $('#btnRegister').click(function () {
+            const data = {
+                username: $('#regUser').val(),
+                password: $('#regPass').val()
+            };
             $.ajax({
-                url: http + 'createUser',
+                url: http + 'auth/register',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(user),
-                dataType: 'json',
-                success: handleSuccess,
-                error: handleError,
-                complete: handleComplete
+                data: JSON.stringify(data),
+                success: function (res) {
+                    alert("註冊成功: " + JSON.stringify(res));
+                },
+                error: function (xhr, status, error) {
+                    alert("註冊失敗: " + xhr.responseText);
+                }
             });
         });
-        $('#btn2').click(function () {
-            let user = {
-                name: $('#inp1').val()
-            }
+        // 登入
+        $('#btnLogin').click(function () {
+            const data = {
+                username: $('#loginUser').val(),
+                password: $('#loginPass').val()
+            };
             $.ajax({
-                url: http + 'queryUser',
+                url: http + 'auth/login',
                 type: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify(user),
-                dataType: 'json',
-                success: handleSuccess,
-                error: handleError,
-                complete: handleComplete
+                data: JSON.stringify(data),
+                success: function (token) {
+                    alert("登入成功! Token: " + token);
+                    $('#token').val(token);
+                    $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                },
+                error: function (xhr) {
+                    alert("登入失敗: " + xhr.responseText);
+                }
             });
         });
-        $('#btn3').click(function () {
-            let user = {
-                name: $('#inp1').val()
-            }
+        // 驗證 Token
+        $('#btnValidate').click(function () {
+            const token = $('#token').val();
             $.ajax({
-                url: http + 'deleteUser',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(user),
-                dataType: 'json',
-                success: handleSuccess,
-                error: handleError,
-                complete: handleComplete
+                url: http + 'auth/validate',
+                type: 'GET',
+                data: { token: token },
+                success: function (res) {
+                    alert("驗證結果: " + res);
+                },
+                error: function (xhr) {
+                    alert("驗證失敗: " + xhr.responseText);
+                }
             });
         });
-        $('#btn4').click(function () {
-            $('#test1, #test2, #test3').html('');
+        // 登出
+        $('#btnLogout').click(function () {
+            const token = $('#token').val();
+            $.ajax({
+                url: http + 'auth/logout',
+                type: 'GET',
+                data: { token: token },
+                success: function (res) {
+                    alert(res);
+                },
+                error: function (xhr) {
+                    alert("登出失敗: " + xhr.responseText);
+                }
+            });
         });
     });
-
-    // 成功回應
-    function handleSuccess(response) {
-        $('#test1').html('回應成功: ' + JSON.stringify(response));
-        $('#test2').html('');
-    }
-
-    // 錯誤回應
-    function handleError(xhr, status, error) {
-        $('#test1').html('');
-        $('#test2').html('AJAX 錯誤: ' + error);
-    }
-
-    // 請求完成
-    function handleComplete() {
-        $('#test3').html('請求完成');
-    }
 
 
 </script>
 
 <body>
-    <div>
-        <input id="inp1" />Name
-        <br>
-        <input id="inp2" />Data
-    </div>
-    <button id="btn1">新增</button>
-    <button id="btn2">查詢</button>
-    <button id="btn3">刪除</button>
-    <button id="btn4">清除</button>
-    <p id="test1"></p>
-    <p id="test2"></p>
-    <p id="test3"></p>
+    <h2>註冊</h2>
+    <input id="regUser" placeholder="帳號">
+    <input id="regPass" placeholder="密碼">
+    <button id="btnRegister">註冊</button>
+
+    <h2>登入</h2>
+    <input id="loginUser" placeholder="帳號">
+    <input id="loginPass" placeholder="密碼">
+    <button id="btnLogin">登入</button>
+
+    <h2>驗證 Token</h2>
+    <input id="token" placeholder="Token">
+    <button id="btnValidate">驗證</button>
+
+    <h2>登出</h2>
+    <button id="btnLogout">登出</button>
 </body>
 
 </html>

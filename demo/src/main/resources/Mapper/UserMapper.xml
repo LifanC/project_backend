@@ -1,25 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.example.demo.Mapper.UserMapper">
-    <insert id="create">
-        INSERT INTO interviewWorks.user (name, data, update_date, timestamp)
-        VALUES (#{name}, #{data}, #{update_date}, #{timestamp});
-    </insert>
-    <update id="update">
-        update interviewworks.user
-        set data = #{data},
-            update_date = #{update_date},
-            timestamp = #{timestamp}
-        where name = #{name}
-    </update>
+
     <select id="select" resultType="java.util.Map">
-        select name, data, update_date, `timestamp`
-        from interviewWorks.`user`
-        where name = #{name}
+        select
+            username as username,
+            password as password,
+            update_date as update_date,
+            time_stamp as time_stamp
+        from interviewWorks.userdata
+        where username = #{username}
     </select>
-    <delete id="delete">
+
+    <insert id="create">
+        insert
+        into interviewWorks.userdata (username,
+                                      password,
+                                      update_date,
+                                      time_stamp)
+        values (#{username},
+                #{password},
+                #{update_date},
+                #{time_stamp})
+    </insert>
+
+    <delete id="delNoSecret">
         delete
-        from interviewworks.user
-        where name = #{name}
+        from interviewworks.secret
+        where update_date != #{dateFormat}
     </delete>
+
+    <select id="getSecret" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+            secret_number as secret_number
+        from interviewWorks.secret
+        where update_date like concat(#{dateFormatStr}, '%')
+    </select>
+
+    <insert id="createSecret">
+        insert
+        into interviewWorks.secret (secret_number,
+                                    update_date)
+        values (#{secretNum},
+                #{dateFormat})
+    </insert>
+
+    <select id="getSecretOnly" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+            secret_number as secret_number
+        from interviewWorks.secret
+        where update_date = #{dateFormatStr}
+    </select>
+
 </mapper>

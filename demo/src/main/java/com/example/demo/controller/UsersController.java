@@ -10,7 +10,7 @@ import java.util.*;
 
 @RestController
 @CrossOrigin(origins = "*")
-@RequestMapping("/")
+@RequestMapping("/auth/")
 public class UsersController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -24,49 +24,26 @@ public class UsersController {
         return "login: success";
     }
 
-    @PostMapping("createUser")
-    public Map<String, Object> createUser(@RequestBody Map<String, Object> map) {
-        Map<String, Object> result = new HashMap<>();
-        logger.info("data: {}", map);
-        Map<String, Object> resultData = userService.createUser(map);
-        result.put("message", "users 成功");
-        result.put("result", resultData);
-        logger.info("createUser: {}", result);
-        return result;
+    @PostMapping("register")
+    public Map<String, Object> register(@RequestBody Map<String, Object> map) {
+        return userService.register(map);
     }
 
-    @PostMapping("queryUser")
-    public Map<String, Object> queryUser(@RequestBody Map<String, Object> map) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("data", map);
-        Map<String, Object> resultData = userService.query(map);
-        if (!resultData.isEmpty()) {
-            result.put("status", "success");
-            result.put("message", "users 查詢成功");
-            result.put("result", resultData);
-        } else {
-            result.put("status", "fail");
-            result.put("message", "users 查無資料");
-        }
-        logger.info("queryUser: {}", result);
-        return result;
+    @PostMapping("login")
+    public String login(@RequestBody Map<String, Object> map) {
+        return userService.login(map);
     }
 
+    @GetMapping("validate")
+    public String validate(@RequestParam String token) {
+        boolean validate = userService.validateToken(token);
+        return validate ? "有效" : "無效";
+    }
 
-    @PostMapping("deleteUser")
-    public Map<String, Object> deleteUser(@RequestBody Map<String, Object> map) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("data", map);
-        int del = userService.delete(map);
-        if (del > 0) {
-            result.put("status", "success");
-            result.put("message", "users 刪除成功");
-        } else {
-            result.put("status", "fail");
-            result.put("message", "users 查無資料");
-        }
-        logger.info("deleteUser: {}", result);
-        return result;
+    @GetMapping("logout")
+    public String logout(@RequestParam String token) {
+        userService.logout(token);
+        return "已登出";
     }
 
 }
