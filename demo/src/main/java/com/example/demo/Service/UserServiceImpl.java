@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,10 +44,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Object> register(Map<String, Object> map) {
+        if (StringUtils.isBlank(map.get("username").toString())
+                || StringUtils.isBlank(map.get("password").toString())) {
+            logger.info("註冊 帳號密碼未輸入");
+            throw new RuntimeException("註冊 帳號密碼未輸入");
+        }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect != null) {
-            logger.info("帳號已存在");
-            throw new RuntimeException("帳號已存在");
+            logger.info("註冊 帳號已存在");
+            throw new RuntimeException("註冊 帳號已存在");
         }
         Date date = new Date();
         LocalDate localDate = date.toInstant()
@@ -69,15 +75,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String login(Map<String, Object> map) {
+        if (StringUtils.isBlank(map.get("username").toString())
+                || StringUtils.isBlank(map.get("password").toString())) {
+            logger.info("登入 帳號密碼未輸入");
+            throw new RuntimeException("登入 帳號密碼未輸入");
+        }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            logger.info("帳號不存在");
-            throw new RuntimeException("帳號不存在");
+            logger.info("登入 帳號不存在");
+            throw new RuntimeException("登入 帳號不存在");
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
         String userPassword = userSelect.get("password").toString();
         if (!passwordEncoder.matches(password, userPassword)) {
+            logger.info("登入 密碼錯誤");
             throw new RuntimeException("密碼錯誤");
         }
         LocalDate localDate = new Date().toInstant()
@@ -123,6 +135,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean validateToken(String token) {
+        if (StringUtils.isBlank(token)) {
+            logger.info("驗證 token未輸入");
+            throw new RuntimeException("驗證 token未輸入");
+        }
         logger.info("{} : {}", tokens, token);
         try {
             SecretKey key = getKeyForToday();
@@ -133,7 +149,7 @@ public class UserServiceImpl implements UserService {
                     .getBody();
 
             String username = claims.getSubject();
-            logger.info("username: {}", username);
+            logger.info("驗證 username: {}", username);
 
             // Redis 控制登出（token 是否存在）
             return stringRedisTemplate.hasKey(tokens);
@@ -145,6 +161,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void logout(String token) {
+        if (StringUtils.isBlank(token)) {
+            logger.info("登出 token未輸入");
+            throw new RuntimeException("登出 token未輸入");
+        }
         logger.info("{} : {}", tokens, token);
         stringRedisTemplate.delete(tokens);
     }
