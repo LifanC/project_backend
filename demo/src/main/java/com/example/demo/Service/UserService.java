@@ -6,9 +6,12 @@ public interface UserService {
 
     Map<String, Object> register(Map<String, Object> map);
 
-    String login(Map<String, Object> map);
+    Map<String, Object> login(Map<String, Object> map);
 
-    boolean validateToken(String token);
+    Map<String, Object> validateToken(String token);
 
-    void logout(String token);
+    Map<String, Object> query(Map<String, Object> map);
+
+    Map<String, Object> logout(String token);
+
 }

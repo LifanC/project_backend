@@ -1,10 +1,10 @@
 package com.example.demo.Mapper;
 
-import org.mybatis.spring.annotation.MapperScan;
+import org.apache.ibatis.annotations.Mapper;
 
 import java.util.*;
 
-@MapperScan
+@Mapper
 public interface UserMapper {
 
     Map<String, Object> select(Map<String, Object> map);
@@ -18,4 +18,10 @@ public interface UserMapper {
     void createSecret(String secretNum, String dateFormat);
 
     Map<String, Object> getSecretOnly(String dateFormat);
+
+    void update(Map<String, Object> map);
+
+    Map<String, Object> selectUsername(String token);
+
+    Map<String, Object> selectToken(String username);
 }

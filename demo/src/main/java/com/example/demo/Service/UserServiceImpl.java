@@ -18,8 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -31,8 +33,6 @@ public class UserServiceImpl implements UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    private final String tokens = "tokens";
-
     @Value("${jwt.expiration}")
     private long expirationSeconds;
 
@@ -42,17 +42,34 @@ public class UserServiceImpl implements UserService {
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    private String hiddenCode(String password) {
+        if (password.length() <= 2) {
+            password = "*".repeat(password.length());
+        } else {
+            password =
+                    password.charAt(0) +
+                            "*".repeat(password.length() - 2) +
+                            password.charAt(password.length() - 1);
+        }
+        return password;
+    }
+
     @Override
     public Map<String, Object> register(Map<String, Object> map) {
+        map.put("register", true);
         if (StringUtils.isBlank(map.get("username").toString())
                 || StringUtils.isBlank(map.get("password").toString())) {
-            logger.info("註冊 帳號密碼未輸入");
-            throw new RuntimeException("註冊 帳號密碼未輸入");
+            map.put("register", false);
+            map.put("msg", "\n註冊 帳號密碼未輸入");
+            logger.info(map.get("msg").toString());
+            return map;
         }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect != null) {
-            logger.info("註冊 帳號已存在");
-            throw new RuntimeException("註冊 帳號已存在");
+            map.put("register", false);
+            map.put("msg", "\n註冊 帳號已存在");
+            logger.info(map.get("msg").toString());
+            return map;
         }
         Date date = new Date();
         LocalDate localDate = date.toInstant()
@@ -65,32 +82,48 @@ public class UserServiceImpl implements UserService {
                 localDate.getMonthValue(),
                 localDate.getDayOfMonth()
         );
+        String username = map.get("username").toString();
         String password = map.get("password").toString();
         map.put("password", passwordEncoder.encode(password));
         map.put("update_date", dateFormat);
         map.put("time_stamp", date);
         userMapper.create(map);
-        return map;
+        Map<String, Object> ui = new HashMap<>();
+        ui.put("register", true);
+        ui.put("msg", "\n帳號:" + username + "\n密碼" + hiddenCode(password));
+        return ui;
     }
 
     @Override
-    public String login(Map<String, Object> map) {
+    public Map<String, Object> login(Map<String, Object> map) {
+        map.put("login", true);
         if (StringUtils.isBlank(map.get("username").toString())
                 || StringUtils.isBlank(map.get("password").toString())) {
-            logger.info("登入 帳號密碼未輸入");
-            throw new RuntimeException("登入 帳號密碼未輸入");
+            map.put("login", false);
+            map.put("msg", "\n登入 帳號密碼未輸入");
+            logger.info(map.get("msg").toString());
+            return map;
         }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            logger.info("登入 帳號不存在");
-            throw new RuntimeException("登入 帳號不存在");
+            map.put("login", false);
+            map.put("msg", "\n登入 帳號不存在");
+            logger.info(map.get("msg").toString());
+            return map;
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
         String userPassword = userSelect.get("password").toString();
         if (!passwordEncoder.matches(password, userPassword)) {
-            logger.info("登入 密碼錯誤");
-            throw new RuntimeException("密碼錯誤");
+            map.put("login", false);
+            map.put("msg", "\n登入 密碼錯誤");
+            logger.info(map.get("msg").toString());
+            return map;
+        }
+        String usertoken = stringRedisTemplate.opsForValue().get(username);
+        if (StringUtils.isNotBlank(usertoken)) {
+            map.put("token", usertoken);
+            return map;
         }
         LocalDate localDate = new Date().toInstant()
                 .atZone(ZoneId.systemDefault())
@@ -102,6 +135,7 @@ public class UserServiceImpl implements UserService {
                 localDate.getMonthValue(),
                 localDate.getDayOfMonth()
         );
+        // JWT 簽名與驗證用的「祕密字串（secret）」
         Map<String, Object> secretMap = userMapper.getSecretOnly(dateFormat);
         SecretKey key =
                 Keys.hmacShaKeyFor(
@@ -109,13 +143,18 @@ public class UserServiceImpl implements UserService {
                 );
         String token = Jwts.builder()
                 .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + expirationSeconds * 1000L))
+                .setExpiration(
+                        Date.from(Instant.now().plus(expirationSeconds, ChronoUnit.SECONDS))
+                )
                 .signWith(key)
                 .compact();
-        stringRedisTemplate.opsForValue().set(tokens, token, expirationSeconds, TimeUnit.SECONDS);
-        logger.info("{}: {}", tokens, stringRedisTemplate.opsForValue().get(tokens));
-        logger.info("{}: {}", tokens, stringRedisTemplate.getExpire(tokens, TimeUnit.SECONDS));
-        return token;
+        stringRedisTemplate.opsForValue().set(username, token, expirationSeconds, TimeUnit.SECONDS);
+        map.put("token", token);
+        userMapper.update(map);
+        Map<String, Object> ui = new HashMap<>();
+        ui.put("login", true);
+        ui.put("msg", "\n" + token);
+        return ui;
     }
 
     private SecretKey getKeyForToday() {
@@ -134,39 +173,118 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean validateToken(String token) {
+    public Map<String, Object> validateToken(String token) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("validate", true);
         if (StringUtils.isBlank(token)) {
-            logger.info("驗證 token未輸入");
-            throw new RuntimeException("驗證 token未輸入");
+            map.put("validate", false);
+            map.put("msg", "\n驗證 token未輸入");
+            logger.info(map.get("msg").toString());
+            return map;
         }
-        logger.info("{} : {}", tokens, token);
+        String username;
+        boolean tokensIsNotBlank;
         try {
             SecretKey key = getKeyForToday();
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(expirationSeconds)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
 
-            String username = claims.getSubject();
-            logger.info("驗證 username: {}", username);
-
+            username = claims.getSubject();
+            logger.info("驗證 username: {} : {}", username, token);
             // Redis 控制登出（token 是否存在）
-            return stringRedisTemplate.hasKey(tokens);
-
+            tokensIsNotBlank = stringRedisTemplate.hasKey(username);
         } catch (JwtException e) {
-            return false; // JWT 不合法
+            // JWT 不合法
+            logger.info("validate JwtException : {}", e.getMessage());
+            Map<String, Object> selectUsername = userMapper.selectUsername(token);
+            username = selectUsername.get("username").toString();
+            // Redis 控制登出（token 是否存在）
+            tokensIsNotBlank = stringRedisTemplate.hasKey(username);
         }
+        Map<String, Object> ui = new HashMap<>();
+        ui.put("validate", true);
+        ui.put("msg", "\n" + (tokensIsNotBlank ? "有效" : "無效"));
+        return ui;
     }
 
     @Override
-    public void logout(String token) {
-        if (StringUtils.isBlank(token)) {
-            logger.info("登出 token未輸入");
-            throw new RuntimeException("登出 token未輸入");
+    public Map<String, Object> query(Map<String, Object> map) {
+        map.put("query", true);
+        if (StringUtils.isBlank(map.get("username").toString())
+                || StringUtils.isBlank(map.get("password").toString())) {
+            map.put("query", false);
+            map.put("msg", "\n查詢 帳號密碼未輸入");
+            logger.info(map.get("msg").toString());
+            return map;
         }
-        logger.info("{} : {}", tokens, token);
-        stringRedisTemplate.delete(tokens);
+        Map<String, Object> userSelect = userMapper.select(map);
+        if (userSelect == null) {
+            map.put("query", false);
+            map.put("msg", "\n查詢 帳號不存在");
+            logger.info(map.get("msg").toString());
+            return map;
+        }
+        String username = map.get("username").toString();
+        String password = map.get("password").toString();
+        String userPassword = userSelect.get("password").toString();
+        if (!passwordEncoder.matches(password, userPassword)) {
+            map.put("query", false);
+            map.put("msg", "\n查詢 密碼錯誤");
+            logger.info(map.get("msg").toString());
+            return map;
+        }
+        Map<String, Object> selectToken = userMapper.selectToken(username);
+        String token = "";
+        if (selectToken != null) {
+            token = selectToken.get("token").toString();
+        }
+        Map<String, Object> ui = new HashMap<>();
+        ui.put("query", true);
+        ui.put("msg", "\n" + token);
+        return ui;
+    }
+
+    @Override
+    public Map<String, Object> logout(String token) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("logout", true);
+        if (StringUtils.isBlank(token)) {
+            map.put("logout", false);
+            map.put("msg", "\n登出 token未輸入");
+            logger.info(map.get("msg").toString());
+            return map;
+        }
+        String username;
+        try {
+            SecretKey key = getKeyForToday();
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .setAllowedClockSkewSeconds(expirationSeconds)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            username = claims.getSubject();
+        } catch (JwtException e) {
+            // JWT 不合法
+            logger.info("logout JwtException : {}", e.getMessage());
+            Map<String, Object> selectUsername = userMapper.selectUsername(token);
+            username = selectUsername.get("username").toString();
+        }
+        logger.info("登出 username: {} : {}", username, token);
+        stringRedisTemplate.delete(username);
+        Map<String, Object> updateMap = new HashMap<>();
+        updateMap.put("username", username);
+        updateMap.put("token", null);
+        userMapper.update(updateMap);
+        Map<String, Object> ui = new HashMap<>();
+        ui.put("logout", true);
+        ui.put("msg", "\n已登出");
+        return ui;
     }
 
 }

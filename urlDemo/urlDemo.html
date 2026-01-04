@@ -22,10 +22,16 @@
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function (res) {
-                    alert("註冊成功: " + JSON.stringify(res));
+                    if (res.register) {
+                        alert("註冊成功: " + res.msg);
+                        $('#loginUser').val($('#regUser').val())
+                        $('#loginPass').val($('#regPass').val())
+                    } else {
+                        alert("註冊失敗: " + res.msg);
+                    }
                 },
                 error: function (xhr, status, error) {
-                    alert("註冊失敗: " + xhr.responseText);
+                    alert("註冊失敗error: " + xhr.responseText);
                 }
             });
         });
@@ -40,13 +46,17 @@
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
-                success: function (token) {
-                    alert("登入成功! Token: " + token);
-                    $('#token').val(token);
-                    $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                success: function (res) {
+                    if (res.login) {
+                        alert("登入成功! Token: " + res.msg);
+                        $('#token').val(res.msg);
+                        $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                    } else {
+                        alert("登入失敗: " + res.msg);
+                    }
                 },
                 error: function (xhr) {
-                    alert("登入失敗: " + xhr.responseText);
+                    alert("登入失敗error: " + xhr.responseText);
                 }
             });
         });
@@ -58,10 +68,41 @@
                 type: 'GET',
                 data: { token: token },
                 success: function (res) {
-                    alert("驗證結果: " + res);
+                    if (res.validate) {
+                        alert("驗證結果: " + res.msg);
+                    } else {
+                        alert("驗證失敗: " + res.msg);
+                    }
                 },
                 error: function (xhr) {
-                    alert("驗證失敗: " + xhr.responseText);
+                    alert("驗證失敗error: " + xhr.responseText);
+                }
+            });
+        });
+        // 查詢 Token
+        $('#btnQuery').click(function () {
+            const data = {
+                username: $('#queryUser').val(),
+                password: $('#queryPass').val()
+            };
+            $.ajax({
+                url: http + 'auth/query',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    if (res.query) {
+                        alert("查詢成功! Token: " + res.msg);
+                        $('#token').val(res.msg);
+                        if (res.msg.length > 0) {
+                            $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                        }
+                    } else {
+                        alert("查詢失敗: " + res.msg);
+                    }
+                },
+                error: function (xhr) {
+                    alert("查詢失敗error: " + xhr.responseText);
                 }
             });
         });
@@ -73,10 +114,14 @@
                 type: 'GET',
                 data: { token: token },
                 success: function (res) {
-                    alert(res);
+                    if (res.logout) {
+                        alert("登出結果: " + res.msg);
+                    } else {
+                        alert("登出失敗: " + res.msg);
+                    }
                 },
                 error: function (xhr) {
-                    alert("登出失敗: " + xhr.responseText);
+                    alert("登出失敗error: " + xhr.responseText);
                 }
             });
         });
@@ -95,10 +140,15 @@
     <input id="loginUser" placeholder="帳號">
     <input id="loginPass" placeholder="密碼">
     <button id="btnLogin">登入</button>
-
+    
     <h2>驗證 Token</h2>
     <input id="token" placeholder="Token">
     <button id="btnValidate">驗證</button>
+
+    <h2>查詢 Token</h2>
+    <input id="queryUser" placeholder="帳號">
+    <input id="queryPass" placeholder="密碼">
+    <button id="btnQuery">查詢</button>
 
     <h2>登出</h2>
     <button id="btnLogout">登出</button>

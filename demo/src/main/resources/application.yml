@@ -1,5 +1,5 @@
 jwt:
-  expiration: 60  # 單位秒
+  expiration: 120  # 單位秒
 
 server:
   port: 8080

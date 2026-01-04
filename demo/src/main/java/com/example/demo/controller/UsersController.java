@@ -20,8 +20,8 @@ public class UsersController {
 
     @GetMapping("login")
     public String login() {
-        logger.info("login: success");
-        return "login: success";
+        logger.info("auth/login: success");
+        return "auth/login: success";
     }
 
     @PostMapping("register")
@@ -30,20 +30,23 @@ public class UsersController {
     }
 
     @PostMapping("login")
-    public String login(@RequestBody Map<String, Object> map) {
+    public Map<String, Object> login(@RequestBody Map<String, Object> map) {
         return userService.login(map);
     }
 
     @GetMapping("validate")
-    public String validate(@RequestParam String token) {
-        boolean validate = userService.validateToken(token);
-        return validate ? "有效" : "無效";
+    public Map<String, Object> validate(@RequestParam String token) {
+        return userService.validateToken(token);
+    }
+
+    @PostMapping("query")
+    public Map<String, Object> query(@RequestBody Map<String, Object> map) {
+        return userService.query(map);
     }
 
     @GetMapping("logout")
-    public String logout(@RequestParam String token) {
-        userService.logout(token);
-        return "已登出";
+    public Map<String, Object> logout(@RequestParam String token) {
+        return userService.logout(token);
     }
 
 }

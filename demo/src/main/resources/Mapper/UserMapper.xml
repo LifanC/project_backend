@@ -52,4 +52,24 @@
         where update_date = #{dateFormatStr}
     </select>
 
+    <update id="update">
+        update interviewworks.userdata
+        set token_temp = #{token}
+        where username = #{username}
+    </update>
+
+    <select id="selectUsername" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+            username as username
+        from interviewWorks.userdata
+        where token_temp = #{token}
+    </select>
+
+    <select id="selectToken" resultType="java.util.Map" parameterType="java.lang.String">
+        select
+            token_temp as token
+        from interviewWorks.userdata
+        where username = #{username}
+    </select>
+
 </mapper>

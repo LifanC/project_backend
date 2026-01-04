@@ -28,8 +28,7 @@ public class secret {
     }
 
     public void getSecret() {
-        Date date = new Date();
-        LocalDate localDate = date.toInstant()
+        LocalDate localDate = new Date().toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate();
         int rocYear = localDate.getYear() - 1911;
@@ -44,7 +43,9 @@ public class secret {
         List<Map<String, Object>> list = userMapper.getSecret(dateFormatStr);
         if (list.isEmpty()) {
             SecureRandom random = new SecureRandom();
-            byte[] bytes = new byte[32]; // 256 bits
+            // 產生 32 bytes = 256 bits
+            // JWT HS256 最小要求就是 256 bits
+            byte[] bytes = new byte[32];
             random.nextBytes(bytes);
             String secretNum = Base64.getEncoder().encodeToString(bytes);
             userMapper.createSecret(secretNum, dateFormat);
