@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
         }
         String usertoken = stringRedisTemplate.opsForValue().get(username);
         if (StringUtils.isNotBlank(usertoken)) {
-            map.put("token", usertoken);
+            map.put("msg", "\n" + usertoken);
             return map;
         }
         LocalDate localDate = new Date().toInstant()
