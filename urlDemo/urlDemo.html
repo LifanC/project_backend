@@ -24,14 +24,39 @@
                 success: function (res) {
                     if (res.register) {
                         alert("註冊成功: " + res.msg);
-                        $('#loginUser').val($('#regUser').val())
-                        $('#loginPass').val($('#regPass').val())
                     } else {
                         alert("註冊失敗: " + res.msg);
                     }
+                    $('#loginUser').val($('#regUser').val())
+                    $('#loginPass').val($('#regPass').val())
                 },
                 error: function (xhr, status, error) {
                     alert("註冊失敗error: " + xhr.responseText);
+                }
+            });
+        });
+        // 更改密碼
+        $('#btnUpdatePassword').click(function () {
+            const data = {
+                username: $('#loginUser').val(),
+                password: $('#loginPass').val()
+            };
+            $.ajax({
+                url: http + 'auth/updatePassword',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    if (res.updatePassword) {
+                        alert("更改密碼成功! Token: " + res.msg);
+                        $('#token').val(res.msg);
+                        $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                    } else {
+                        alert("更改密碼失敗: " + res.msg);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert("更改密碼失敗error: " + xhr.responseText);
                 }
             });
         });
@@ -140,7 +165,8 @@
     <input id="loginUser" placeholder="帳號">
     <input id="loginPass" placeholder="密碼">
     <button id="btnLogin">登入</button>
-    
+    <button id="btnUpdatePassword">忘記密碼</button>
+
     <h2>驗證 Token</h2>
     <input id="token" placeholder="Token">
     <button id="btnValidate">驗證</button>

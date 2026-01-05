@@ -24,6 +24,12 @@
                 #{time_stamp})
     </insert>
 
+    <update id="update">
+        update interviewworks.userdata
+        set password = #{password}
+        where username = #{username}
+    </update>
+
     <delete id="delNoSecret">
         delete
         from interviewworks.secret
@@ -52,7 +58,7 @@
         where update_date = #{dateFormatStr}
     </select>
 
-    <update id="update">
+    <update id="updateToken">
         update interviewworks.userdata
         set token_temp = #{token}
         where username = #{username}

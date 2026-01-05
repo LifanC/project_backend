@@ -11,6 +11,8 @@ public interface UserMapper {
 
     void create(Map<String, Object> map);
 
+    void update(Map<String, Object> map);
+
     void delNoSecret(String dateFormat);
 
     List<Map<String, Object>> getSecret(String dateFormatStr);
@@ -19,7 +21,7 @@ public interface UserMapper {
 
     Map<String, Object> getSecretOnly(String dateFormat);
 
-    void update(Map<String, Object> map);
+    void updateToken(Map<String, Object> map);
 
     Map<String, Object> selectUsername(String token);
 

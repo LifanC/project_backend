@@ -29,6 +29,11 @@ public class UsersController {
         return userService.register(map);
     }
 
+    @PostMapping("updatePassword")
+    public Map<String, Object> updatePassword(@RequestBody Map<String, Object> map) {
+        return userService.updatePassword(map);
+    }
+
     @PostMapping("login")
     public Map<String, Object> login(@RequestBody Map<String, Object> map) {
         return userService.login(map);
