@@ -6,9 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>註冊/登入</title>
 </head>
+<link rel="stylesheet" href="/urlDemo.css">
 <script src="/jquery.min.js"></script>
 <script>
-    var http = 'http://localhost:8080/api/';
+
+    function show(res) {
+        $('#result').text(JSON.stringify(res, null, 2));
+    }
+
+    const BASE = 'http://localhost:8080/api/';
     $(document).ready(function () {
         // 註冊
         $('#btnRegister').click(function () {
@@ -17,46 +23,17 @@
                 password: $('#regPass').val()
             };
             $.ajax({
-                url: http + 'auth/register',
+                url: BASE + 'auth/register',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function (res) {
-                    if (res.register) {
-                        alert("註冊成功: " + res.msg);
-                    } else {
-                        alert("註冊失敗: " + res.msg);
-                    }
+                    show(res)
                     $('#loginUser').val($('#regUser').val())
                     $('#loginPass').val($('#regPass').val())
                 },
                 error: function (xhr, status, error) {
-                    alert("註冊失敗error: " + xhr.responseText);
-                }
-            });
-        });
-        // 更改密碼
-        $('#btnUpdatePassword').click(function () {
-            const data = {
-                username: $('#loginUser').val(),
-                password: $('#loginPass').val()
-            };
-            $.ajax({
-                url: http + 'auth/updatePassword',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (res) {
-                    if (res.updatePassword) {
-                        alert("更改密碼成功! Token: " + res.msg);
-                        $('#token').val(res.msg);
-                        $('#token').css("width", ($('#token').val().length + 1) + "ch");
-                    } else {
-                        alert("更改密碼失敗: " + res.msg);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    alert("更改密碼失敗error: " + xhr.responseText);
+                    show(xhr)
                 }
             });
         });
@@ -67,21 +44,42 @@
                 password: $('#loginPass').val()
             };
             $.ajax({
-                url: http + 'auth/login',
+                url: BASE + 'auth/login',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function (res) {
-                    if (res.login) {
-                        alert("登入成功! Token: " + res.msg);
-                        $('#token').val(res.msg);
+                    show(res)
+                    if (res.token) {
+                        $('#token').val(res.token);
                         $('#token').css("width", ($('#token').val().length + 1) + "ch");
-                    } else {
-                        alert("登入失敗: " + res.msg);
                     }
                 },
-                error: function (xhr) {
-                    alert("登入失敗error: " + xhr.responseText);
+                error: function (xhr, status, error) {
+                    show(xhr)
+                }
+            });
+        });
+        // 更改密碼
+        $('#btnUpdatePassword').click(function () {
+            const data = {
+                username: $('#loginUser').val(),
+                password: $('#loginPass').val()
+            };
+            $.ajax({
+                url: BASE + 'auth/updatePassword',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    show(res)
+                    if (res.token) {
+                        $('#token').val(res.token);
+                        $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    show(xhr)
                 }
             });
         });
@@ -89,18 +87,14 @@
         $('#btnValidate').click(function () {
             const token = $('#token').val();
             $.ajax({
-                url: http + 'auth/validate',
+                url: BASE + 'auth/validate',
                 type: 'GET',
                 data: { token: token },
                 success: function (res) {
-                    if (res.validate) {
-                        alert("驗證結果: " + res.msg);
-                    } else {
-                        alert("驗證失敗: " + res.msg);
-                    }
+                    show(res)
                 },
-                error: function (xhr) {
-                    alert("驗證失敗error: " + xhr.responseText);
+                error: function (xhr, status, error) {
+                    show(xhr)
                 }
             });
         });
@@ -111,42 +105,36 @@
                 password: $('#queryPass').val()
             };
             $.ajax({
-                url: http + 'auth/query',
+                url: BASE + 'auth/query',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function (res) {
-                    if (res.query) {
-                        alert("查詢成功! Token: " + res.msg);
-                        $('#token').val(res.msg);
-                        if (res.msg.length > 0) {
-                            $('#token').css("width", ($('#token').val().length + 1) + "ch");
+                    show(res)
+                    if (res.token) {
+                        $('#tokenLogout').val(res.token);
+                        if (res.token.length > 0) {
+                            $('#tokenLogout').css("width", ($('#tokenLogout').val().length + 1) + "ch");
                         }
-                    } else {
-                        alert("查詢失敗: " + res.msg);
                     }
                 },
-                error: function (xhr) {
-                    alert("查詢失敗error: " + xhr.responseText);
+                error: function (xhr, status, error) {
+                    show(xhr)
                 }
             });
         });
         // 登出
         $('#btnLogout').click(function () {
-            const token = $('#token').val();
+            const token = $('#tokenLogout').val();
             $.ajax({
-                url: http + 'auth/logout',
+                url: BASE + 'auth/logout',
                 type: 'GET',
                 data: { token: token },
                 success: function (res) {
-                    if (res.logout) {
-                        alert("登出結果: " + res.msg);
-                    } else {
-                        alert("登出失敗: " + res.msg);
-                    }
+                    show(res)
                 },
-                error: function (xhr) {
-                    alert("登出失敗error: " + xhr.responseText);
+                error: function (xhr, status, error) {
+                    show(xhr)
                 }
             });
         });
@@ -156,28 +144,33 @@
 </script>
 
 <body>
-    <h2>註冊</h2>
-    <input id="regUser" placeholder="帳號">
-    <input id="regPass" placeholder="密碼">
-    <button id="btnRegister">註冊</button>
-
-    <h2>登入</h2>
-    <input id="loginUser" placeholder="帳號">
-    <input id="loginPass" placeholder="密碼">
-    <button id="btnLogin">登入</button>
-    <button id="btnUpdatePassword">忘記密碼</button>
-
-    <h2>驗證 Token</h2>
-    <input id="token" placeholder="Token">
-    <button id="btnValidate">驗證</button>
-
-    <h2>查詢 Token</h2>
-    <input id="queryUser" placeholder="帳號">
-    <input id="queryPass" placeholder="密碼">
-    <button id="btnQuery">查詢</button>
-
-    <h2>登出</h2>
-    <button id="btnLogout">登出</button>
+    <section>
+        <h2>註冊</h2>
+        <input id="regUser" placeholder="帳號">
+        <input id="regPass" placeholder="密碼">
+        <button id="btnRegister">註冊</button>
+        <h2>登入</h2>
+        <input id="loginUser" placeholder="帳號">
+        <input id="loginPass" placeholder="密碼">
+        <button id="btnLogin">登入</button>
+        <button id="btnUpdatePassword">更改密碼</button>
+        <h2>驗證 Token</h2>
+        <input id="token" placeholder="Token">
+        <button id="btnValidate">驗證</button>
+    </section>
+    <section>
+        <h2>查詢 Token</h2>
+        <input id="queryUser" placeholder="帳號">
+        <input id="queryPass" placeholder="密碼">
+        <button id="btnQuery">查詢</button>
+        <h2>登出 Token</h2>
+        <input id="tokenLogout" placeholder="Token">
+        <button id="btnLogout">登出</button>
+    </section>
+    <section>
+        <h3>API Result</h3>
+        <pre id="result"></pre>
+    </section>
 </body>
 
 </html>

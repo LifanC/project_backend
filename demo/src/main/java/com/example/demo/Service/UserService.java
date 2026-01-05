@@ -6,9 +6,9 @@ public interface UserService {
 
     Map<String, Object> register(Map<String, Object> map);
 
-    Map<String, Object> updatePassword(Map<String, Object> map);
-
     Map<String, Object> login(Map<String, Object> map);
+
+    Map<String, Object> updatePassword(Map<String, Object> map);
 
     Map<String, Object> validateToken(String token);
 

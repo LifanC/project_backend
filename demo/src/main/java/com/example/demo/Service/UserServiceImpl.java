@@ -76,18 +76,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public Map<String, Object> register(Map<String, Object> map) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("register", true);
         if (StringUtils.isBlank(map.get("username").toString())
                 || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("register", false);
-            ui.put("msg", "\n註冊 帳號密碼未輸入");
+            ui.put("msg", "註冊 帳號密碼未輸入");
             logger.info(ui.get("msg").toString());
             return ui;
         }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect != null) {
-            ui.put("register", false);
-            ui.put("msg", "\n註冊 帳號已存在");
+            ui.put("msg", "註冊 帳號已存在");
             logger.info(ui.get("msg").toString());
             return ui;
         }
@@ -98,25 +95,67 @@ public class UserServiceImpl implements UserService {
         map.put("update_date", localDateFormat(date));
         map.put("time_stamp", date);
         userMapper.create(map);
-        ui.put("msg", "\n帳號:" + username + "\n密碼" + hiddenCode(password));
+        ui.put("username", "帳號:" + username);
+        ui.put("password", "密碼:" + hiddenCode(password));
+        return ui;
+    }
+
+    @Override
+    public Map<String, Object> login(Map<String, Object> map) {
+        Map<String, Object> ui = new HashMap<>();
+        if (StringUtils.isBlank(map.get("username").toString())
+                || StringUtils.isBlank(map.get("password").toString())) {
+            ui.put("msg", "登入 帳號密碼未輸入");
+            logger.info(ui.get("msg").toString());
+            return ui;
+        }
+        Map<String, Object> userSelect = userMapper.select(map);
+        if (userSelect == null) {
+            ui.put("msg", "登入 帳號不存在");
+            logger.info(ui.get("msg").toString());
+            return ui;
+        }
+        String username = map.get("username").toString();
+        String password = map.get("password").toString();
+        String userPassword = userSelect.get("password").toString();
+        if (!passwordEncoder.matches(password, userPassword)) {
+            ui.put("msg", "登入 密碼錯誤");
+            logger.info(ui.get("msg").toString());
+            return ui;
+        }
+        String usertoken = stringRedisTemplate.opsForValue().get(username);
+        if (StringUtils.isNotBlank(usertoken)) {
+            ui.put("token", usertoken);
+            return ui;
+        }
+        // JWT 簽名與驗證用的「祕密字串（secret）」
+        SecretKey key = getKeyForToday(new Date());
+        String token = Jwts.builder()
+                .setSubject(username)
+                .setExpiration(
+                        Date.from(Instant.now().plus(expirationSeconds, ChronoUnit.SECONDS))
+                )
+                .signWith(key)
+                .compact();
+        stringRedisTemplate.opsForValue().set(username, token, expirationSeconds, TimeUnit.SECONDS);
+        map.put("token", token);
+        userMapper.updateToken(map);
+        ui.put("token", token);
         return ui;
     }
 
     @Override
     public Map<String, Object> updatePassword(Map<String, Object> map) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("updatePassword", true);
         if (StringUtils.isBlank(map.get("username").toString())
                 || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("updatePassword", false);
-            ui.put("msg", "\n登入 帳號密碼未輸入");
+            ui.put("msg", "登入 帳號密碼未輸入");
             logger.info(ui.get("msg").toString());
             return ui;
         }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            ui.put("updatePassword", false);
-            ui.put("msg", "\n登入 帳號不存在");
+            ui.put("msg", "登入 帳號不存在");
             logger.info(ui.get("msg").toString());
             return ui;
         }
@@ -139,65 +178,15 @@ public class UserServiceImpl implements UserService {
         userMapper.update(map);
         map.put("token", token);
         userMapper.updateToken(map);
-        ui.put("msg", "\n" + token);
-        return ui;
-    }
-
-    @Override
-    public Map<String, Object> login(Map<String, Object> map) {
-        Map<String, Object> ui = new HashMap<>();
-        ui.put("login", true);
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("login", false);
-            ui.put("msg", "\n登入 帳號密碼未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
-        Map<String, Object> userSelect = userMapper.select(map);
-        if (userSelect == null) {
-            ui.put("login", false);
-            ui.put("msg", "\n登入 帳號不存在");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
-        String username = map.get("username").toString();
-        String password = map.get("password").toString();
-        String userPassword = userSelect.get("password").toString();
-        if (!passwordEncoder.matches(password, userPassword)) {
-            ui.put("login", false);
-            ui.put("msg", "\n登入 密碼錯誤");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
-        String usertoken = stringRedisTemplate.opsForValue().get(username);
-        if (StringUtils.isNotBlank(usertoken)) {
-            ui.put("msg", "\n" + usertoken);
-            return ui;
-        }
-        // JWT 簽名與驗證用的「祕密字串（secret）」
-        SecretKey key = getKeyForToday(new Date());
-        String token = Jwts.builder()
-                .setSubject(username)
-                .setExpiration(
-                        Date.from(Instant.now().plus(expirationSeconds, ChronoUnit.SECONDS))
-                )
-                .signWith(key)
-                .compact();
-        stringRedisTemplate.opsForValue().set(username, token, expirationSeconds, TimeUnit.SECONDS);
-        map.put("token", token);
-        userMapper.updateToken(map);
-        ui.put("msg", "\n" + token);
+        ui.put("token", token);
         return ui;
     }
 
     @Override
     public Map<String, Object> validateToken(String token) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("validate", true);
         if (StringUtils.isBlank(token)) {
-            ui.put("validate", false);
-            ui.put("msg", "\n驗證 token未輸入");
+            ui.put("msg", "驗證 token未輸入");
             logger.info(ui.get("msg").toString());
             return ui;
         }
@@ -221,32 +210,29 @@ public class UserServiceImpl implements UserService {
             logger.info("validate JwtException : {}", e.getMessage());
             Map<String, Object> selectUsername = userMapper.selectUsername(token);
             if (selectUsername == null) {
-                ui.put("msg", "\n無效");
+                ui.put("msg", "無效");
                 return ui;
             }
             username = selectUsername.get("username").toString();
             // Redis 控制登出（token 是否存在）
             tokensIsNotBlank = stringRedisTemplate.hasKey(username);
         }
-        ui.put("msg", "\n" + (tokensIsNotBlank ? "有效" : "無效"));
+        ui.put("msg", (tokensIsNotBlank ? "有效" : "無效"));
         return ui;
     }
 
     @Override
     public Map<String, Object> query(Map<String, Object> map) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("query", true);
         if (StringUtils.isBlank(map.get("username").toString())
                 || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("query", false);
-            ui.put("msg", "\n查詢 帳號密碼未輸入");
+            ui.put("msg", "查詢 帳號密碼未輸入");
             logger.info(ui.get("msg").toString());
             return ui;
         }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            ui.put("query", false);
-            ui.put("msg", "\n查詢 帳號不存在");
+            ui.put("msg", "查詢 帳號不存在");
             logger.info(ui.get("msg").toString());
             return ui;
         }
@@ -254,8 +240,7 @@ public class UserServiceImpl implements UserService {
         String password = map.get("password").toString();
         String userPassword = userSelect.get("password").toString();
         if (!passwordEncoder.matches(password, userPassword)) {
-            ui.put("query", false);
-            ui.put("msg", "\n查詢 密碼錯誤");
+            ui.put("msg", "查詢 密碼錯誤");
             logger.info(ui.get("msg").toString());
             return ui;
         }
@@ -264,17 +249,15 @@ public class UserServiceImpl implements UserService {
         if (selectToken != null) {
             token = selectToken.get("token").toString();
         }
-        ui.put("msg", "\n" + token);
+        ui.put("token", token);
         return ui;
     }
 
     @Override
     public Map<String, Object> logout(String token) {
         Map<String, Object> ui = new HashMap<>();
-        ui.put("logout", true);
         if (StringUtils.isBlank(token)) {
-            ui.put("logout", false);
-            ui.put("msg", "\n登出 token未輸入");
+            ui.put("msg", "登出 token未輸入");
             logger.info(ui.get("msg").toString());
             return ui;
         }
@@ -301,7 +284,7 @@ public class UserServiceImpl implements UserService {
         updateMap.put("username", username);
         updateMap.put("token", null);
         userMapper.updateToken(updateMap);
-        ui.put("msg", "\n已登出");
+        ui.put("msg", "已登出");
         return ui;
     }
 
