@@ -122,7 +122,6 @@ public class UserServiceImpl implements UserService {
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
-        stringRedisTemplate.delete(username);
         // JWT 簽名與驗證用的「祕密字串（secret）」
         Date date = new Date();
         SecretKey key = getKeyForToday(date);
