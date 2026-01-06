@@ -33,7 +33,7 @@
                     $('#loginPass').val($('#regPass').val())
                 },
                 error: function (xhr, status, error) {
-                    show(xhr)
+                    show(xhr.responseJSON)
                 }
             });
         });
@@ -56,7 +56,7 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    show(xhr)
+                    show(xhr.responseJSON)
                 }
             });
         });
@@ -79,7 +79,7 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    show(xhr)
+                    show(xhr.responseJSON)
                 }
             });
         });
@@ -94,7 +94,7 @@
                     show(res)
                 },
                 error: function (xhr, status, error) {
-                    show(xhr)
+                    show(xhr.responseJSON)
                 }
             });
         });
@@ -119,7 +119,7 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    show(xhr)
+                    show(xhr.responseJSON)
                 }
             });
         });
@@ -134,7 +134,7 @@
                     show(res)
                 },
                 error: function (xhr, status, error) {
-                    show(xhr)
+                    show(xhr.responseJSON)
                 }
             });
         });

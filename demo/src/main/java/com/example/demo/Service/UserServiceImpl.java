@@ -75,18 +75,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Object> register(Map<String, Object> map) {
-        Map<String, Object> ui = new HashMap<>();
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("msg", "註冊 帳號密碼未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect != null) {
-            ui.put("msg", "註冊 帳號已存在");
-            logger.info(ui.get("msg").toString());
-            return ui;
+            throw new RuntimeException("註冊 帳號已存在");
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
@@ -95,6 +86,7 @@ public class UserServiceImpl implements UserService {
         map.put("update_date", localDateFormat(date));
         map.put("time_stamp", date);
         userMapper.create(map);
+        Map<String, Object> ui = new HashMap<>();
         ui.put("username", "帳號:" + username);
         ui.put("password", "密碼:" + hiddenCode(password));
         return ui;
@@ -102,28 +94,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Object> login(Map<String, Object> map) {
-        Map<String, Object> ui = new HashMap<>();
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("msg", "登入 帳號密碼未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            ui.put("msg", "登入 帳號不存在");
-            logger.info(ui.get("msg").toString());
-            return ui;
+            throw new RuntimeException("登入 帳號不存在");
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
         String userPassword = userSelect.get("password").toString();
         if (!passwordEncoder.matches(password, userPassword)) {
-            ui.put("msg", "登入 密碼錯誤");
-            logger.info(ui.get("msg").toString());
-            return ui;
+            throw new RuntimeException("登入 密碼錯誤");
         }
         String usertoken = stringRedisTemplate.opsForValue().get(username);
+        Map<String, Object> ui = new HashMap<>();
         if (StringUtils.isNotBlank(usertoken)) {
             ui.put("token", usertoken);
             return ui;
@@ -146,18 +128,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Object> updatePassword(Map<String, Object> map) {
-        Map<String, Object> ui = new HashMap<>();
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("msg", "登入 帳號密碼未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            ui.put("msg", "登入 帳號不存在");
-            logger.info(ui.get("msg").toString());
-            return ui;
+            throw new RuntimeException("登入 帳號不存在");
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
@@ -178,20 +151,16 @@ public class UserServiceImpl implements UserService {
         userMapper.update(map);
         map.put("token", token);
         userMapper.updateToken(map);
+        Map<String, Object> ui = new HashMap<>();
         ui.put("token", token);
         return ui;
     }
 
     @Override
     public Map<String, Object> validateToken(String token) {
-        Map<String, Object> ui = new HashMap<>();
-        if (StringUtils.isBlank(token)) {
-            ui.put("msg", "驗證 token未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
         String username;
         boolean tokensIsNotBlank;
+        String msg = "";
         try {
             SecretKey key = getKeyForToday(new Date());
             Claims claims = Jwts.parserBuilder()
@@ -205,62 +174,49 @@ public class UserServiceImpl implements UserService {
             logger.info("驗證 username: {} : {}", username, token);
             // Redis 控制登出（token 是否存在）
             tokensIsNotBlank = stringRedisTemplate.hasKey(username);
+            msg = tokensIsNotBlank ? "有效" : "無效";
         } catch (JwtException e) {
             // JWT 不合法
             logger.info("validate JwtException : {}", e.getMessage());
             Map<String, Object> selectUsername = userMapper.selectUsername(token);
             if (selectUsername == null) {
-                ui.put("msg", "無效");
-                return ui;
+                msg = "無效";
+            } else {
+                username = selectUsername.get("username").toString();
+                // Redis 控制登出（token 是否存在）
+                tokensIsNotBlank = stringRedisTemplate.hasKey(username);
+                msg = tokensIsNotBlank ? "有效" : "無效";
             }
-            username = selectUsername.get("username").toString();
-            // Redis 控制登出（token 是否存在）
-            tokensIsNotBlank = stringRedisTemplate.hasKey(username);
         }
-        ui.put("msg", (tokensIsNotBlank ? "有效" : "無效"));
+        Map<String, Object> ui = new HashMap<>();
+        ui.put("msg", msg);
         return ui;
     }
 
     @Override
     public Map<String, Object> query(Map<String, Object> map) {
-        Map<String, Object> ui = new HashMap<>();
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
-            ui.put("msg", "查詢 帳號密碼未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
-            ui.put("msg", "查詢 帳號不存在");
-            logger.info(ui.get("msg").toString());
-            return ui;
+            throw new RuntimeException("查詢 帳號不存在");
         }
         String username = map.get("username").toString();
         String password = map.get("password").toString();
         String userPassword = userSelect.get("password").toString();
         if (!passwordEncoder.matches(password, userPassword)) {
-            ui.put("msg", "查詢 密碼錯誤");
-            logger.info(ui.get("msg").toString());
-            return ui;
+            throw new RuntimeException("查詢 密碼錯誤");
         }
         Map<String, Object> selectToken = userMapper.selectToken(username);
         String token = "";
         if (selectToken != null) {
             token = selectToken.get("token").toString();
         }
+        Map<String, Object> ui = new HashMap<>();
         ui.put("token", token);
         return ui;
     }
 
     @Override
     public Map<String, Object> logout(String token) {
-        Map<String, Object> ui = new HashMap<>();
-        if (StringUtils.isBlank(token)) {
-            ui.put("msg", "登出 token未輸入");
-            logger.info(ui.get("msg").toString());
-            return ui;
-        }
         String username;
         try {
             SecretKey key = getKeyForToday(new Date());
@@ -284,6 +240,7 @@ public class UserServiceImpl implements UserService {
         updateMap.put("username", username);
         updateMap.put("token", null);
         userMapper.updateToken(updateMap);
+        Map<String, Object> ui = new HashMap<>();
         ui.put("msg", "已登出");
         return ui;
     }
