@@ -160,7 +160,7 @@ public class UserServiceImpl implements UserService {
     public Map<String, Object> validateToken(String token) {
         String username;
         boolean tokensIsNotBlank;
-        String msg = "";
+        String msg;
         try {
             SecretKey key = getKeyForToday(new Date());
             Claims claims = Jwts.parserBuilder()
@@ -178,15 +178,7 @@ public class UserServiceImpl implements UserService {
         } catch (JwtException e) {
             // JWT 不合法
             logger.info("validate JwtException : {}", e.getMessage());
-            Map<String, Object> selectUsername = userMapper.selectUsername(token);
-            if (selectUsername == null) {
-                msg = "無效";
-            } else {
-                username = selectUsername.get("username").toString();
-                // Redis 控制登出（token 是否存在）
-                tokensIsNotBlank = stringRedisTemplate.hasKey(username);
-                msg = tokensIsNotBlank ? "有效" : "無效";
-            }
+            throw new RuntimeException(e.getMessage());
         }
         Map<String, Object> ui = new HashMap<>();
         ui.put("msg", msg);
@@ -218,6 +210,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Map<String, Object> logout(String token) {
         String username;
+        Map<String, Object> updateMap = new HashMap<>();
         try {
             SecretKey key = getKeyForToday(new Date());
             Claims claims = Jwts.parserBuilder()
@@ -228,18 +221,24 @@ public class UserServiceImpl implements UserService {
                     .getBody();
 
             username = claims.getSubject();
+            logger.info("登出 username: {} : {}", username, token);
+            stringRedisTemplate.delete(username);
+            updateMap.put("username", username);
+            updateMap.put("token", null);
+            userMapper.updateToken(updateMap);
         } catch (JwtException e) {
             // JWT 不合法
-            logger.info("logout JwtException : {}", e.getMessage());
             Map<String, Object> selectUsername = userMapper.selectUsername(token);
-            username = selectUsername.get("username").toString();
+            if (selectUsername != null) {
+                username = selectUsername.get("username").toString();
+                updateMap.put("username", username);
+                updateMap.put("token", null);
+                userMapper.updateToken(updateMap);
+            }
+            logger.info("logout JwtException : {}", e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
-        logger.info("登出 username: {} : {}", username, token);
-        stringRedisTemplate.delete(username);
-        Map<String, Object> updateMap = new HashMap<>();
-        updateMap.put("username", username);
-        updateMap.put("token", null);
-        userMapper.updateToken(updateMap);
+
         Map<String, Object> ui = new HashMap<>();
         ui.put("msg", "已登出");
         return ui;

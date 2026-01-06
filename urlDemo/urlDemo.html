@@ -9,137 +9,156 @@
 <link rel="stylesheet" href="/urlDemo.css">
 <script src="/jquery.min.js"></script>
 <script>
+    const BASE = 'http://localhost:8080/api/';
 
     function show(res) {
-        $('#result').text(JSON.stringify(res, null, 2));
+        document.getElementById('result').textContent = JSON.stringify(res, null, 2);
     }
 
-    const BASE = 'http://localhost:8080/api/';
-    $(document).ready(function () {
-        // 註冊
-        $('#btnRegister').click(function () {
-            const data = {
-                username: $('#regUser').val(),
-                password: $('#regPass').val()
-            };
-            $.ajax({
-                url: BASE + 'auth/register',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (res) {
-                    show(res)
-                    $('#loginUser').val($('#regUser').val())
-                    $('#loginPass').val($('#regPass').val())
-                },
-                error: function (xhr, status, error) {
-                    show(xhr.responseJSON)
-                }
+    // POST JSON helper
+    async function postJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(data)
             });
-        });
-        // 登入
-        $('#btnLogin').click(function () {
-            const data = {
-                username: $('#loginUser').val(),
-                password: $('#loginPass').val()
-            };
-            $.ajax({
-                url: BASE + 'auth/login',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (res) {
-                    show(res)
-                    if (res.token) {
-                        $('#token').val(res.token);
-                        $('#token').css("width", ($('#token').val().length + 1) + "ch");
-                    }
-                },
-                error: function (xhr, status, error) {
-                    show(xhr.responseJSON)
-                }
-            });
-        });
-        // 更改密碼
-        $('#btnUpdatePassword').click(function () {
-            const data = {
-                username: $('#loginUser').val(),
-                password: $('#loginPass').val()
-            };
-            $.ajax({
-                url: BASE + 'auth/updatePassword',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (res) {
-                    show(res)
-                    if (res.token) {
-                        $('#token').val(res.token);
-                        $('#token').css("width", ($('#token').val().length + 1) + "ch");
-                    }
-                },
-                error: function (xhr, status, error) {
-                    show(xhr.responseJSON)
-                }
-            });
-        });
-        // 驗證 Token
-        $('#btnValidate').click(function () {
-            const token = $('#token').val();
-            $.ajax({
-                url: BASE + 'auth/validate',
-                type: 'GET',
-                data: { token: token },
-                success: function (res) {
-                    show(res)
-                },
-                error: function (xhr, status, error) {
-                    show(xhr.responseJSON)
-                }
-            });
-        });
-        // 查詢 Token
-        $('#btnQuery').click(function () {
-            const data = {
-                username: $('#queryUser').val(),
-                password: $('#queryPass').val()
-            };
-            $.ajax({
-                url: BASE + 'auth/query',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (res) {
-                    show(res)
-                    if (res.token) {
-                        $('#tokenLogout').val(res.token);
-                        if (res.token.length > 0) {
-                            $('#tokenLogout').css("width", ($('#tokenLogout').val().length + 1) + "ch");
-                        }
-                    }
-                },
-                error: function (xhr, status, error) {
-                    show(xhr.responseJSON)
-                }
-            });
-        });
-        // 登出
-        $('#btnLogout').click(function () {
-            const token = $('#tokenLogout').val();
-            $.ajax({
-                url: BASE + 'auth/logout',
-                type: 'GET',
-                data: { token: token },
-                success: function (res) {
-                    show(res)
-                },
-                error: function (xhr, status, error) {
-                    show(xhr.responseJSON)
-                }
-            });
-        });
-    });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
 
+    // GET helper with query params
+    async function getJSON(url, params) {
+        const query = params ? '?' + new URLSearchParams(params) : '';
+        try {
+            const res = await fetch(url + query, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // 將值塞入 input 並自動調整寬度
+    function setInputValue(inputId, value) {
+        const input = document.getElementById(inputId);
+        input.value = value;
+        if (value.length > 22) {
+            input.style.width = (value.length + 1) + "ch";
+        } else {
+            input.removeAttribute('style');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // 註冊
+        document.getElementById('btnRegister').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value
+            };
+            try {
+                const res = await postJSON(BASE + 'auth/register', data);
+                show(res);
+                setInputValue('loginUser', data.username);
+                setInputValue('loginPass', data.password);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 登入
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                password: document.getElementById('loginPass').value
+            };
+            try {
+                const res = await postJSON(BASE + 'auth/login', data);
+                show(res);
+                if (res.message && res.message.token) {
+                    setInputValue('token', res.message.token);
+                }
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 更改密碼
+        document.getElementById('btnUpdatePassword').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                password: document.getElementById('loginPass').value
+            };
+            try {
+                const res = await postJSON(BASE + 'auth/updatePassword', data);
+                show(res);
+                if (res.message && res.message.token) {
+                    setInputValue('token', res.message.token);
+                }
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 驗證 Token
+        document.getElementById('btnValidate').addEventListener('click', async () => {
+            const token = document.getElementById('token').value;
+            try {
+                const res = await getJSON(BASE + 'auth/validate', { token });
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 查詢 Token
+        document.getElementById('btnQuery').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('queryUser').value,
+                password: document.getElementById('queryPass').value
+            };
+            try {
+                const res = await postJSON(BASE + 'auth/query', data);
+                show(res);
+                if (res.message && res.message.token) {
+                    setInputValue('tokenLogout', res.message.token);
+                }
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 登出
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            const token = document.getElementById('tokenLogout').value;
+            try {
+                const res = await getJSON(BASE + 'auth/logout', { token });
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        document.getElementById('token').addEventListener('blur', function () {
+            setInputValue('token', this.value);
+        });
+
+        document.getElementById('tokenLogout').addEventListener('blur', function () {
+            setInputValue('tokenLogout', this.value);
+        });
+
+
+    });
 
 </script>
 
