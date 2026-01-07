@@ -12,7 +12,29 @@
     const BASE = 'http://localhost:8080/api/';
 
     function show(res) {
-        document.getElementById('result').textContent = JSON.stringify(res, null, 2);
+        const {
+            name = undefined,
+            message = undefined,
+            stack = undefined,
+            status = undefined,
+            detail = undefined,
+            path = undefined,
+            timestamp = undefined,
+        } = res;
+        let safeStack = undefined;
+        if (stack != undefined) {
+            safeStack = stack.replace(/\n/g, '<br>');
+        }
+        const err = {
+            name,
+            message,
+            safeStack,
+            status,
+            detail,
+            path,
+            timestamp,
+        }
+        document.getElementById('result').innerHTML = JSON.stringify(err, null, 2);
     }
 
     // POST JSON helper
@@ -163,7 +185,7 @@
 </script>
 
 <body>
-    <section>
+    <div class="form">
         <h2>註冊</h2>
         <input id="regUser" placeholder="帳號">
         <input id="regPass" placeholder="密碼">
@@ -176,8 +198,8 @@
         <h2>驗證 Token</h2>
         <input id="token" placeholder="Token">
         <button id="btnValidate">驗證</button>
-    </section>
-    <section>
+    </div>
+    <div class="form">
         <h2>查詢 Token</h2>
         <input id="queryUser" placeholder="帳號">
         <input id="queryPass" placeholder="密碼">
@@ -185,7 +207,7 @@
         <h2>登出 Token</h2>
         <input id="tokenLogout" placeholder="Token">
         <button id="btnLogout">登出</button>
-    </section>
+    </div>
     <section>
         <h3>API Result</h3>
         <pre id="result"></pre>

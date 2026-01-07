@@ -14,18 +14,31 @@
       margin: 0 0 8px;
   }
 
-  input {
-      margin: 4px 4px 4px 0;
-  }
-
-  button {
-      margin-right: 4px;
-  }
-
   pre {
       background: #000;
       color: #0f0;
       padding: 8px;
       height: 250px;
       overflow: auto;
+  }
+
+  .form {
+      display: flex;
+      flex-direction: column;
+      /* 上下排列 */
+      width: 300px;
+      /* 控制整體寬度 */
+  }
+
+  .form input,
+  .form button {
+      width: 100%;
+      /* input 跟 button 一樣寬 */
+      box-sizing: border-box;
+      /* 避免 padding 撐大 */
+  }
+
+  .form button {
+      margin-top: 0px;
+      /* 上下間距 */
   }

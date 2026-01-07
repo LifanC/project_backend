@@ -111,9 +111,8 @@ public class UsersController {
 
     private ResponseEntity<Map<String, Object>> getMapResponseEntity(HttpServletRequest request, Map<String, Object> ui) {
         Map<String, Object> result = new HashMap<>();
-        result.put("success", true);
-        result.put("code", HttpStatus.OK.value());
-        result.put("message", ui);
+        result.put("status", HttpStatus.OK.value());
+        result.put("detail", ui);
         result.put("path", request.getRequestURI());
         result.put("timestamp", LocalDateTime.now());
 

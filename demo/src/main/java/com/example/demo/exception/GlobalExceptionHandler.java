@@ -19,9 +19,8 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         Map<String, Object> error = new HashMap<>();
-        error.put("success", false);
-        error.put("code", HttpStatus.BAD_REQUEST.value());
-        error.put("message", e.getMessage());
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("detail", e.getMessage());
         error.put("path", request.getRequestURI());
         error.put("timestamp", LocalDateTime.now());
 
