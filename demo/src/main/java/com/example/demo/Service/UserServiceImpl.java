@@ -231,6 +231,8 @@ public class UserServiceImpl implements UserService {
             Map<String, Object> selectUsername = userMapper.selectUsername(token);
             if (selectUsername != null) {
                 username = selectUsername.get("username").toString();
+                logger.info("JwtException 登出 username: {} : {}", username, token);
+                stringRedisTemplate.delete(username);
                 updateMap.put("username", username);
                 updateMap.put("token", null);
                 userMapper.updateToken(updateMap);
