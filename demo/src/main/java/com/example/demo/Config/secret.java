@@ -1,4 +1,4 @@
-package com.example.demo.config;
+package com.example.demo.Config;
 
 import com.example.demo.Mapper.UserMapper;
 import jakarta.annotation.PostConstruct;
