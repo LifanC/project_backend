@@ -8,13 +8,13 @@
             password as password,
             update_date as update_date,
             time_stamp as time_stamp
-        from interviewWorks.userdata
+        from interviewworks.userdata
         where username = #{username}
     </select>
 
     <insert id="create">
         insert
-        into interviewWorks.userdata (username,
+        into interviewworks.userdata (username,
                                       password,
                                       update_date,
                                       time_stamp)
@@ -39,13 +39,13 @@
     <select id="getSecret" resultType="java.util.Map" parameterType="java.lang.String">
         select
             secret_number as secret_number
-        from interviewWorks.secret
+        from interviewworks.secret
         where update_date like concat(#{dateFormatStr}, '%')
     </select>
 
     <insert id="createSecret">
         insert
-        into interviewWorks.secret (secret_number,
+        into interviewworks.secret (secret_number,
                                     update_date)
         values (#{secretNum},
                 #{dateFormat})
@@ -54,7 +54,7 @@
     <select id="getSecretOnly" resultType="java.util.Map" parameterType="java.lang.String">
         select
             secret_number as secret_number
-        from interviewWorks.secret
+        from interviewworks.secret
         where update_date = #{dateFormatStr}
     </select>
 
@@ -67,14 +67,14 @@
     <select id="selectUsername" resultType="java.util.Map" parameterType="java.lang.String">
         select
             username as username
-        from interviewWorks.userdata
+        from interviewworks.userdata
         where token_temp = #{token}
     </select>
 
     <select id="selectToken" resultType="java.util.Map" parameterType="java.lang.String">
         select
             token_temp as token
-        from interviewWorks.userdata
+        from interviewworks.userdata
         where username = #{username}
     </select>
 

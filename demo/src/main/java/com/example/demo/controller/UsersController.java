@@ -15,6 +15,7 @@ import java.util.*;
 
 @RestController
 @CrossOrigin(origins = "*")
+// 認證
 @RequestMapping("/auth/")
 public class UsersController {
 

@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+    image: springboot-app:1.0
+    container_name: springboot-container
+    ports:
+      - "8080:8080"          # 本機 8080 對應容器 8080
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/interviewworks
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11.0
+    container_name: mariadb-container
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: interviewworks
+    ports:
+      - "3307:3306"       # 避免本機 port 3306 衝突
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped

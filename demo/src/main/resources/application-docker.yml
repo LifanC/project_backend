@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://db:3306/interviewworks
+    username: root
+    password: 1234
+  jpa:
+    hibernate:
+      ddl-auto: update   # 容器啟動時自動建表
+    show-sql: true
+server:
+  port: 8080
