@@ -39,6 +39,7 @@ public class UsersController {
                 || StringUtils.isBlank(map.get("password").toString())) {
             throw new RuntimeException("註冊 帳號密碼未輸入");
         }
+        logger.info("register: {}", map);
 
         Map<String, Object> ui = userService.register(map);
         return getMapResponseEntity(request, ui);
@@ -56,6 +57,7 @@ public class UsersController {
         }
 
         Map<String, Object> map = new HashMap<>();
+        logger.info("login: {}", map);
         map.put("username", username);
         map.put("password", password);
         Map<String, Object> ui = userService.login(map);
@@ -71,6 +73,7 @@ public class UsersController {
                 || StringUtils.isBlank(map.get("password").toString())) {
             throw new RuntimeException("登入 帳號密碼未輸入");
         }
+        logger.info("updatePassword: {}", map);
 
         Map<String, Object> ui = userService.updatePassword(map);
         return getMapResponseEntity(request, ui);
@@ -83,20 +86,26 @@ public class UsersController {
         if (StringUtils.isBlank(token)) {
             throw new RuntimeException("驗證 token未輸入");
         }
+        logger.info("validate token: {}", token);
 
         Map<String, Object> ui = userService.validateToken(token);
         return getMapResponseEntity(request, ui);
     }
 
-    @PostMapping("query")
+    @GetMapping("query")
     public ResponseEntity<Map<String, Object>> query(
-            @RequestBody
-            Map<String, Object> map,
+            @RequestParam
+            String username,
+            String password,
             HttpServletRequest request) {
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
+        if (StringUtils.isBlank(username)
+                || StringUtils.isBlank(password)) {
             throw new RuntimeException("查詢 帳號密碼未輸入");
         }
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", username);
+        map.put("password", password);
+        logger.info("query: {}", map);
 
         Map<String, Object> ui = userService.query(map);
         return getMapResponseEntity(request, ui);
@@ -110,6 +119,7 @@ public class UsersController {
         if (StringUtils.isBlank(map.get("token").toString())) {
             throw new RuntimeException("登出 token未輸入");
         }
+        logger.info("logout: {}", map);
 
         Map<String, Object> ui = userService.logout(map);
         return getMapResponseEntity(request, ui);
@@ -122,9 +132,11 @@ public class UsersController {
         result.put("path", request.getRequestURI());
         result.put("timestamp", LocalDateTime.now());
 
-        return ResponseEntity
+        ResponseEntity<Map<String, Object>> log = ResponseEntity
                 .status(HttpStatus.OK)
                 .body(result);
+        logger.info("結果 log: {}", log);
+        return log;
     }
 
 }

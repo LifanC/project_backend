@@ -182,7 +182,7 @@
                 password: document.getElementById('queryPass').value
             };
             try {
-                const res = await postJSON(BASE + 'auth/query', data);
+                const res = await getJSON(BASE + 'auth/query', data);
                 show(res);
                 if (res.message && res.message.token) {
                     setInputValue('tokenLogout', res.message.token);
