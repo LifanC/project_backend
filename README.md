@@ -127,17 +127,17 @@ src/
  ├─ main/
  │   ├─ java/
  │   │   └─ com.example.demo/
- │   │       ├─ Config/       * 模擬每次都要更新密鑰的方法 *
- │   │       ├─ Controller/   * API 控制器 *
- │   │       ├─ Exception/    * 業務例外邏輯 自訂例外訊息 *
- │   │       ├─ Mapper/       * 資料庫操作 *
- │   │       └─ Service/      * 業務邏輯 *
+ │   │       ├─ Config/              *模擬每次都要更新密鑰的方法*
+ │   │       ├─ Controller/          *API 控制器*
+ │   │       ├─ Exception/           *業務例外邏輯 自訂例外訊息*
+ │   │       ├─ Mapper/              *資料庫操作*
+ │   │       └─ Service/             *業務邏輯*
  │   └─ resources/
- │       ├─ application.yml   * 配置檔 *
- │       ├─ application-docker.yml   * Docker 配置檔 *
- │       ├─ log4j2.xml        * 顯示 log *
+ │       ├─ application.yml          *配置檔*
+ │       ├─ application-docker.yml   *Docker 配置檔*
+ │       ├─ log4j2.xml               *顯示 log*
  │       └─ static/
- └─ test/                     * 單元測試 *
+ └─ test/                            *單元測試*
 ```
 
 ## 6. 用到的設計模式與思維
