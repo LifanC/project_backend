@@ -208,7 +208,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Map<String, Object> logout(String token) {
+    public Map<String, Object> logout(Map<String, Object> map) {
+        String token = map.get("token").toString();
         String username;
         Map<String, Object> updateMap = new HashMap<>();
         try {

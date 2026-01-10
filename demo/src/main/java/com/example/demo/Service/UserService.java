@@ -14,5 +14,5 @@ public interface UserService {
 
     Map<String, Object> query(Map<String, Object> map);
 
-    Map<String, Object> logout(String token);
+    Map<String, Object> logout(Map<String, Object> map);
 }

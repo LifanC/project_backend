@@ -23,7 +23,7 @@ public class UsersController {
     @Resource
     private UserService userService;
 
-    @GetMapping("login")
+    @GetMapping("testLogin")
     public String login() {
         logger.info("auth/login: success");
         return "auth/login: success";
@@ -43,21 +43,25 @@ public class UsersController {
         return getMapResponseEntity(request, ui);
     }
 
-    @PostMapping("login")
+    @GetMapping("login")
     public ResponseEntity<Map<String, Object>> login(
-            @RequestBody
-            Map<String, Object> map,
+            @RequestParam
+            String username,
+            String password,
             HttpServletRequest request) {
-        if (StringUtils.isBlank(map.get("username").toString())
-                || StringUtils.isBlank(map.get("password").toString())) {
+        if (StringUtils.isBlank(username)
+                || StringUtils.isBlank(password)) {
             throw new RuntimeException("登入 帳號密碼未輸入");
         }
 
+        Map<String, Object> map = new HashMap<>();
+        map.put("username", username);
+        map.put("password", password);
         Map<String, Object> ui = userService.login(map);
         return getMapResponseEntity(request, ui);
     }
 
-    @PostMapping("updatePassword")
+    @PutMapping("updatePassword")
     public ResponseEntity<Map<String, Object>> updatePassword(
             @RequestBody
             Map<String, Object> map,
@@ -97,15 +101,16 @@ public class UsersController {
         return getMapResponseEntity(request, ui);
     }
 
-    @GetMapping("logout")
+    @DeleteMapping("logout")
     public ResponseEntity<Map<String, Object>> logout(
-            @RequestParam String token,
+            @RequestBody
+            Map<String, Object> map,
             HttpServletRequest request) {
-        if (StringUtils.isBlank(token)) {
+        if (StringUtils.isBlank(map.get("token").toString())) {
             throw new RuntimeException("登出 token未輸入");
         }
 
-        Map<String, Object> ui = userService.logout(token);
+        Map<String, Object> ui = userService.logout(map);
         return getMapResponseEntity(request, ui);
     }
 

@@ -68,6 +68,38 @@
             return Promise.reject(err);
         }
     }
+    
+    // PUT JSON helper
+    async function putJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // DELETE JSON helper
+    async function deleteJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
 
     // 將值塞入 input 並自動調整寬度
     function setInputValue(inputId, value) {
@@ -105,7 +137,7 @@
                 password: document.getElementById('loginPass').value
             };
             try {
-                const res = await postJSON(BASE + 'auth/login', data);
+                const res = await getJSON(BASE + 'auth/login', data);
                 show(res);
                 if (res.message && res.message.token) {
                     setInputValue('token', res.message.token);
@@ -122,7 +154,7 @@
                 password: document.getElementById('loginPass').value
             };
             try {
-                const res = await postJSON(BASE + 'auth/updatePassword', data);
+                const res = await putJSON(BASE + 'auth/updatePassword', data);
                 show(res);
                 if (res.message && res.message.token) {
                     setInputValue('token', res.message.token);
@@ -164,7 +196,7 @@
         document.getElementById('btnLogout').addEventListener('click', async () => {
             const token = document.getElementById('tokenLogout').value;
             try {
-                const res = await getJSON(BASE + 'auth/logout', { token });
+                const res = await deleteJSON(BASE + 'auth/logout', { token });
                 show(res);
             } catch (err) {
                 show(err);
