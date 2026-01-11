@@ -13,14 +13,6 @@ public interface UserMapper {
 
     void update(Map<String, Object> map);
 
-    void delNoSecret(String dateFormat);
-
-    List<Map<String, Object>> getSecret(String dateFormatStr);
-
-    void createSecret(String secretNum, String dateFormat);
-
-    Map<String, Object> getSecretOnly(String dateFormat);
-
     void updateToken(Map<String, Object> map);
 
     Map<String, Object> selectUsername(String token);

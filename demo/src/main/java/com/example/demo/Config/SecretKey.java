@@ -1,6 +1,6 @@
 package com.example.demo.Config;
 
-import com.example.demo.Mapper.UserMapper;
+import com.example.demo.Mapper.SecretMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -16,10 +16,10 @@ import java.util.Map;
 
 @Service
 @Transactional
-public class secret {
+public class SecretKey {
 
     @Resource
-    private UserMapper userMapper;
+    private SecretMapper secretMapper;
 
     // 這個方法啟動時會自動執行
     @PostConstruct
@@ -38,9 +38,9 @@ public class secret {
                 localDate.getMonthValue(),
                 localDate.getDayOfMonth()
         );
-        userMapper.delNoSecret(dateFormat);
+        secretMapper.delNoSecret(dateFormat);
         String dateFormatStr = dateFormat.substring(0, 5);
-        List<Map<String, Object>> list = userMapper.getSecret(dateFormatStr);
+        List<Map<String, Object>> list = secretMapper.getSecret(dateFormatStr);
         if (list.isEmpty()) {
             SecureRandom random = new SecureRandom();
             // 產生 32 bytes = 256 bits
@@ -48,7 +48,7 @@ public class secret {
             byte[] bytes = new byte[32];
             random.nextBytes(bytes);
             String secretNum = Base64.getEncoder().encodeToString(bytes);
-            userMapper.createSecret(secretNum, dateFormat);
+            secretMapper.createSecret(secretNum, dateFormat);
         }
 
     }

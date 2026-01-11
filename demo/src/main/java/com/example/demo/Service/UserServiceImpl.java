@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Mapper.SecretMapper;
 import com.example.demo.Mapper.UserMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -26,7 +27,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -35,6 +35,9 @@ public class UserServiceImpl implements UserService {
 
     @Value("${jwt.expiration}")
     private long expirationSeconds;
+
+    @Resource
+    private SecretMapper secretMapper;
 
     @Resource
     private UserMapper userMapper;
@@ -69,11 +72,12 @@ public class UserServiceImpl implements UserService {
 
     private SecretKey getKeyForToday(Date date) {
         String dateFormat = localDateFormat(date);
-        String secret = userMapper.getSecretOnly(dateFormat).get("secret_number").toString();
+        String secret = secretMapper.getSecretOnly(dateFormat).get("secret_number").toString();
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
+    @Transactional
     public Map<String, Object> register(Map<String, Object> map) {
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect != null) {
@@ -93,6 +97,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Map<String, Object> login(Map<String, Object> map) {
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
@@ -127,6 +132,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Map<String, Object> updatePassword(Map<String, Object> map) {
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
@@ -186,6 +192,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> query(Map<String, Object> map) {
         Map<String, Object> userSelect = userMapper.select(map);
         if (userSelect == null) {
@@ -208,6 +215,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Map<String, Object> logout(Map<String, Object> map) {
         String token = map.get("token").toString();
         String username;

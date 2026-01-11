@@ -30,34 +30,6 @@
         where username = #{username}
     </update>
 
-    <delete id="delNoSecret">
-        delete
-        from interviewworks.secret
-        where update_date != #{dateFormat}
-    </delete>
-
-    <select id="getSecret" resultType="java.util.Map" parameterType="java.lang.String">
-        select
-            secret_number as secret_number
-        from interviewworks.secret
-        where update_date like concat(#{dateFormatStr}, '%')
-    </select>
-
-    <insert id="createSecret">
-        insert
-        into interviewworks.secret (secret_number,
-                                    update_date)
-        values (#{secretNum},
-                #{dateFormat})
-    </insert>
-
-    <select id="getSecretOnly" resultType="java.util.Map" parameterType="java.lang.String">
-        select
-            secret_number as secret_number
-        from interviewworks.secret
-        where update_date = #{dateFormatStr}
-    </select>
-
     <update id="updateToken">
         update interviewworks.userdata
         set token_temp = #{token}
