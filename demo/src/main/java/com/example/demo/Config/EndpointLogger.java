@@ -1,5 +1,6 @@
 package com.example.demo.Config;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class EndpointLogger implements CommandLineRunner {
     private RequestMappingHandlerMapping handlerMapping;
 
     @Override
-    public void run(String... args) {
+    public void run(@Nonnull String... args) {
 
         // 指定 Controller 名稱
         List<String> targetControllers = List.of(

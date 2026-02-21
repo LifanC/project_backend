@@ -4,7 +4,7 @@
         <!--        <Property name="APP_NAME">LogFile</Property>-->
         <!--        <Property name="LOG_FILE_PATH">/project2.0/${APP_NAME}/$${date:yyyy-MM-dd}</Property>-->
         <!--設置 Log 輸出格式-->
-        <Property name="PATTERN_FORMAT">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n</Property>
+        <Property name="PATTERN_FORMAT">%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} %L %M - %msg%xEx%n</Property>
     </Properties>
 
     <Appenders>
@@ -75,7 +75,9 @@
     <Loggers>
         <!--過濾掉 spring 和 mybatis 的一些無用的 log-->
         <Logger name="org.springframework" level="INFO"/>
+        <!-- MyBatis SQL log -->
         <Logger name="org.mybatis" level="INFO"/>
+        <!-- Root -->
         <Root level="INFO">
             <AppenderRef ref="Console"/>
             <!--            <AppenderRef ref="RollingInfoFile"/>-->

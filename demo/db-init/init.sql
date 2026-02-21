@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `userdata_details_u` (
                             `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
                             `updated_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
                             `order_item` varchar(100) DEFAULT NULL COMMENT '訂單',
-                            `action_type` enum('INSERT','UPDATE','DELETE') NOT NULL,
+                            `action_type` enum('insert','update','delete') NOT NULL,
                             KEY `userdata_details_u_FK` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
 

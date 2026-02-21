@@ -22,10 +22,6 @@ public class SecretKey {
 
     // 這個方法啟動時會自動執行
     @PostConstruct
-    public void initSecret() {
-        getSecret();
-    }
-
     public void getSecret() {
         Integer cnt = secretMapper.getSecret();
         if (cnt > 0) {

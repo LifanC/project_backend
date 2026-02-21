@@ -47,7 +47,7 @@ spring:
 # MyBatis 設定
 # -----------------------------
 mybatis:
-  mapper-locations: classpath:Mapper/*.xml  #注意：一定要對應mapper映射xml文件的所在路徑
+  mapper-locations: classpath:Mapper/**/*.xml  #注意：一定要對應mapper映射xml文件的所在路徑
   configuration:
     #org.apache.ibatis.logging.stdout.StdOutImpl 控制檯打印sql語句方便調試sql語句執行錯誤
     #org.apache.ibatis.logging.log4j2.Log4j2Impl 這個不在控制檯打印查詢結果,但是在log4j中打印

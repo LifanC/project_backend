@@ -58,7 +58,7 @@ public class CommonAspect {
                     }
 
                     List<String> selectRoles = roleMapper.getSelectRoles(req.getUsername());
-                    String allowedRoles = checkRole.value();
+                    String allowedRoles = checkRole.value().getPermission();
 
                     // 只要使用者有其中一個角色就通過
                     boolean hasRole = selectRoles.stream().anyMatch(role -> role.equals(allowedRoles));

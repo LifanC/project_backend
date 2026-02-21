@@ -655,7 +655,7 @@ public class UserServiceImpl implements UserService {
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             userdataDetails.setCreated_date(((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
                             userdataDetails.setUpdated_date(((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
-                            userdataDetails.setAction_type(ActionType.INSERT.name());
+                            userdataDetails.setAction_type(ActionType.INSERT.getActionType());
                             userMapper.createUserdataDetailU(userdataDetails);
                             userdataDetails.setHistory(new ArrayList<>());
 
@@ -922,7 +922,7 @@ public class UserServiceImpl implements UserService {
                             userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             userdataDetails.setCreated_date(((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
                             userdataDetails.setUpdated_date(((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
-                            userdataDetails.setAction_type(ActionType.UPDATE.name());
+                            userdataDetails.setAction_type(ActionType.UPDATE.getActionType());
                             userMapper.createUserdataDetailU(userdataDetails);
                             userdataDetails.setHistory(new ArrayList<>());
                             return ResponseEntity
@@ -1044,7 +1044,7 @@ public class UserServiceImpl implements UserService {
                             userdataDetails.setStatus(HttpStatus.OK);
                             userdataDetails.setCreated_date(((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
                             userdataDetails.setUpdated_date(((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
-                            userdataDetails.setAction_type(ActionType.DELETE.name());
+                            userdataDetails.setAction_type(ActionType.DELETE.getActionType());
                             userMapper.createUserdataDetailU(userdataDetails);
                             userdataDetails.setHistory(new ArrayList<>());
                         } catch (DataIntegrityViolationException e) {
