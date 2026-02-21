@@ -1,5 +1,5 @@
 # Stage 1: Build jar
-FROM maven:3.9.3-eclipse-temurin-21 AS builder
+FROM maven:3.9.3-eclipse-temurin-21-jammy AS builder
 WORKDIR /app
 
 # 複製 Maven 設定和程式碼
