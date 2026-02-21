@@ -1,0 +1,8 @@
+cd C:\Program Files\Java\jdk-21\bin
+
+# 本機憑證路徑
+# 最少1天
+
+keytool -genkeypair -alias server -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore D:/project_backend/demo/src/main/resources/certs/permission-keystore.p12 -storepass 1qaz@WSX -validity 1
+keytool -genkeypair -alias server -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore D:/project_backend/demo/src/main/resources/certs/user-keystore.p12 -storepass 1qaz@WSX -validity 1
+

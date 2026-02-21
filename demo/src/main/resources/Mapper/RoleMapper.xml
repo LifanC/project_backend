@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.RoleMapper">
+
+    <select id="getRoles" resultType="java.lang.String">
+        select name
+        from interviewworks.roles
+    </select>
+
+    <select id="getRolesId" resultType="java.util.Map">
+        select id, name
+        from interviewworks.roles
+    </select>
+
+    <insert id="createUserRole">
+        insert
+        into interviewworks.user_role (username,
+                                       role_id)
+        values (#{username},
+                #{roleId})
+    </insert>
+
+    <select id="selectUserRole" resultType="java.util.Map">
+        select username, role_id
+        from interviewworks.user_role
+        where username = #{username}
+    </select>
+
+    <update id="updateUserRole">
+        update interviewworks.user_role
+        set role_id = #{roleId}
+        where username = #{username}
+          and role_id = #{roleIdOld}
+    </update>
+
+    <delete id="deleteUserRole">
+        delete
+        from interviewworks.user_role
+        where username = #{username}
+    </delete>
+
+    <select id="getSelectRoles" resultType="java.lang.String">
+        select permissions.code
+        from
+            interviewworks.user_role,
+            interviewworks.role_permission,
+            interviewworks.permissions
+        where user_role.role_id = role_permission.role_id
+          and role_permission.permission_id = permissions.id
+          and user_role.username = #{username}
+    </select>
+    <select id="selectPermissionsCode" resultType="java.util.Map">
+        select code, description
+        from
+            interviewworks.permissions
+        where permissions.code = #{allowedRoles}
+    </select>
+
+</mapper>

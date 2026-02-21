@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.UserMapper">
+
+    <select id="select" resultType="java.util.Map">
+        select userdata.username               as username,
+               permissionsdata.password        as password,
+               permissionsdata.use_permissions as permissions,
+               userdata.created_date           as created_date,
+               userdata.updated_date           as updated_date
+        from interviewworks.userdata userdata
+                 inner join interviewworks.permissionsdata permissionsdata
+                            on
+                                userdata.username = permissionsdata.username
+        where userdata.username = #{username}
+        order by userdata.updated_date desc
+    </select>
+
+    <insert id="create">
+        insert
+        into interviewworks.userdata (username)
+        values (#{username})
+    </insert>
+
+    <delete id="delete">
+        delete
+        from interviewworks.userdata
+        where username = #{username}
+    </delete>
+
+    <insert id="createUserdataDetail">
+        insert
+        into interviewworks.userdata_details (username,
+                                              order_item)
+        values (#{username},
+                #{order_item_str})
+    </insert>
+
+    <select id="selectUserdataDetail" resultType="java.util.Map">
+        select userdata_details.username    as username,
+               permissionsdata.password     as password,
+               permissionsdata.use_permissions as permissions,
+               userdata_details.created_date   as created_date,
+               userdata_details.updated_date   as updated_date,
+               userdata_details.order_item  as order_item
+        from interviewworks.userdata_details userdata_details
+                 inner join interviewworks.userdata userdata
+                            on
+                                userdata_details.username = userdata.username
+                 inner join interviewworks.permissionsdata permissionsdata
+                            on
+                                userdata.username = permissionsdata.username
+        where userdata_details.username = #{username}
+        order by userdata_details.updated_date desc
+    </select>
+
+    <update id="updateUserdataDetail">
+        update interviewworks.userdata_details
+        set order_item  = #{order_item_str}
+        where username = #{username}
+    </update>
+
+    <delete id="deleteUserdataDetail">
+        delete
+        from interviewworks.userdata_details
+        where username = #{username}
+    </delete>
+
+    <delete id="deleteUserdataDetailU">
+        delete
+        from interviewworks.userdata_details_u
+        where username = #{username}
+    </delete>
+
+    <insert id="createUserdataDetailU">
+        insert
+        into interviewworks.userdata_details_u (username,
+                                                order_item,
+                                                action_type)
+        values (#{username},
+                #{order_item_str},
+                #{action_type})
+    </insert>
+
+    <select id="selectUserdataDetailU" resultType="java.lang.String">
+        select concat('(',
+                      permissionsdata.use_permissions,
+                      ')',
+                      userdata_details_u.username,
+                      '(',
+                      userdata_details_u.action_type,
+                      ')*|',
+                      userdata_details_u.order_item) as fixed
+        from interviewworks.userdata_details_u userdata_details_u
+                 inner join interviewworks.userdata userdata
+                            on
+                                userdata_details_u.username = userdata.username
+                 inner join interviewworks.permissionsdata permissionsdata
+                            on
+                                userdata_details_u.username = permissionsdata.username
+        where permissionsdata.use_permissions in ('GUEST', 'USER')
+          and userdata_details_u.username = #{username}
+        order by case permissionsdata.use_permissions
+                     when 'GUEST' then 1
+                     when 'USER' then 2
+                     end,
+                 permissionsdata.updated_date desc
+    </select>
+
+    <select id="queryUserSelect" resultType="java.lang.String">
+        select concat('(',
+                      permissionsdata.use_permissions,
+                      ')',
+                      userdata.username,
+                      '*|' ,
+                      order_item) as fixed
+        from interviewworks.userdata userdata
+                 inner join interviewworks.permissionsdata permissionsdata
+                            on
+                                userdata.username = permissionsdata.username
+                 inner join interviewworks.userdata_details userdata_details
+                            on
+                                userdata.username = userdata_details.username
+        where permissionsdata.use_permissions in ('GUEST', 'USER')
+        order by
+            case permissionsdata.use_permissions
+                when 'GUEST' then 1
+                when 'USER' then 2
+                end ,
+            permissionsdata.updated_date desc
+    </select>
+
+    <select id="selectUserdataDetailUUsernameItem" resultType="java.lang.String">
+        select distinct userdata_details_u.username
+        from interviewworks.userdata_details_u userdata_details_u
+                 inner join interviewworks.userdata userdata
+                            on
+                                userdata_details_u.username = userdata.username
+                 inner join interviewworks.permissionsdata permissionsdata
+                            on
+                                userdata_details_u.username = permissionsdata.username
+        where permissionsdata.use_permissions in ('GUEST', 'USER')
+        order by case permissionsdata.use_permissions
+                     when 'GUEST' then 1
+                     when 'USER' then 2
+                     end,
+                 permissionsdata.updated_date desc
+    </select>
+    <select id="queryUserName" resultType="java.lang.String">
+        select concat('(',
+                      permissionsdata.use_permissions,
+                      ')',
+                      userdata.username) as fixed
+        from interviewworks.userdata userdata
+                 inner join interviewworks.permissionsdata permissionsdata
+                            on
+                                userdata.username = permissionsdata.username
+        where permissionsdata.use_permissions in ('GUEST', 'USER')
+        order by
+            case permissionsdata.use_permissions
+                when 'GUEST' then 1
+                when 'USER' then 2
+                end ,
+            permissionsdata.updated_date desc
+    </select>
+
+</mapper>

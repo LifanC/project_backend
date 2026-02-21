@@ -1,0 +1,24 @@
+# -----------------------------
+# Server 設定不需重複寫 context-path
+# Docker 仍會套用 application.yml 的 /api
+# -----------------------------
+server:
+  port: 8080
+
+# -----------------------------
+# Redis 使用 Docker 環境變數
+# -----------------------------
+spring:
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST}  # Docker 裡使用 redis service name
+      port: ${SPRING_REDIS_PORT}
+      password: ${SPRING_REDIS_PASSWORD}
+      database: 0
+      timeout: 2000
+
+  # Datasource 使用 Docker 環境變數
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}

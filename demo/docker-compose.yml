@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+    image: springboot-app:1.0
+    container_name: springboot-container
+    ports:
+      - "8080:8080"          # 本機 8080 對應容器 8080
+    volumes:
+      - "D:/project_backend/demo/src/main/resources/certs:/app/certs:cached"       # 本機憑證路徑
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/interviewworks
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_REDIS_HOST: redis   # 這裡指定 redis host
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: 1234
+      PERMISSION_KEYSTORE_PATH: /app/certs/permission-keystore.p12
+      USER_KEYSTORE_PATH: /app/certs/user-keystore.p12
+      KEYSTORE_PASSWORD: 1qaz@WSX
+    depends_on:
+      - redis
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11.0
+    container_name: mariadb-container
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: interviewworks
+    ports:
+      - "3307:3306"       # 避免本機 port 3306 衝突
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: redis-container
+    command: ["redis-server", "--requirepass", "1234"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

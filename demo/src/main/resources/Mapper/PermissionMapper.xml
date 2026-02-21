@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.PermissionMapper">
+
+    <select id="select" resultType="java.util.Map">
+        select
+            username as username,
+            password as password,
+            use_permissions as permissions,
+            created_date as created_date,
+            updated_date as updated_date
+        from interviewworks.permissionsdata
+        where username = #{username}
+        order by permissionsdata.updated_date desc
+    </select>
+
+    <insert id="create">
+        insert
+        into interviewworks.permissionsdata (username,
+                                      password,
+                                      use_permissions)
+        values (#{username},
+                #{password},
+                #{permissions})
+    </insert>
+
+    <update id="update">
+        update interviewworks.permissionsdata
+        set use_permissions = #{permissions}
+        where username = #{username}
+    </update>
+
+    <delete id="delete">
+        delete
+        from interviewworks.permissionsdata
+        where username = #{username}
+    </delete>
+
+    <select id="selectAll" resultType="java.lang.String">
+        select concat(
+                       username, ' - ',
+                       use_permissions)
+        from interviewworks.permissionsdata
+        order by permissionsdata.updated_date desc
+    </select>
+
+</mapper>

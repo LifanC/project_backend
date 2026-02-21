@@ -1,0 +1,64 @@
+# -----------------------------
+# JWT 設定
+# -----------------------------
+jwt:
+  expirationSeconds: 360
+
+# -----------------------------
+# Server 設定
+# -----------------------------
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# -----------------------------
+# Spring Boot 通用設定
+# -----------------------------
+spring:
+  application:
+    name: demo-app-test
+
+  # Redis 本機設定
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 2000
+      password: 1234
+
+  # 資料庫本機設定
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/interviewworks
+    username: root
+    password: 1234
+
+  # Security 本機預設帳密
+  security:
+    user:
+      name: lukechen      # 登入帳號
+      password: 1qaz@WSX  # 登入密碼
+  aop:
+    proxy-target-class: true
+
+# -----------------------------
+# MyBatis 設定
+# -----------------------------
+mybatis:
+  mapper-locations: classpath:Mapper/*.xml  #注意：一定要對應mapper映射xml文件的所在路徑
+  configuration:
+    #org.apache.ibatis.logging.stdout.StdOutImpl 控制檯打印sql語句方便調試sql語句執行錯誤
+    #org.apache.ibatis.logging.log4j2.Log4j2Impl:這個不在控制檯打印查詢結果,但是在log4j中打印
+    log-impl: org.apache.ibatis.logging.log4j2.Log4j2Impl
+    mapUnderscoreToCamelCase: true # 開啓駝峯命名轉換法
+
+# -----------------------------
+# Logging 設定
+# -----------------------------
+logging:
+  config: classpath:log4j2.xml
+  level:
+    #這個指定你的dao層，也就是mapper文件的所在包
+    com.example.demo.Mapper: DEBUG
