@@ -9,6 +9,7 @@ services:
     volumes:
       - "D:/project_backend/demo/src/main/resources/certs:/app/certs:cached"       # 本機憑證路徑
     environment:
+      PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/interviewworks
       SPRING_DATASOURCE_USERNAME: root
