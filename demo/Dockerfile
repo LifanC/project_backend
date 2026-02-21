@@ -8,7 +8,7 @@ WORKDIR /app
 COPY target/*.jar app.jar
 
 # 對外開放 Spring Boot 預設 port
-EXPOSE 8080
+ENV SPRING_PROFILES_ACTIVE=docker
 
 # 啟動 Spring Boot
-ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -Dserver.port=$PORT -jar app.jar"]
