@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>權限</title>
+</head>
+<link rel="stylesheet" href="/url.css">
+<script src="/jquery.min.js"></script>
+<script>
+    // http://127.0.0.1:5500/permissions.html
+    const BASE = 'http://localhost:8080/api/';
+
+    const SafetyUsername = 'lukechen';
+    const SafetyPassword = '1qaz@WSX';
+
+    testLogin()
+    async function testLogin() {
+        try {
+            const res = await getJSON(BASE + 'permissions/testLogin', null);
+            show(res);
+        } catch (err) {
+            show(err);
+        }
+    }
+
+    function show(res) {
+        const {
+            code = undefined,
+            name = undefined,
+            username = undefined,
+            permissions = undefined,
+            message = undefined,
+            errors = undefined,
+            status = undefined,
+            created_date = undefined,
+            updated_date = undefined,
+            error = undefined,
+            path = undefined,
+            users = undefined,
+            timestamp = undefined,
+        } = res;
+        const err = {
+            code,
+            name,
+            username,
+            permissions,
+            message,
+            errors,
+            status,
+            created_date,
+            updated_date,
+            error,
+            path,
+            users,
+            timestamp,
+        }
+        document.getElementById('result').innerHTML = JSON.stringify(err, null, 2);
+    }
+
+    // POST JSON helper
+    async function postJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword)
+                },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // GET helper with query params
+    async function getJSON(url, params) {
+        const query = params ? '?' + new URLSearchParams(params) : '';
+        try {
+            const res = await fetch(url + query, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword),
+                    'Accept': 'application/json'
+                }
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // PUT JSON helper
+    async function putJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword)
+                },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // DELETE JSON helper
+    async function deleteJSON(url, params) {
+        const del = params ? '?' + new URLSearchParams(params) : '';
+        try {
+            const res = await fetch(url + del, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(params)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // 將值塞入 input 並自動調整寬度
+    function setInputValue(inputId, value) {
+        const input = document.getElementById(inputId);
+        input.value = value;
+        if (value.length > 22) {
+            input.style.width = (value.length + 1) + "ch";
+        } else {
+            input.removeAttribute('style');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // 註冊
+        document.getElementById('btnRegister').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value,
+                permissions: document.querySelector('input[name="permission"]:checked').value
+            };
+            try {
+                const res = await postJSON(BASE + 'permissions/register', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 查詢
+        document.getElementById('btnQuery').addEventListener('click', async () => {
+            try {
+                const res = await getJSON(BASE + 'permissions/query', null);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 更改權限
+        document.getElementById('btnUpdate').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value,
+                permissions: document.querySelector('input[name="permission"]:checked').value
+            };
+            try {
+                const res = await putJSON(BASE + 'permissions/update', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 刪除
+        document.getElementById('btnDelete').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('regUser').value,
+                password: document.getElementById('regPass').value
+            };
+            try {
+                const res = await deleteJSON(BASE + 'permissions/delete', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+    });
+
+</script>
+
+<body>
+    <div class="form">
+        <h2>權限設定</h2>
+        <input id="regUser" placeholder="帳號">
+        <input id="regPass" placeholder="密碼">
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="permission" value="GUEST" checked>
+                客人
+            </label>
+            <label>
+                <input type="radio" name="permission" value="USER">
+                一般使用者
+            </label>
+            <label>
+                <input type="radio" name="permission" value="ADMIN">
+                系統管理員
+            </label>
+            <label>
+                <input type="radio" name="permission" value="MANAGER">
+                部門主管或中階管理者
+            </label>
+        </div>
+        <button id="btnRegister">註冊</button>
+        <button id="btnQuery">查詢</button>
+        <button id="btnUpdate">更改權限</button>
+        <button id="btnDelete">刪除</button>
+    </div>
+    <section>
+        <h3>API Result</h3>
+        <pre id="result"></pre>
+    </section>
+</body>
+
+</html>

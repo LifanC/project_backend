@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單</title>
+</head>
+<link rel="stylesheet" href="/url.css">
+<script src="/jquery.min.js"></script>
+<script>
+    // http://127.0.0.1:5500/userUrl.html
+    const BASE = 'http://localhost:8080/api/';
+
+    const SafetyUsername = 'lukechen';
+    const SafetyPassword = '1qaz@WSX';
+
+    testLogin()
+    async function testLogin() {
+        try {
+            const res = await getJSON(BASE + 'user/testLogin', null);
+            show(res);
+        } catch (err) {
+            show(err);
+        }
+    }
+
+    function show(log) {
+        const {
+            code = undefined,
+            name = undefined,
+            username = undefined,
+            permissions = undefined,
+            message = undefined,
+            errors = undefined,
+            status = undefined,
+            created_date = undefined,
+            updated_date = undefined,
+            error = undefined,
+            path = undefined,
+            token = undefined,
+            order_item = undefined,
+            history = undefined,
+            data = undefined,
+            timestamp = undefined,
+        } = log;
+        const messageLog = {
+            code,
+            name,
+            username,
+            permissions,
+            message,
+            errors,
+            status,
+            created_date,
+            updated_date,
+            error,
+            path,
+            token,
+            order_item,
+            history,
+            data,
+            timestamp,
+        }
+        document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
+    }
+
+    // POST JSON helper
+    async function postJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword)
+                },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // GET helper with query params
+    async function getJSON(url, params) {
+        const query = params ? '?' + new URLSearchParams(params) : '';
+        try {
+            const res = await fetch(url + query, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword),
+                    'Accept': 'application/json'
+                }
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // PUT JSON helper
+    async function putJSON(url, data) {
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword)
+                },
+                body: JSON.stringify(data)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // DELETE JSON helper
+    async function deleteJSON(url, params) {
+        const del = params ? '?' + new URLSearchParams(params) : '';
+        try {
+            const res = await fetch(url + del, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(params)
+            });
+            const json = await res.json();
+            if (!res.ok) throw json;
+            return json;
+        } catch (err) {
+            return Promise.reject(err);
+        }
+    }
+
+    // 將值塞入 input 並自動調整寬度
+    function setInputValue(inputId, value) {
+        const input = document.getElementById(inputId);
+        input.value = value;
+        if (value.length > 22) {
+            input.style.width = (value.length + 1) + "ch";
+        } else {
+            input.removeAttribute('style');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // 取得 Token
+        document.getElementById('btnTakeToken').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                password: document.getElementById('loginPass').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/takeToken', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 驗證 Token
+        document.getElementById('btnValidate').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/validate', data);
+                show(res);
+                if (res.token) {
+                    setInputValue('token', res.token);
+                }
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 登出
+        document.getElementById('btnLogout').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/logout', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+            setInputValue('token', '');
+        });
+
+        // 查使用者
+        document.getElementById('btnQueryUser').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/queryUser', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 新增訂單
+        document.getElementById('btnCreate').addEventListener('click', async () => {
+            let container = document.getElementById('inputContainer');
+            let cnt = container.getElementsByTagName('input').length;
+            let item = [];
+            for (let i = 1; i <= cnt; i++) {
+                item.push(document.getElementById('order' + i).value);
+            }
+            let order_item = [];
+            for (let index = 0; index < item.length; index++) {
+                let element = item[index];
+                if (element) {
+                    order_item.push(element)
+                }
+            }
+            const data = {
+                username: document.getElementById('loginUser').value,
+                order_item: order_item,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/createOrderItem', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 查詢訂單
+        document.getElementById('btnQuery').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/queryOrderItem', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 更改訂單
+        document.getElementById('btnUpdate').addEventListener('click', async () => {
+            let container = document.getElementById('inputContainer');
+            let cnt = container.getElementsByTagName('input').length;
+            let item = [];
+            for (let i = 1; i <= cnt; i++) {
+                item.push(document.getElementById('order' + i).value);
+            }
+            let order_item = [];
+            for (let index = 0; index < item.length; index++) {
+                let element = item[index];
+                if (element) {
+                    order_item.push(element)
+                }
+            }
+            const data = {
+                username: document.getElementById('loginUser').value,
+                useruser: document.getElementById('UserUpdater').value,
+                order_item: order_item,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/updateOrderItem', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 刪除訂單
+        document.getElementById('btnDelete').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                useruser: document.getElementById('UserDelete').value,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/deleteOrderItem', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        // 歷史訂單
+        document.getElementById('btnHistory').addEventListener('click', async () => {
+            const data = {
+                username: document.getElementById('loginUser').value,
+                token: document.getElementById('token').value
+            };
+            try {
+                const res = await postJSON(BASE + 'user/historyOrderItem', data);
+                show(res);
+            } catch (err) {
+                show(err);
+            }
+        });
+
+        document.getElementById('cnt').addEventListener('input', async () => {
+            let cnt = document.getElementById('cnt').value;
+            let container = document.getElementById('inputContainer');
+            container.innerHTML = '';
+            if (/^[1-9]\d*$/.test(cnt)) {
+                for (let i = 1; i <= cnt; i++) {
+                    // 建立 input 元素
+                    const input = document.createElement('input');
+
+                    // 設定屬性
+                    input.id = 'order' + i;
+                    input.placeholder = '資料' + i;
+
+                    // 放進容器
+                    container.appendChild(input);
+                }
+            } else {
+                document.getElementById('cnt').value = '';
+            }
+
+        });
+
+        document.getElementById('token').addEventListener('input', async () => {
+            let token = document.getElementById('token').value;
+            setInputValue('token', token);
+        });
+
+    });
+
+</script>
+
+<body>
+    <div class="form">
+        <h2>登入</h2>
+        <input id="loginUser" placeholder="帳號">
+        <input id="loginPass" placeholder="密碼">
+        <button id="btnTakeToken">Token 取得</button>
+        <button id="btnValidate">Token 驗證</button>
+        <input id="token" placeholder="Token">
+        <button id="btnLogout">Token 登出</button>
+        <h2>訂單</h2>
+        <button id="btnQueryUser">查詢使用者名單</button>
+        <input id="cnt" placeholder="數量">
+        <div id="inputContainer"></div>
+        <button id="btnCreate">新增訂單</button>
+        <button id="btnQuery">查詢訂單</button>
+        <input id="UserUpdater" placeholder="更改帳號">
+        <button id="btnUpdate">更改訂單</button>
+        <input id="UserDelete" placeholder="刪除帳號">
+        <button id="btnDelete">刪除訂單</button>
+        <button id="btnHistory">歷史訂單</button>
+    </div>
+    <section>
+        <h3>API Result</h3>
+        <pre id="result"></pre>
+    </section>
+</body>
+
+</html>

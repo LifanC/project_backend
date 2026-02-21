@@ -1,0 +1,59 @@
+  body {
+      font-family: monospace;
+      background: #f6f6f6;
+  }
+
+  section {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin: 12px;
+  }
+
+  h3 {
+      margin: 0 0 8px;
+  }
+
+  pre {
+      background: #000;
+      color: #0f0;
+      padding: 8px;
+      height: 1000px;
+      overflow: auto;
+  }
+
+  .form {
+      display: flex;
+      flex-direction: column;
+      /* 上下排列 */
+      width: 300px;
+      /* 控制整體寬度 */
+  }
+
+  .form input,
+  .form button {
+      width: 100%;
+      /* input 跟 button 一樣寬 */
+      box-sizing: border-box;
+      /* 避免 padding 撐大 */
+      margin-top: 0px;
+      /* 上下間距 */
+  }
+
+  /* radio 區塊 */
+  .radio-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+  }
+
+  .radio-group label {
+      display: flex;
+      gap: 8px;
+  }
+
+  .radio-group input[type="radio"] {
+      width: auto;
+      /* 關鍵 */
+      margin: 0;
+  }
