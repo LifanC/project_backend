@@ -5,3 +5,6 @@ spring:
   data:
     redis:
       url: ${REDIS_URL}
+
+server:
+  port: ${PORT:8080}
