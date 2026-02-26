@@ -8,8 +8,8 @@
                permissionsdata.use_permissions as permissions,
                userdata.created_date           as created_date,
                userdata.updated_date           as updated_date
-        from interviewworks.userdata userdata
-                 inner join interviewworks.permissionsdata permissionsdata
+        from "interviewworks_schema"."userdata" userdata
+                 inner join "interviewworks_schema".permissionsdata permissionsdata
                             on
                                 userdata.username = permissionsdata.username
         where userdata.username = #{username}
@@ -18,19 +18,19 @@
 
     <insert id="create">
         insert
-        into interviewworks.userdata (username)
+        into "interviewworks_schema"."userdata" (username)
         values (#{username})
     </insert>
 
     <delete id="delete">
         delete
-        from interviewworks.userdata
+        from "interviewworks_schema"."userdata"
         where username = #{username}
     </delete>
 
     <insert id="createUserdataDetail">
         insert
-        into interviewworks.userdata_details (username,
+        into "interviewworks_schema"."userdata_details" (username,
                                               order_item)
         values (#{username},
                 #{order_item_str})
@@ -43,11 +43,11 @@
                userdata_details.created_date   as created_date,
                userdata_details.updated_date   as updated_date,
                userdata_details.order_item  as order_item
-        from interviewworks.userdata_details userdata_details
-                 inner join interviewworks.userdata userdata
+        from "interviewworks_schema"."userdata_details" userdata_details
+                 inner join "interviewworks_schema"."userdata" userdata
                             on
                                 userdata_details.username = userdata.username
-                 inner join interviewworks.permissionsdata permissionsdata
+                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
                             on
                                 userdata.username = permissionsdata.username
         where userdata_details.username = #{username}
@@ -55,26 +55,26 @@
     </select>
 
     <update id="updateUserdataDetail">
-        update interviewworks.userdata_details
+        update "interviewworks_schema"."userdata_details"
         set order_item  = #{order_item_str}
         where username = #{username}
     </update>
 
     <delete id="deleteUserdataDetail">
         delete
-        from interviewworks.userdata_details
+        from "interviewworks_schema"."userdata_details"
         where username = #{username}
     </delete>
 
     <delete id="deleteUserdataDetailU">
         delete
-        from interviewworks.userdata_details_u
+        from "interviewworks_schema"."userdata_details_u"
         where username = #{username}
     </delete>
 
     <insert id="createUserdataDetailU">
         insert
-        into interviewworks.userdata_details_u (username,
+        into "interviewworks_schema"."userdata_details_u" (username,
                                                 order_item,
                                                 action_type)
         values (#{username},
@@ -91,11 +91,11 @@
                       userdata_details_u.action_type,
                       ')*|',
                       userdata_details_u.order_item) as fixed
-        from interviewworks.userdata_details_u userdata_details_u
-                 inner join interviewworks.userdata userdata
+        from "interviewworks_schema"."userdata_details_u" userdata_details_u
+                 inner join "interviewworks_schema"."userdata" userdata
                             on
                                 userdata_details_u.username = userdata.username
-                 inner join interviewworks.permissionsdata permissionsdata
+                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
                             on
                                 userdata_details_u.username = permissionsdata.username
         where permissionsdata.use_permissions in ('GUEST', 'USER')
@@ -113,12 +113,12 @@
                       ')',
                       userdata.username,
                       '*|' ,
-                      order_item) as fixed
-        from interviewworks.userdata userdata
-                 inner join interviewworks.permissionsdata permissionsdata
+                      userdata_details.order_item) as fixed
+        from "interviewworks_schema"."userdata" userdata
+                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
                             on
                                 userdata.username = permissionsdata.username
-                 inner join interviewworks.userdata_details userdata_details
+                 inner join "interviewworks_schema"."userdata_details" userdata_details
                             on
                                 userdata.username = userdata_details.username
         where permissionsdata.use_permissions in ('GUEST', 'USER')
@@ -132,11 +132,11 @@
 
     <select id="selectUserdataDetailUUsernameItem" resultType="java.lang.String">
         select distinct userdata_details_u.username
-        from interviewworks.userdata_details_u userdata_details_u
-                 inner join interviewworks.userdata userdata
+        from "interviewworks_schema"."userdata_details_u" userdata_details_u
+                 inner join "interviewworks_schema"."userdata" userdata
                             on
                                 userdata_details_u.username = userdata.username
-                 inner join interviewworks.permissionsdata permissionsdata
+                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
                             on
                                 userdata_details_u.username = permissionsdata.username
         where permissionsdata.use_permissions in ('GUEST', 'USER')
@@ -151,8 +151,8 @@
                       permissionsdata.use_permissions,
                       ')',
                       userdata.username) as fixed
-        from interviewworks.userdata userdata
-                 inner join interviewworks.permissionsdata permissionsdata
+        from "interviewworks_schema".userdata userdata
+                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
                             on
                                 userdata.username = permissionsdata.username
         where permissionsdata.use_permissions in ('GUEST', 'USER')

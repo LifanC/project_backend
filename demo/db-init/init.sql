@@ -1,68 +1,124 @@
--- 建資料庫（如果 docker-compose 沒設定 MariaDB_DATABASE，也可以寫）
-CREATE DATABASE IF NOT EXISTS interviewworks;
+CREATE SCHEMA IF NOT EXISTS interviewworks_schema;
 
-USE interviewworks;
+-- 建立觸發器函數
+CREATE OR REPLACE FUNCTION update_updated_date()
+    RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_date = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- interviewworks.permissionsdata definition
 
-CREATE TABLE IF NOT EXISTS `permissionsdata` (
-                          `username` varchar(10) NOT NULL COMMENT '名稱',
-                          `password` varchar(100) NOT NULL COMMENT '密碼',
-                          `use_permissions` enum('GUEST','USER','ADMIN','MANAGER') NOT NULL COMMENT '權限',
-                          `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
-                          `updated_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-                          PRIMARY KEY (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.permissionsdata;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.permissionsdata (
+                                                       username varchar(10) NOT NULL,
+                                                       "password" varchar(100) NOT NULL,
+                                                       use_permissions varchar(20) NULL,
+                                                       created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                       updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                       CONSTRAINT permissionsdata_pkey PRIMARY KEY (username),
+                                                       CONSTRAINT permissionsdata_use_permissions_check CHECK (((use_permissions)::text = ANY ((ARRAY['GUEST'::character varying, 'USER'::character varying, 'ADMIN'::character varying, 'MANAGER'::character varying])::text[])))
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.permissionsdata
+    FOR EACH ROW
+EXECUTE FUNCTION update_updated_date();
 
 -- interviewworks.secret definition
 
-CREATE TABLE IF NOT EXISTS `secret` (
-                          `secret_number` varchar(100) NOT NULL,
-                          `created_date` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.secret;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.secret (
+                                              secret_number varchar(100) NOT NULL,
+                                              created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 -- interviewworks.userdata definition
 
-CREATE TABLE IF NOT EXISTS `userdata` (
-                            `username` varchar(10) NOT NULL COMMENT '名稱',
-                            `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
-                            `updated_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-                            PRIMARY KEY (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.userdata;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata (
+                                                username varchar(10) NOT NULL,
+                                                created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                CONSTRAINT userdata_pkey PRIMARY KEY (username)
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.userdata
+    FOR EACH ROW
+EXECUTE FUNCTION update_updated_date();
 
 -- interviewworks.userdata_details definition
 
-CREATE TABLE IF NOT EXISTS `userdata_details` (
-                            `username` varchar(10) NOT NULL COMMENT '名稱',
-                            `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
-                            `updated_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-                            `order_item` varchar(100) DEFAULT NULL COMMENT '訂單',
-                            PRIMARY KEY (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.userdata_details;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata_details (
+                                                        username varchar(10) NOT NULL,
+                                                        created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                        updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                        order_item varchar(100) NULL DEFAULT NULL::character varying,
+                                                        CONSTRAINT userdata_details_pkey PRIMARY KEY (username)
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.userdata_details
+    FOR EACH ROW
+EXECUTE FUNCTION update_updated_date();
 
 -- interviewworks.userdata_details_u definition
 
-CREATE TABLE IF NOT EXISTS `userdata_details_u` (
-                            `username` varchar(10) NOT NULL COMMENT '名稱',
-                            `created_date` timestamp NOT NULL DEFAULT current_timestamp(),
-                            `updated_date` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-                            `order_item` varchar(100) DEFAULT NULL COMMENT '訂單',
-                            `action_type` enum('insert','update','delete') NOT NULL,
-                            KEY `userdata_details_u_FK` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_vietnamese_ci;
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.userdata_details_u;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata_details_u (
+                                                          username varchar(10) NOT NULL,
+                                                          created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                          updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                          order_item varchar(100) NULL DEFAULT NULL::character varying,
+                                                          action_type varchar(100) NULL DEFAULT NULL::character varying,
+                                                          CONSTRAINT userdata_details_u_action_type_check CHECK (((action_type)::text = ANY ((ARRAY['insert'::character varying, 'update'::character varying, 'delete'::character varying])::text[]))),
+                                                          CONSTRAINT userdata_details_u_pkey PRIMARY KEY (username)
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.userdata_details_u
+    FOR EACH ROW
+EXECUTE FUNCTION update_updated_date();
 
 -- interviewworks.roles definition
 
-CREATE TABLE IF NOT EXISTS `roles` (
-                            `id` bigint(20) NOT NULL AUTO_INCREMENT,
-                            `name` varchar(100) DEFAULT NULL COMMENT '權限名稱',
-                            `description` varchar(100) DEFAULT NULL COMMENT '敘述',
-                            PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='roles（角色表）';
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.roles;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.roles (
+                                             id int8 NOT NULL GENERATED ALWAYS AS IDENTITY( INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1 NO CYCLE),
+                                             "name" varchar(100) NULL,
+                                             description varchar(100) NULL,
+                                             CONSTRAINT roles_pkey PRIMARY KEY (id)
+);
 
 -- 初始化資料
 
-INSERT INTO interviewworks.roles (name, description)
+INSERT INTO interviewworks_schema.roles (name, description)
 VALUES ('GUEST', '客人'),
        ('USER', '一般使用者'),
        ('ADMIN', '系統管理員'),
@@ -70,16 +126,20 @@ VALUES ('GUEST', '客人'),
 
 -- interviewworks.permissions definition
 
-CREATE TABLE IF NOT EXISTS `permissions` (
-                            `id` bigint(20) NOT NULL AUTO_INCREMENT,
-                            `code` varchar(100) DEFAULT NULL,
-                            `description` varchar(100) DEFAULT NULL COMMENT '敘述',
-                            PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='permissions（權限表）';
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.permissions;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.permissions (
+                                                   id int8 NOT NULL GENERATED ALWAYS AS IDENTITY( INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START 1 CACHE 1 NO CYCLE),
+                                                   code varchar(100) NULL DEFAULT NULL::character varying,
+                                                   description varchar(100) NULL DEFAULT NULL::character varying,
+                                                   CONSTRAINT permissions_pkey PRIMARY KEY (id)
+);
 
 -- 初始化資料
 
-INSERT INTO interviewworks.permissions (code, description)
+INSERT INTO interviewworks_schema.permissions (code, description)
 VALUES ('user:item:query', 'ADMIN、MANAGER'),
        ('order:item:query', 'GUEST、USER、ADMIN、MANAGER'),
        ('order:item:create', 'GUEST、USER'),
@@ -89,23 +149,31 @@ VALUES ('user:item:query', 'ADMIN、MANAGER'),
 
 -- interviewworks.user_role definition
 
-CREATE TABLE IF NOT EXISTS `user_role` (
-                             `username` varchar(10) NOT NULL COMMENT '名稱',
-                             `role_id` bigint(20) NOT NULL,
-                             PRIMARY KEY (`username`,`role_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='user_role（使用者-角色 關聯表）';
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.user_role;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.user_role (
+                                                 username varchar(10) NOT NULL,
+                                                 role_id int8 NOT NULL,
+                                                 CONSTRAINT user_role_pk PRIMARY KEY (username, role_id)
+);
 
 -- interviewworks.role_permission definition
 
-CREATE TABLE IF NOT EXISTS `role_permission` (
-                             `role_id` bigint(20) NOT NULL,
-                             `permission_id` bigint(20) NOT NULL,
-                             PRIMARY KEY (`role_id`,`permission_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='role_permission（角色-權限 關聯表）';
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.role_permission;
+
+CREATE TABLE IF NOT EXISTS interviewworks_schema.role_permission (
+                                                       role_id int8 NOT NULL,
+                                                       permission_id int8 NOT NULL,
+                                                       CONSTRAINT role_permission_pk PRIMARY KEY (role_id, permission_id)
+);
 
 -- 初始化資料
 
-INSERT INTO interviewworks.role_permission (role_id, permission_id)
+INSERT INTO interviewworks_schema.role_permission (role_id, permission_id)
 VALUES (1, 2),
        (1, 3),
        (1, 5),
@@ -122,4 +190,5 @@ VALUES (1, 2),
        (4, 2),
        (4, 5),
        (4, 6);
+
 

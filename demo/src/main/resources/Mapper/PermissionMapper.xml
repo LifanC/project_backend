@@ -4,19 +4,19 @@
 
     <select id="select" resultType="java.util.Map">
         select
-            username as username,
-            password as password,
+            username,
+            password,
             use_permissions as permissions,
-            created_date as created_date,
-            updated_date as updated_date
-        from interviewworks.permissionsdata
+            created_date,
+            updated_date
+        from "interviewworks_schema"."permissionsdata" pd
         where username = #{username}
-        order by permissionsdata.updated_date desc
+        order by pd.updated_date desc
     </select>
 
     <insert id="create">
         insert
-        into interviewworks.permissionsdata (username,
+        into "interviewworks_schema"."permissionsdata" (username,
                                       password,
                                       use_permissions)
         values (#{username},
@@ -25,14 +25,14 @@
     </insert>
 
     <update id="update">
-        update interviewworks.permissionsdata
+        update "interviewworks_schema"."permissionsdata"
         set use_permissions = #{permissions}
         where username = #{username}
     </update>
 
     <delete id="delete">
         delete
-        from interviewworks.permissionsdata
+        from "interviewworks_schema"."permissionsdata"
         where username = #{username}
     </delete>
 
@@ -40,8 +40,8 @@
         select concat(
                        username, ' - ',
                        use_permissions)
-        from interviewworks.permissionsdata
-        order by permissionsdata.updated_date desc
+        from "interviewworks_schema"."permissionsdata" pd
+        order by pd.updated_date desc
     </select>
 
 </mapper>

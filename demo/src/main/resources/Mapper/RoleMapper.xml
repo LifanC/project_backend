@@ -4,17 +4,17 @@
 
     <select id="getRoles" resultType="java.lang.String">
         select name
-        from interviewworks.roles
+        from "interviewworks_schema"."roles"
     </select>
 
     <select id="getRolesId" resultType="java.util.Map">
         select id, name
-        from interviewworks.roles
+        from "interviewworks_schema"."roles"
     </select>
 
     <insert id="createUserRole">
         insert
-        into interviewworks.user_role (username,
+        into "interviewworks_schema"."user_role" (username,
                                        role_id)
         values (#{username},
                 #{roleId})
@@ -22,12 +22,12 @@
 
     <select id="selectUserRole" resultType="java.util.Map">
         select username, role_id
-        from interviewworks.user_role
+        from "interviewworks_schema"."user_role"
         where username = #{username}
     </select>
 
     <update id="updateUserRole">
-        update interviewworks.user_role
+        update "interviewworks_schema"."user_role"
         set role_id = #{roleId}
         where username = #{username}
           and role_id = #{roleIdOld}
@@ -35,16 +35,16 @@
 
     <delete id="deleteUserRole">
         delete
-        from interviewworks.user_role
+        from "interviewworks_schema"."user_role"
         where username = #{username}
     </delete>
 
     <select id="getSelectRoles" resultType="java.lang.String">
         select permissions.code
         from
-            interviewworks.user_role,
-            interviewworks.role_permission,
-            interviewworks.permissions
+            "interviewworks_schema"."user_role" user_role,
+            "interviewworks_schema"."role_permission" role_permission,
+            "interviewworks_schema"."permissions" permissions
         where user_role.role_id = role_permission.role_id
           and role_permission.permission_id = permissions.id
           and user_role.username = #{username}
@@ -52,7 +52,7 @@
     <select id="selectPermissionsCode" resultType="java.util.Map">
         select code, description
         from
-            interviewworks.permissions
+            "interviewworks_schema"."permissions"
         where permissions.code = #{allowedRoles}
     </select>
 

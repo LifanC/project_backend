@@ -11,30 +11,32 @@ services:
     environment:
       PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/interviewworks
-      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/interviewworks?currentSchema=interviewworks_schema
+      SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 1234
       SPRING_REDIS_HOST: redis   # 這裡指定 redis host
       SPRING_REDIS_PORT: 6379
       SPRING_REDIS_PASSWORD: 1234
-      PERMISSION_KEYSTORE_PATH: /app/certs/permission-keystore.p12
-      USER_KEYSTORE_PATH: /app/certs/user-keystore.p12
-      KEYSTORE_PASSWORD: 1qaz@WSX
+#      PERMISSION_KEYSTORE_PATH: /app/certs/permission-keystore.p12
+#      USER_KEYSTORE_PATH: /app/certs/user-keystore.p12
+#      KEYSTORE_PASSWORD: 1qaz@WSX
     depends_on:
       - redis
       - db
     restart: unless-stopped
 
   db:
-    image: mariadb:11.0
-    container_name: mariadb-container
+    image: postgres:16
+    container_name: postgres-container
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: interviewworks
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: interviewworks
     ports:
-      - "3307:3306"       # 避免本機 port 3306 衝突
+      - "5432:5432"
     volumes:
       - ./db-init:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   redis:
@@ -44,3 +46,6 @@ services:
     ports:
       - "6379:6379"
     restart: unless-stopped
+
+volumes:
+  postgres-data:

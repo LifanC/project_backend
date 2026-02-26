@@ -23,8 +23,8 @@ public class SecretKey {
     // 這個方法啟動時會自動執行
     @PostConstruct
     public void getSecret() {
-        Integer cnt = secretMapper.getSecret();
-        if (cnt > 0) {
+        boolean cnt = secretMapper.getSecret();
+        if (cnt) {
             logger.info("SecretKey 資料已存在");
         } else {
             SecureRandom random = new SecureRandom();

@@ -65,10 +65,10 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
-        <!-- MariaDB -->
+        <!-- postgresql -->
         <dependency>
-            <groupId>org.mariadb.jdbc</groupId>
-            <artifactId>mariadb-java-client</artifactId>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 

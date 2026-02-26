@@ -25,4 +25,4 @@ ENV SPRING_PROFILES_ACTIVE=docker
 ENV PORT=8080
 
 # 使用 wait-for-it.sh 等資料庫啟動
-ENTRYPOINT ["./wait-for-it.sh", "db:3306", "--timeout=60", "--strict", "--", "sh", "-c", "java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -Dserver.port=$PORT -jar app.jar"]
+ENTRYPOINT ["./wait-for-it.sh", "db:5432", "--timeout=60", "--strict", "--", "sh", "-c", "java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -Dserver.port=$PORT -jar app.jar"]

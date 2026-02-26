@@ -2,7 +2,7 @@ package com.example.demo.Service;
 
 import com.example.demo.Aspect.Permissions;
 import com.example.demo.Common.ActionType;
-import com.example.demo.Common.CertificateFunction;
+//import com.example.demo.Common.CertificateFunction;
 import com.example.demo.Common.Context;
 import com.example.demo.Dto.User.*;
 import com.example.demo.Exception.*;
@@ -96,15 +96,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User takeToken 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "takeToken");
-                    if (!valid) {
-                        logger.error("takeToken 憑證未通過");
-                        userData.setMessage("Token 憑證未通過");
-                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "takeToken");
+//                    if (!valid) {
+//                        logger.error("takeToken 憑證未通過");
+//                        userData.setMessage("Token 憑證未通過");
+//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userData.getStatus())
+//                                .body(new UserResponse(userData));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (Token 取得)帳號不存在", username);
@@ -211,15 +211,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User validate 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "validate");
-                    if (!valid) {
-                        logger.error("validate 憑證未通過");
-                        userData.setMessage("Token 憑證未通過");
-                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "validate");
+//                    if (!valid) {
+//                        logger.error("validate 憑證未通過");
+//                        userData.setMessage("Token 憑證未通過");
+//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userData.getStatus())
+//                                .body(new UserResponse(userData));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (Token驗證)帳號不存在", username);
@@ -350,15 +350,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User logout 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "logout");
-                    if (!valid) {
-                        logger.error("logout 憑證未通過");
-                        userData.setMessage("Token 憑證未通過");
-                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "logout");
+//                    if (!valid) {
+//                        logger.error("logout 憑證未通過");
+//                        userData.setMessage("Token 憑證未通過");
+//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userData.getStatus())
+//                                .body(new UserResponse(userData));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : 登出 Token 帳號不存在", username);
@@ -492,15 +492,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User queryUser 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "queryUser");
-                    if (!valid) {
-                        logger.error("queryUser 憑證未通過");
-                        userData.setMessage("queryUser 憑證未通過");
-                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "queryUser");
+//                    if (!valid) {
+//                        logger.error("queryUser 憑證未通過");
+//                        userData.setMessage("queryUser 憑證未通過");
+//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userData.getStatus())
+//                                .body(new UserResponse(userData));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (查詢使用者名單) 查使用者帳號不存在", username);
@@ -596,15 +596,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User createOrderItem 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "createOrderItem");
-                    if (!valid) {
-                        logger.error("createOrderItem 憑證未通過");
-                        userdataDetails.setMessage("createOrderItem 憑證未通過");
-                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "createOrderItem");
+//                    if (!valid) {
+//                        logger.error("createOrderItem 憑證未通過");
+//                        userdataDetails.setMessage("createOrderItem 憑證未通過");
+//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userdataDetails.getStatus())
+//                                .body(new UserdataDetailsResponse(userdataDetails));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (新增訂單) 使用者不存在", username);
@@ -712,15 +712,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User queryOrderItem 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "queryOrderItem");
-                    if (!valid) {
-                        logger.error("queryOrderItem 憑證未通過");
-                        userdataDetails.setMessage("queryOrderItem 憑證未通過");
-                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "queryOrderItem");
+//                    if (!valid) {
+//                        logger.error("queryOrderItem 憑證未通過");
+//                        userdataDetails.setMessage("queryOrderItem 憑證未通過");
+//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userdataDetails.getStatus())
+//                                .body(new UserdataDetailsResponse(userdataDetails));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (查詢訂單) 使用者不存在", username);
@@ -852,15 +852,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User updateOrderItem 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "updateOrderItem");
-                    if (!valid) {
-                        logger.error("updateOrderItem 憑證未通過");
-                        userdataDetails.setMessage("updateOrderItem 憑證未通過");
-                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "updateOrderItem");
+//                    if (!valid) {
+//                        logger.error("updateOrderItem 憑證未通過");
+//                        userdataDetails.setMessage("updateOrderItem 憑證未通過");
+//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userdataDetails.getStatus())
+//                                .body(new UserdataDetailsResponse(userdataDetails));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (更改訂單) 使用者不存在", username);
@@ -975,15 +975,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User deleteOrderItem 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "deleteOrderItem");
-                    if (!valid) {
-                        logger.error("deleteOrderItem 憑證未通過");
-                        userdataDetails.setMessage("deleteOrderItem 憑證未通過");
-                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "deleteOrderItem");
+//                    if (!valid) {
+//                        logger.error("deleteOrderItem 憑證未通過");
+//                        userdataDetails.setMessage("deleteOrderItem 憑證未通過");
+//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userdataDetails.getStatus())
+//                                .body(new UserdataDetailsResponse(userdataDetails));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (刪除訂單) 使用者不存在", username);
@@ -1096,15 +1096,15 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User historyOrderItem 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "historyOrderItem");
-                    if (!valid) {
-                        logger.error("historyOrderItem 憑證未通過");
-                        userdataDetails.setMessage("historyOrderItem 憑證未通過");
-                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "historyOrderItem");
+//                    if (!valid) {
+//                        logger.error("historyOrderItem 憑證未通過");
+//                        userdataDetails.setMessage("historyOrderItem 憑證未通過");
+//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(userdataDetails.getStatus())
+//                                .body(new UserdataDetailsResponse(userdataDetails));
+//                    }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (歷史紀錄) 使用者不存在", username);

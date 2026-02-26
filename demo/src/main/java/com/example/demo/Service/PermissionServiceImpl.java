@@ -82,15 +82,15 @@ public class PermissionServiceImpl implements PermissionService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Permission register 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "register");
-                    if (!valid) {
-                        logger.error("register 憑證未通過");
-                        permission.setMessage("註冊憑證未通過");
-                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(permission.getStatus())
-                                .body(new PermissionResponse(permission));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "register");
+//                    if (!valid) {
+//                        logger.error("register 憑證未通過");
+//                        permission.setMessage("註冊憑證未通過");
+//                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(permission.getStatus())
+//                                .body(new PermissionResponse(permission));
+//                    }
                     try {
                         permission.setPassword(passwordEncoder.encode(password));
                         permission.setPermissions(permissions);
@@ -153,15 +153,15 @@ public class PermissionServiceImpl implements PermissionService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Permission query 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "query");
-                    if (!valid) {
-                        logger.error("query 憑證未通過");
-                        permission.setMessage("查詢憑證未通過");
-                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(permission.getStatus())
-                                .body(new PermissionResponse(permission));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "query");
+//                    if (!valid) {
+//                        logger.error("query 憑證未通過");
+//                        permission.setMessage("查詢憑證未通過");
+//                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(permission.getStatus())
+//                                .body(new PermissionResponse(permission));
+//                    }
                     List<String> permissionsSelect = permissionMapper.selectAll();
                     if (permissionsSelect.isEmpty()) {
                         throw new ResourceNotFoundException("查詢帳號不存在");
@@ -215,15 +215,15 @@ public class PermissionServiceImpl implements PermissionService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Permission update 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "update");
-                    if (!valid) {
-                        logger.error("update 憑證未通過");
-                        permission.setMessage("更改憑證未通過");
-                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(permission.getStatus())
-                                .body(new PermissionResponse(permission));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "update");
+//                    if (!valid) {
+//                        logger.error("update 憑證未通過");
+//                        permission.setMessage("更改憑證未通過");
+//                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(permission.getStatus())
+//                                .body(new PermissionResponse(permission));
+//                    }
                     Map<String, Object> permissionsSelect = getPermission(permission);
                     // 連動更改userdata表
                     if (permissionsSelect == null) {
@@ -286,15 +286,15 @@ public class PermissionServiceImpl implements PermissionService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Permission delete 拿鎖");
                 try {
-                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "delete");
-                    if (!valid) {
-                        logger.error("delete 憑證未通過");
-                        permission.setMessage("刪除憑證未通過");
-                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-                        return ResponseEntity
-                                .status(permission.getStatus())
-                                .body(new PermissionResponse(permission));
-                    }
+//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "delete");
+//                    if (!valid) {
+//                        logger.error("delete 憑證未通過");
+//                        permission.setMessage("刪除憑證未通過");
+//                        permission.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+//                        return ResponseEntity
+//                                .status(permission.getStatus())
+//                                .body(new PermissionResponse(permission));
+//                    }
                     Map<String, Object> permissionsSelect = getPermission(permission);
                     if (permissionsSelect == null) {
                         logger.error("Permission 沒有找到要刪除的帳號");
