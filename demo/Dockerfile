@@ -16,8 +16,5 @@ WORKDIR /app
 # 從 builder 複製 jar
 COPY --from=builder /app/target/*.jar app.jar
 
-# 環境變數
-ENV SPRING_PROFILES_ACTIVE=docker
-ENV PORT=8080
-
-ENTRYPOINT ["sh","-c","java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -Dserver.port=$PORT -jar app.jar"]
+# 不指定 profile !!!
+ENTRYPOINT ["sh","-c","java -Dserver.port=$PORT -jar app.jar"]
