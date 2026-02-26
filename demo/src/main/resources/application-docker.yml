@@ -3,7 +3,7 @@
 # Docker 仍會套用 application.yml 的 /api
 # -----------------------------
 server:
-  port: ${PORT}
+  port: 8080
 
 # -----------------------------
 # Redis 使用 Docker 環境變數
@@ -11,14 +11,14 @@ server:
 spring:
   data:
     redis:
-      host: ${SPRING_REDIS_HOST}  # Docker 裡使用 redis service name
-      port: ${SPRING_REDIS_PORT}
-      password: ${SPRING_REDIS_PASSWORD}
+      host: redis
+      port: 6379
+      password: 1234
       database: 0
       timeout: 2000
 
   # Datasource 使用 Docker 環境變數
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:postgresql://db:5432/interviewworks?currentSchema=interviewworks_schema
+    username: postgres
+    password: 1234

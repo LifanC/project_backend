@@ -6,17 +6,11 @@ services:
     container_name: springboot-container
     ports:
       - "8080:8080"          # 本機 8080 對應容器 8080
-    volumes:
-      - "D:/project_backend/demo/src/main/resources/certs:/app/certs:cached"       # 本機憑證路徑
+#    volumes:
+#      - "D:/project_backend/demo/src/main/resources/certs:/app/certs:cached"       # 本機憑證路徑
     environment:
       PORT: 8080
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/interviewworks?currentSchema=interviewworks_schema
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 1234
-      SPRING_REDIS_HOST: redis   # 這裡指定 redis host
-      SPRING_REDIS_PORT: 6379
-      SPRING_REDIS_PASSWORD: 1234
 #      PERMISSION_KEYSTORE_PATH: /app/certs/permission-keystore.p12
 #      USER_KEYSTORE_PATH: /app/certs/user-keystore.p12
 #      KEYSTORE_PASSWORD: 1qaz@WSX

@@ -16,13 +16,8 @@ WORKDIR /app
 # 從 builder 複製 jar
 COPY --from=builder /app/target/*.jar app.jar
 
-# 複製 wait-for-it.sh
-COPY wait-for-it.sh wait-for-it.sh
-RUN chmod +x wait-for-it.sh
-
 # 環境變數
 ENV SPRING_PROFILES_ACTIVE=docker
 ENV PORT=8080
 
-# 使用 wait-for-it.sh 等資料庫啟動
-ENTRYPOINT ["./wait-for-it.sh", "db:5432", "--timeout=60", "--strict", "--", "sh", "-c", "java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -Dserver.port=$PORT -jar app.jar"]
+ENTRYPOINT ["sh","-c","java -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE} -Dserver.port=$PORT -jar app.jar"]
