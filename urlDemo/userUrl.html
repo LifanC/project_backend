@@ -220,7 +220,7 @@
                 password: document.getElementById('loginPass').value
             };
             try {
-                const res = await postJSON(BASE + 'user/takeToken', data);
+                const res = await api.post('user/takeToken', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -233,7 +233,7 @@
                 username: document.getElementById('loginUser').value
             };
             try {
-                const res = await postJSON(BASE + 'user/validate', data);
+                const res = await api.post('user/validate', data);
                 show(res);
                 if (res.token) {
                     setInputValue('token', res.token);
@@ -250,7 +250,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/logout', data);
+                const res = await api.post('user/logout', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -265,7 +265,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/queryUser', data);
+                const res = await api.post('user/queryUser', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -293,7 +293,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/createOrderItem', data);
+                const res = await api.post('user/createOrderItem', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -307,7 +307,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/queryOrderItem', data);
+                const res = await api.post('user/queryOrderItem', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -336,7 +336,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/updateOrderItem', data);
+                const res = await api.post('user/updateOrderItem', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -351,7 +351,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/deleteOrderItem', data);
+                const res = await api.post('user/deleteOrderItem', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -365,7 +365,7 @@
                 token: document.getElementById('token').value
             };
             try {
-                const res = await postJSON(BASE + 'user/historyOrderItem', data);
+                const res = await api.post('user/historyOrderItem', data);
                 show(res);
             } catch (err) {
                 show(err);

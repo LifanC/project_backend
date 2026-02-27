@@ -204,7 +204,7 @@
                 permissions: document.querySelector('input[name="permission"]:checked').value
             };
             try {
-                const res = await postJSON(BASE_LOCALHOST + 'permissions/register', data);
+                const res = await api.post('permissions/register', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -214,7 +214,7 @@
         // 查詢
         document.getElementById('btnQuery').addEventListener('click', async () => {
             try {
-                const res = await getJSON(BASE_LOCALHOST + 'permissions/query', null);
+                const res = await api.get('permissions/query', null);
                 show(res);
             } catch (err) {
                 show(err);
@@ -229,7 +229,7 @@
                 permissions: document.querySelector('input[name="permission"]:checked').value
             };
             try {
-                const res = await putJSON(BASE_LOCALHOST + 'permissions/update', data);
+                const res = await api.put('permissions/update', data);
                 show(res);
             } catch (err) {
                 show(err);
@@ -243,7 +243,7 @@
                 password: document.getElementById('regPass').value
             };
             try {
-                const res = await deleteJSON(BASE_LOCALHOST + 'permissions/delete', data);
+                const res = await api.delete('permissions/delete', data);
                 show(res);
             } catch (err) {
                 show(err);
