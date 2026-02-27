@@ -16,14 +16,15 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of(
-            "http://127.0.0.1:5500"
+                "http://127.0.0.1:5500",
+                "https://project-frontend-exjf.onrender.com"
         ));
         config.setAllowedMethods(List.of(
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "OPTIONS"
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
         ));
         config.setAllowedHeaders(List.of("*"));
 
