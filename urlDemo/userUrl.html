@@ -9,20 +9,76 @@
 <link rel="stylesheet" href="/url.css">
 <script src="/jquery.min.js"></script>
 <script>
-    // http://127.0.0.1:5500/userUrl.html
-    const BASE = 'http://localhost:8080/api/';
+    // https://project-frontend-exjf.onrender.com/userurl.html
+    // http://127.0.0.1:5500/userurl.html
+    // https://project-backend-2olo.onrender.com/api/
+    // http://localhost:8080/api/
+    const BASES = [
+        'https://project-backend-2olo.onrender.com/api/',
+        'http://localhost:8080/api/'
+    ];
+    var workingBase = localStorage.getItem('workingBase');
 
     const SafetyUsername = 'lukechen';
     const SafetyPassword = '1qaz@WSX';
 
+    const methodMap = new Map([
+        ['GET', getJSON],
+        ['POST', postJSON],
+        ['PUT', putJSON],
+        ['DELETE', deleteJSON]
+    ]);
+
+    async function resolveRequest(method, path, data) {
+        if (workingBase) {
+            try {
+                console.log('使用已記住 API:', workingBase);
+                const fn = methodMap.get(method);
+                return await fn(workingBase + path, data);
+            } catch (err) {
+                console.warn('記住的 API 失敗');
+                workingBase = null;
+                localStorage.removeItem('workingBase');
+                return err;
+            }
+        }
+        let lastError = null;
+        for (const base of BASES) {
+            try {
+                console.log('嘗試 API:', base);
+                const fn = methodMap.get(method);
+                workingBase = base;
+                const res = await fn(workingBase + path, data);
+                localStorage.setItem('workingBase', base);
+                return res;
+            } catch (err) {
+                lastError = err;
+                console.warn('失敗:', base);
+            }
+        }
+        return lastError;
+    }
+
+    const api = {
+        get: (path, data = null) => {
+            return resolveRequest('GET', path, data)
+        },
+        post: (path, data) => {
+            return resolveRequest('POST', path, data)
+        },
+        put: (path, data) => {
+            return resolveRequest('PUT', path, data)
+        },
+        delete: (path, data = null) => {
+            return resolveRequest('DELETE', path, data)
+        }
+    };
+
     testLogin()
     async function testLogin() {
-        try {
-            const res = await getJSON(BASE + 'user/testLogin', null);
-            show(res);
-        } catch (err) {
-            show(err);
-        }
+        const res = await api.get('userurl/testLogin', null);
+        console.log('res', res)
+        show(res);
     }
 
     function show(log) {
