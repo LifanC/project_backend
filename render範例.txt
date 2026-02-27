@@ -1,0 +1,15 @@
+https://render.com/
+
+jdbc:postgresql://dpg-d6g97jrh46gs73akpsfg-a:5432/interviewworks_85ge?currentSchema=interviewworks_schema
+
+postgresql://postgresrender:UPisjpYLnVSKnj8dYHwZlpX7fwy9IOLE@dpg-d6g97jrh46gs73akpsfg-a/interviewworks_85ge
+
+postgresql://postgresrender:UPisjpYLnVSKnj8dYHwZlpX7fwy9IOLE@dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com/interviewworks_85ge
+
+redis://red-d6ga30hr0fns73burdpg:6379
+
+https://project-frontend-exjf.onrender.com
+https://project-backend-2olo.onrender.com
+
+https://project-frontend-exjf.onrender.com/permissions.html
+https://project-frontend-exjf.onrender.com/userUrl.html
