@@ -3,11 +3,11 @@
 - 這是一個基於 Spring Boot 的 REST API 伺服器
 - 實作 Spring Security + JWT + Refresh Token 身份驗證
 - 使用 Redis 作為快取
-- 使用 MariaDB 作為主資料庫
+- 使用 PostgreSQL 作為主資料庫
 - 專案為示範用的 API 系統，整合使用者身分驗證與權限控管機制。
 系統採用 JWT 搭配 Refresh Token 的驗證架構，以確保 API 存取的安全性與可擴充性。
-在系統架構上，使用 Redis 作為快取層，提升驗證與授權流程的效能；並以 MariaDB 作為主要資料庫，負責核心業務資料的持久化儲存。
-## 2. 技術架構圖（Spring Boot → Redis → MariaDB）
+在系統架構上，使用 Redis 作為快取層，提升驗證與授權流程的效能；並以 PostgreSQL 作為主要資料庫，負責核心業務資料的持久化儲存。
+## 2. 技術架構圖（Spring Boot → Redis → PostgreSQL）
 架構說明：
 1. Spring Boot 提供 API
 - 接收前端或其他服務請求，負責業務邏輯處理
@@ -15,24 +15,21 @@
 2. Redis 作為 Cache
 - 快取熱點資料，減少對資料庫的直接查詢，提升效能
 - 例如更新快取前先取得鎖，確保同一時間只有一個請求可以修改快取，避免資料不一致
-3. MariaDB 作為主要資料存儲
+3. PostgreSQL 作為主要資料存儲
 - 在寫入資料庫前也可使用鎖，確保資料安全
 - 例如：
 - 1. 更新 Redis Cache
-- 2. 更新 MariaDB
-4. Redis + MariaDB 的協作：
+- 2. 更新 PostgreSQL
+4. Redis + PostgreSQL 的協作：
 - Redis
 - 1. 資料存放在記憶體中，速度很快，但如果伺服器重啟，資料可能會丟失
-- MariaDB
+- PostgreSQL
 - 1. 資料持久化存儲
-- 2. 每筆資料都會寫到硬碟，保證長期保存
+- 2. 每筆資料都會寫到DB，保證長期保存
 - 3. 讀寫比較慢
 ## 3. 系統啟動方式（Run / docker-compose）
 ### 3.1 本地運行 (Run)
-1. 編譯專案
-- ./mvnw clean package
-2. 啟動 Spring Boot
-- java -jar target/demo-api.jar
+1. 啟動 Spring Boot
 ### 3.2 Docker-Compose (Run)
 1. 啟動 Docker
 - 停止服務 + 清掉容器（加上 --rmi all 就連 image 也刪）
@@ -45,13 +42,15 @@
 - docker compose logs -f *持續追蹤 log*
 4. 看目前有哪些服務在跑
 - docker compose ps
-5. 查看 mariadb
-- docker exec -it <container_name> bash
-- mariadb -u root -p
-- show databases;
-- USE 資料庫名稱;
-- SHOW TABLES;
-- SELECT * FROM permissionsdata;
+5. 查看 PostgreSQL
+- docker exec -it <container_name> psql -U postgres
+- \c interviewworks
+- \dn
+- \dt interviewworks_schema.*
+- SELECT * FROM interviewworks_schema.roles;
+- 或
+- SET search_path TO interviewworks_schema;
+- SELECT * FROM roles;
 6. 查看 redis
 - docker exec -it <container_name> redis-cli
 - KEYS *
@@ -59,8 +58,6 @@
 - TTL <key_name> *查看 TTL (剩餘時間)*
 ## 4. API 使用流程
 ![image](https://github.com/LifanC/project_backend/blob/master/permissions.png)
-```
-```
 ![image](https://github.com/LifanC/project_backend/blob/master/userUrl.png)
 ## 5. 目錄說明 / 層架構說明
 ```
@@ -81,8 +78,8 @@ project_backend/
 │   │   └─ resources/
 │   │       ├─ application.yml          *配置檔*
 │   │       ├─ application-docker.yml   *Docker 配置檔*
-│   │       ├─ log4j2.xml               *顯示 log*
-│   │       └─ certs/                   *放憑證的檔案
+│   │       ├─ application-render.yml   *Render 配置檔*
+│   │       └─ log4j2.xml               *顯示 log*
 │   └─ test/                            *單元測試*
 ├─ docker-compose.yml
 └─ Dockerfile
