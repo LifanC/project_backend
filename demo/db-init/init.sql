@@ -93,8 +93,7 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata_details_u (
                                                           updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                           order_item varchar(100) NULL DEFAULT NULL::character varying,
                                                           action_type varchar(100) NULL DEFAULT NULL::character varying,
-                                                          CONSTRAINT userdata_details_u_action_type_check CHECK (((action_type)::text = ANY ((ARRAY['insert'::character varying, 'update'::character varying, 'delete'::character varying])::text[]))),
-                                                          CONSTRAINT userdata_details_u_pkey PRIMARY KEY (username)
+                                                          CONSTRAINT userdata_details_u_action_type_check CHECK (((action_type)::text = ANY ((ARRAY['insert'::character varying, 'update'::character varying, 'delete'::character varying])::text[])))
 );
 
 -- 建立觸發器
