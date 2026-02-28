@@ -131,20 +131,24 @@
     </select>
 
     <select id="selectUserdataDetailUUsernameItem" resultType="java.lang.String">
-        select distinct userdata_details_u.username
-        from "interviewworks_schema"."userdata_details_u" userdata_details_u
-                 inner join "interviewworks_schema"."userdata" userdata
-                            on
-                                userdata_details_u.username = userdata.username
-                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
-                            on
-                                userdata_details_u.username = permissionsdata.username
-        where permissionsdata.use_permissions in ('GUEST', 'USER')
-        order by case permissionsdata.use_permissions
-                     when 'GUEST' then 1
-                     when 'USER' then 2
-                     end,
-                 permissionsdata.updated_date desc
+        SELECT username
+        FROM (SELECT u.username,
+                     ROW_NUMBER() OVER (
+                         PARTITION BY u.username
+                         ORDER BY
+                             CASE p.use_permissions
+                                 WHEN 'GUEST' THEN 1
+                                 WHEN 'USER' THEN 2
+                                 END,
+                             p.updated_date DESC
+                         ) rn
+              FROM "interviewworks_schema".userdata_details_u u
+                       JOIN "interviewworks_schema".userdata ud
+                            ON u.username = ud.username
+                       JOIN "interviewworks_schema".permissionsdata p
+                            ON u.username = p.username
+              WHERE p.use_permissions IN ('GUEST', 'USER')) t
+        WHERE rn = 1
     </select>
     <select id="queryUserName" resultType="java.lang.String">
         select concat('(',
