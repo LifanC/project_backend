@@ -17,47 +17,10 @@
         'http://localhost:8080/api/',
         'https://project-backend-2olo.onrender.com/api/'
     ];
-    var workingBase = localStorage.getItem('workingBase');
+    let workingBase = localStorage.getItem('workingBase');
 
     const SafetyUsername = 'lukechen';
     const SafetyPassword = '1qaz@WSX';
-
-    const methodMap = new Map([
-        ['GET', getJSON],
-        ['POST', postJSON],
-        ['PUT', putJSON],
-        ['DELETE', deleteJSON]
-    ]);
-
-    async function resolveRequest(method, path, data) {
-        if (workingBase) {
-            try {
-                console.log('使用已記住 API:', workingBase);
-                const fn = methodMap.get(method);
-                return await fn(workingBase + path, data);
-            } catch (err) {
-                console.warn('記住的 API 失敗');
-                workingBase = null;
-                localStorage.removeItem('workingBase');
-                return err;
-            }
-        }
-        let lastError = null;
-        for (const base of BASES) {
-            try {
-                console.log('嘗試 API:', base);
-                const fn = methodMap.get(method);
-                workingBase = base;
-                const res = await fn(workingBase + path, data);
-                localStorage.setItem('workingBase', base);
-                return res;
-            } catch (err) {
-                lastError = err;
-                console.warn('失敗:', base);
-            }
-        }
-        return lastError;
-    }
 
     const api = {
         get: (path, data = null) => {
@@ -74,14 +37,59 @@
         }
     };
 
+    const methodMap = new Map([
+        ['GET', getJSON],
+        ['POST', postJSON],
+        ['PUT', putJSON],
+        ['DELETE', deleteJSON]
+    ]);
+
+    async function resolveRequest(method, path, data) {
+        const fn = methodMap.get(method);
+        if (workingBase) {
+            try {
+                console.log('使用已記住 API:', workingBase + path);
+                return await fn(workingBase + path, data);
+            } catch (err) {
+                if (isFetchNetworkError(err)) {
+                    console.warn('API 掛了:', base);
+                    workingBase = null;
+                    localStorage.removeItem('workingBase');
+                }
+                return err;
+            }
+        }
+
+        for (const base of BASES) {
+            try {
+                console.log('嘗試 API:', base + path);
+
+                workingBase = base;
+                const res = await fn(base + path, null);
+
+                localStorage.setItem('workingBase', base);
+                return res;
+            } catch (err) {
+                if (isFetchNetworkError(err)) {
+                    console.warn('API 掛了:', base);
+                    continue;
+                }
+                return err;
+            }
+        }
+    }
+
+    function isFetchNetworkError(err) {
+        return err instanceof TypeError && err.message.includes('fetch');
+    }
+
     testLogin()
     async function testLogin() {
         const res = await api.get('permissions/testLogin', null);
-        console.log('res', res)
         show(res);
     }
 
-    function show(res) {
+    function show(log = {}) {
         const {
             code = undefined,
             name = undefined,
@@ -96,8 +104,8 @@
             path = undefined,
             users = undefined,
             timestamp = undefined,
-        } = res;
-        const err = {
+        } = log;
+        const messageLog = {
             code,
             name,
             username,
@@ -112,7 +120,7 @@
             users,
             timestamp,
         }
-        document.getElementById('result').innerHTML = JSON.stringify(err, null, 2);
+        document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
     }
 
     // POST JSON helper

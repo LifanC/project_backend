@@ -235,6 +235,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (Token驗證)不存在或已過期，請重新取得 Token", username);
+                            throw new BadRequestException("Token 不存在或已過期，請重新取得 Token");
+                        }
                         String refreshTokenInRedis = stringRedisTemplate.opsForValue().get(refreshRedisKey);
                         Claims claims = Jwts.parserBuilder()
                                 .setSigningKey(getKeyForToday())  // 你生成 token 時用的密鑰
@@ -249,12 +254,6 @@ public class UserServiceImpl implements UserService {
                         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
                             logger.error("{} : (Token驗證)Token 已被撤銷", username);
                             throw new RuntimeException("Token 已被撤銷");
-                        }
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (Token驗證)不存在或已過期，請重新取得 Token", username);
-                            throw new BadRequestException("Token 不存在或已過期，請重新取得 Token");
                         }
 
                         Map<String, Object> userSelect = getUserData(userData);
@@ -383,6 +382,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (Token登出)不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         String refreshTokenInRedis = stringRedisTemplate.opsForValue().get(refreshRedisKey);
                         SecretKey keyForToday = getKeyForToday();
 
@@ -406,12 +410,6 @@ public class UserServiceImpl implements UserService {
                                 remainingSeconds,
                                 TimeUnit.SECONDS
                         );
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (Token登出)不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         Boolean refreshExisted = stringRedisTemplate.delete(refreshRedisKey);
                         logger.info("{} : refresh Token {}",
@@ -552,6 +550,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (查詢使用者名單) Token 不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
@@ -568,12 +571,6 @@ public class UserServiceImpl implements UserService {
                         String roles = Context.get().get("roles").toString();
                         logger.info("(查詢使用者名單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (查詢使用者名單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", accessJti)
@@ -658,6 +655,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (新增訂單) Token 不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
@@ -674,12 +676,6 @@ public class UserServiceImpl implements UserService {
                         String roles = Context.get().get("roles").toString();
                         logger.info("(新增訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (新增訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", accessJti)
@@ -776,6 +772,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (查詢訂單) Token 不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
@@ -792,12 +793,6 @@ public class UserServiceImpl implements UserService {
                         String roles = Context.get().get("roles").toString();
                         logger.info("(查詢訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (查詢訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", accessJti)
@@ -918,6 +913,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (更改訂單) Token 不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
@@ -934,12 +934,6 @@ public class UserServiceImpl implements UserService {
                         String roles = Context.get().get("roles").toString();
                         logger.info("(更改訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (更改訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", accessJti)
@@ -1043,6 +1037,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (刪除訂單) Token 不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
@@ -1059,12 +1058,6 @@ public class UserServiceImpl implements UserService {
                         String roles = Context.get().get("roles").toString();
                         logger.info("(刪除訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (刪除訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", accessJti)
@@ -1166,6 +1159,11 @@ public class UserServiceImpl implements UserService {
 //                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (歷史紀錄) Token 不存在或已過期", username);
+                            throw new BadRequestException("Token 不存在或已過期");
+                        }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
@@ -1182,12 +1180,6 @@ public class UserServiceImpl implements UserService {
                         String roles = Context.get().get("roles").toString();
                         logger.info("(歷史紀錄)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (歷史紀錄) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
-                        }
 
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", accessJti)
