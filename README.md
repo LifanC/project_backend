@@ -92,3 +92,6 @@ project_backend/
 - *MANAGER（部門主管）可執行功能：查詢、刪除、檢視歷史紀錄。* <*可查詢之對象資料：GUEST、USER。*>
 ### 2. JWT 驗證流程: Token 驗證 → Redis 檢查 → 允許存取
 - *商業邏輯層 : Controller 只負責接收與回傳，Service 處理業務邏輯*
+- *解析 JWT*
+- *檢查 Redis*
+- *查使用者（DB or Cache）*

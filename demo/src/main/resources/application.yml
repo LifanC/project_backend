@@ -2,7 +2,7 @@
 # JWT 設定
 # -----------------------------
 jwt:
-  expirationSeconds: 360
+  expirationSeconds: 600
 
 # -----------------------------
 # Server 設定
