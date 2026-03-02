@@ -1,7 +1,7 @@
 # API 功能 Demo 文件
 ## 1. 專案概述
 - 這是一個基於 Spring Boot 的 REST API 伺服器
-- 實作 Spring Security + JWT + Refresh Token 身份驗證
+- 實作 Spring Security + JWT + Refresh Token 身份驗證 + 黑名單
 - 使用 Redis 作為快取
 - 使用 PostgreSQL 作為主資料庫
 - 專案為示範用的 API 系統，整合使用者身分驗證與權限控管機制。
@@ -88,8 +88,8 @@ project_backend/
 ### 1. 提供使用者身分驗證與權限控管機制，確保僅授權使用者可存取對應的 API 資源。
 - *GUEST（客人）可執行功能：查詢、新增、刪除訂單。*
 - *USER（一般使用者）可執行功能：查詢、新增、修改、刪除訂單。*
-- *ADMIN（系統管理員）可執行功能：查詢、修改、刪除、檢視歷史紀錄。* <*可查詢之對象資料：GUEST、USER。*>
-- *MANAGER（部門主管）可執行功能：查詢、刪除、檢視歷史紀錄。* <*可查詢之對象資料：GUEST、USER。*>
+- *ADMIN（系統管理員）可執行功能：查詢、修改、刪除、檢視歷史紀錄。* *(可查詢之對象資料：GUEST、USER)*)
+- *MANAGER（部門主管）可執行功能：查詢、刪除、檢視歷史紀錄。* *(可查詢之對象資料：GUEST、USER)*
 ### 2. JWT 驗證流程: Token 驗證 → Redis 檢查 → 允許存取
 - *商業邏輯層 : Controller 只負責接收與回傳，Service 處理業務邏輯*
 - *解析 JWT*
