@@ -21,6 +21,11 @@
 
     const SafetyUsername = 'lukechen';
     const SafetyPassword = '1qaz@WSX';
+    const authHeader = 'Basic ' + utf8ToB64(SafetyUsername + ':' + SafetyPassword);
+
+    function utf8ToB64(str) {
+        return btoa(unescape(encodeURIComponent(str)));
+    }
 
     const api = {
         get: (path, data = null) => {
@@ -131,7 +136,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword)
+                    'Authorization': authHeader
                 },
                 body: JSON.stringify(data)
             });
@@ -150,7 +155,7 @@
             const res = await fetch(url + query, {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword),
+                    'Authorization': authHeader,
                     'Accept': 'application/json'
                 }
             });
@@ -170,7 +175,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword)
+                    'Authorization': authHeader
                 },
                 body: JSON.stringify(data)
             });
@@ -189,7 +194,7 @@
             const res = await fetch(url + del, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': 'Basic ' + btoa(SafetyUsername + ':' + SafetyPassword),
+                    'Authorization': authHeader,
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify(params)
