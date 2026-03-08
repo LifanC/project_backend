@@ -90,7 +90,9 @@ public class UserServiceImpl implements UserService {
      * 防 Cache Stampede（雪崩）
      * 問題：* 大量 key 同時過期 → DB 被打爆
      * */
-    private int expirationSecondsAddRndomNumber(int min, int max) {
+    private int expirationSecondsAddRndomNumber() {
+        int min = 1;
+        int max = 60;
         return Math.toIntExact(expirationSeconds + (new Random().nextInt((max - min) + 1) + min));
     }
 
@@ -161,7 +163,7 @@ public class UserServiceImpl implements UserService {
                     // JWT 簽名與驗證用的「祕密字串（secret）」
                     final String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                     String jti = UUID.randomUUID().toString();
-                    int expirationSecondsAddRndomNumber = expirationSecondsAddRndomNumber(1, 60);
+                    int expirationSecondsAddRndomNumber = expirationSecondsAddRndomNumber();
                     final String refreshToken = Jwts.builder()
                             .setId(jti)
                             .setSubject(username)
@@ -264,7 +266,7 @@ public class UserServiceImpl implements UserService {
                         // JWT 簽名與驗證用的「祕密字串（secret）」
                         final String permissions = userSelect.get("permissions").toString();
                         String jti = UUID.randomUUID().toString();
-                        int expirationSecondsAddRndomNumber = expirationSecondsAddRndomNumber(1, 60);
+                        int expirationSecondsAddRndomNumber = expirationSecondsAddRndomNumber();
                         String accessToken = Jwts.builder()
                                 .setId(jti)
                                 .setSubject(usernameJwt)
