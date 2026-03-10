@@ -1,6 +1,6 @@
 package com.example.demo.Service;
 
-import com.example.demo.Common.CertificateFunction;
+//import com.example.demo.Common.CertificateFunction;
 import com.example.demo.Dto.Permissions.PermissionRequest;
 import com.example.demo.Dto.Permissions.Permission;
 import com.example.demo.Dto.Permissions.PermissionResponse;
@@ -43,7 +43,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    private final String keystorePath = "permission-keystorePath";
+//    private final String keystorePath = "permission-keystorePath";
 
     // 單次回源鎖
     private final ReentrantLock lock = new ReentrantLock();
