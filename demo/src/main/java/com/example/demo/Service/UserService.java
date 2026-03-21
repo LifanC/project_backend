@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 
 public interface UserService {
 
+    ResponseEntity<?> testLogin();
+
     ResponseEntity<?> takeToken(@Valid UserRequest request);
 
     ResponseEntity<?> validate(@Valid UserTokenValidateRequest request);

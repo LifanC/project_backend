@@ -2,8 +2,8 @@ package com.example.demo.Service;
 
 import com.example.demo.Aspect.Permissions;
 import com.example.demo.Common.ActionType;
-//import com.example.demo.Common.CertificateFunction;
 import com.example.demo.Common.Context;
+import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.User.*;
 import com.example.demo.Exception.*;
 import com.example.demo.Mapper.SecretMapper;
@@ -72,8 +72,6 @@ public class UserServiceImpl implements UserService {
             "fail", "user:auth:fail:{1}"
     );
 
-//    private final String keystorePath = "user-keystorePath";
-
     // 單次回源鎖
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -97,6 +95,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public ResponseEntity<?> testLogin() {
+        logger.info("user/testLogin: User is working!");
+        List<Object> messageList = List.of("User is working!");
+        Map<String, List<Object>> message = Map.of("content", messageList);
+        HttpStatus status = HttpStatus.OK;
+        return ResponseEntity
+                .status(status)
+                .body(ApiResponse.api(
+                        status,
+                        message
+                ));
+    }
+
+    @Override
     @Transactional
     @PermitAll
     public ResponseEntity<?> takeToken(UserRequest request) {
@@ -108,15 +120,6 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User takeToken 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "takeToken");
-//                    if (!valid) {
-//                        logger.error("takeToken 憑證未通過");
-//                        userData.setMessage("Token 憑證未通過");
-//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userData.getStatus())
-//                                .body(new UserResponse(userData));
-//                    }
                     // 最多失敗嘗試次數
                     final int maxFailAttempts = 5;
                     // failKey TTL（同上，避免混亂）
@@ -128,12 +131,12 @@ public class UserServiceImpl implements UserService {
                     if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey))) {
                         Long ttl = stringRedisTemplate.getExpire(lockKey, TimeUnit.SECONDS);
                         logger.error("{} : 連續錯誤{}次，帳號暫時被鎖，請稍後再試({}秒)", username, maxFailAttempts, ttl);
-                        throw new LockedException("連續錯誤" + maxFailAttempts + "次，帳號暫時被鎖，請稍後再試(" + ttl + "秒)");
+                        throw new LockedException(username + " - 連續錯誤" + maxFailAttempts + "次，帳號暫時被鎖，請稍後再試(" + ttl + "秒)");
                     }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} : (Token 取得)帳號不存在", username);
-                        throw new ResourceNotFoundException("帳號不存在");
+                        throw new ResourceNotFoundException(username + " - 帳號不存在");
                     }
                     final String userPassword = userSelect.get("password").toString();
                     final String permissions = userSelect.get("permissions").toString();
@@ -152,14 +155,11 @@ public class UserServiceImpl implements UserService {
                             );
                         }
                         logger.error("{} : (Token 取得)帳號密碼錯誤，第{}次。共可輸入{}次", username, failCount, maxFailAttempts);
-                        throw new ResourceNotFoundException("帳號密碼錯誤，第" + failCount + "次。共可輸入" + maxFailAttempts + "次");
+                        throw new ResourceNotFoundException(username + " - 帳號密碼錯誤，第" + failCount + "次。共可輸入" + maxFailAttempts + "次");
                     }
                     stringRedisTemplate.delete(failKey);
                     stringRedisTemplate.delete(lockKey);
 
-                    userData.setPermissions(permissions);
-                    userData.setCreated_date(((Timestamp) userSelect.get("created_date")).toLocalDateTime());
-                    userData.setUpdated_date(((Timestamp) userSelect.get("updated_date")).toLocalDateTime());
                     // JWT 簽名與驗證用的「祕密字串（secret）」
                     final String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                     String jti = UUID.randomUUID().toString();
@@ -182,32 +182,45 @@ public class UserServiceImpl implements UserService {
                             TimeUnit.SECONDS
                     );
                     if (!success) {
-                        throw new IllegalStateException("Token 已經存在");
+                        throw new IllegalStateException(username + " - Token 已經存在");
                     }
                     logger.info("{} : (Token 取得)成功", username);
-                    userData.setMessage("Token 取得成功");
-                    userData.setStatus(HttpStatus.OK);
-                    userData.setToken("");
-                    userData.setData(new ArrayList<>());
-
+                    List<Object> messageList = List.of(
+                            "帳號 - " + username,
+                            "權限 - " + permissions,
+                            username + " - Token 取得成功",
+                            LocalDateTime.now()
+                    );
+                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
-                            .status(userData.getStatus())
-                            .body(new UserResponse(userData));
+                            .status(status)
+                            .body(ApiResponse.api(
+                                    status,
+                                    message
+                            ));
                 } finally {
                     lock.unlock();
                 }
             } else {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
-                logger.error("{} : takeToken 資源忙碌，請重試", username);
-                userData.setMessage("資源忙碌，請重試");
-                userData.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                logger.error("{} : 取Token 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 取Token，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userData.getStatus())
-                        .body(new UserResponse(userData));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -226,21 +239,12 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User validate 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "validate");
-//                    if (!valid) {
-//                        logger.error("validate 憑證未通過");
-//                        userData.setMessage("Token 憑證未通過");
-//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userData.getStatus())
-//                                .body(new UserResponse(userData));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (Token驗證)不存在或已過期，請重新取得 Token", username);
-                            throw new BadRequestException("Token 不存在或已過期，請重新取得 Token");
+                            throw new BadRequestException(username + " - Token 不存在或已過期，請重新取得 Token");
                         }
                         String refreshTokenInRedis = stringRedisTemplate.opsForValue().get(refreshRedisKey);
                         Claims claims = Jwts.parserBuilder()
@@ -255,13 +259,13 @@ public class UserServiceImpl implements UserService {
                         String blacklistRedisKey = redisKey.get("blacklist").replace("{1}", usernameJwtId);
                         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
                             logger.error("{} : (Token驗證)Token 已被撤銷", username);
-                            throw new RuntimeException("Token 已被撤銷");
+                            throw new RuntimeException(username + " - Token 已被撤銷");
                         }
 
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
                             logger.error("{} : (Token驗證)帳號不存在", username);
-                            throw new ResourceNotFoundException("帳號不存在");
+                            throw new ResourceNotFoundException(username + " - 帳號不存在");
                         }
                         // JWT 簽名與驗證用的「祕密字串（secret）」
                         final String permissions = userSelect.get("permissions").toString();
@@ -323,21 +327,26 @@ public class UserServiceImpl implements UserService {
                             logger.info("{} : (Token驗證)不存在", usernameJwt);
                         }
                         logger.info("{} : (Token驗證)成功", usernameJwt);
-                        userData.setMessage("驗證成功");
-                        userData.setStatus(HttpStatus.OK);
-                        userData.setToken(accessToken);
-                        userData.setPermissions(permissions);
-                        userData.setCreated_date(((Timestamp) userSelect.get("created_date")).toLocalDateTime());
-                        userData.setUpdated_date(((Timestamp) userSelect.get("updated_date")).toLocalDateTime());
-                        userData.setData(new ArrayList<>());
-
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + permissions,
+                                username + " - Token 驗證成功",
+                                LocalDateTime.now()
+                        );
+                        Map<String, List<Object>> message = new TreeMap<>();
+                        message.put("content", messageList);
+                        message.put("token", List.of(accessToken));
+                        HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (Token驗證)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -346,14 +355,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : validate 資源忙碌，請重試", username);
-                userData.setMessage("資源忙碌，請重試");
-                userData.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - Token驗證，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userData.getStatus())
-                        .body(new UserResponse(userData));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -373,21 +389,12 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User logout 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "logout");
-//                    if (!valid) {
-//                        logger.error("logout 憑證未通過");
-//                        userData.setMessage("Token 憑證未通過");
-//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userData.getStatus())
-//                                .body(new UserResponse(userData));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (Token登出)不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         String refreshTokenInRedis = stringRedisTemplate.opsForValue().get(refreshRedisKey);
                         SecretKey keyForToday = getKeyForToday();
@@ -402,7 +409,7 @@ public class UserServiceImpl implements UserService {
                         String blacklistRedisKey = redisKey.get("blacklist").replace("{1}", usernameAccessJwtId);
                         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
                             logger.error("{} : (Token登出)Token 已被撤銷", username);
-                            throw new RuntimeException("Token 已被撤銷");
+                            throw new RuntimeException(username + " - Token 已被撤銷");
                         }
 
                         long remainingSeconds = stringRedisTemplate.getExpire(refreshRedisKey, TimeUnit.SECONDS);
@@ -428,7 +435,7 @@ public class UserServiceImpl implements UserService {
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(Token登出)使用者錯誤");
-                            throw new RuntimeException("使用者錯誤");
+                            throw new RuntimeException(username + " - 使用者錯誤");
                         }
 
                         String accessRedisKey = redisKey.get("access")
@@ -439,24 +446,29 @@ public class UserServiceImpl implements UserService {
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
                             logger.error("{} : 登出 Token 帳號不存在", username);
-                            throw new ResourceNotFoundException("登出 Token 帳號不存在");
+                            throw new ResourceNotFoundException(username + " - 登出 Token 帳號不存在");
                         }
                         String permissions = userSelect.get("permissions").toString();
-                        userData.setMessage("已登出");
-                        userData.setStatus(HttpStatus.OK);
-                        userData.setPermissions(permissions);
-                        userData.setCreated_date(((Timestamp) userSelect.get("created_date")).toLocalDateTime());
-                        userData.setUpdated_date(((Timestamp) userSelect.get("updated_date")).toLocalDateTime());
-                        userData.setToken("");
-                        userData.setData(new ArrayList<>());
-
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + permissions,
+                                username + " - Token 已登出",
+                                LocalDateTime.now()
+                        );
+                        Map<String, List<Object>> message = new TreeMap<>();
+                        message.put("content", messageList);
+                        message.put("token", List.of(""));
+                        HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (Token登出)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -465,14 +477,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : logout 資源忙碌，請重試", username);
-                userData.setMessage("資源忙碌，請重試");
-                userData.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - Token登出，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userData.getStatus())
-                        .body(new UserResponse(userData));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -541,27 +560,18 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User queryUser 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "queryUser");
-//                    if (!valid) {
-//                        logger.error("queryUser 憑證未通過");
-//                        userData.setMessage("queryUser 憑證未通過");
-//                        userData.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userData.getStatus())
-//                                .body(new UserResponse(userData));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (查詢使用者名單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(查詢使用者名單)使用者錯誤");
-                            throw new RuntimeException("(查詢使用者名單)使用者錯誤");
+                            throw new RuntimeException(username + " - (查詢使用者名單)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
@@ -580,31 +590,38 @@ public class UserServiceImpl implements UserService {
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
                             logger.error("{} : (查詢使用者名單) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException("Token 已過期");
+                            throw new BadRequestException(username + " - Token 已過期");
                         }
                         String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
                         userData.setToken(accessTokenInRedis);
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
                             logger.error("{} : 查使用者帳號不存在", username);
-                            throw new ResourceNotFoundException("查使用者帳號不存在");
+                            throw new ResourceNotFoundException(username + " - 查使用者帳號不存在");
                         }
-                        userData.setCreated_date(((Timestamp) userSelect.get("created_date")).toLocalDateTime());
-                        userData.setUpdated_date(((Timestamp) userSelect.get("updated_date")).toLocalDateTime());
                         String permissions = userSelect.get("permissions").toString();
-                        userData.setStatus(HttpStatus.OK);
-                        userData.setPermissions(permissions);
-                        userData.setMessage("");
                         List<String> isUserName = userMapper.queryUserName();
-                        userData.setData(isUserName);
-
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + permissions,
+                                username + " - 查詢使用者名單",
+                                isUserName,
+                                "新增日期" + ((Timestamp) userSelect.get("created_date")).toLocalDateTime(),
+                                "更改日期" + ((Timestamp) userSelect.get("updated_date")).toLocalDateTime()
+                        );
+                        Map<String, List<Object>> message = new TreeMap<>();
+                        message.put("content", messageList);
+                        HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
-                                .status(userData.getStatus())
-                                .body(new UserResponse(userData));
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (查詢使用者名單)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -613,14 +630,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : queryUser 資源忙碌，請重試", username);
-                userData.setMessage("資源忙碌，請重試");
-                userData.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 查詢使用者名單，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userData.getStatus())
-                        .body(new UserResponse(userData));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -646,27 +670,18 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User createOrderItem 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "createOrderItem");
-//                    if (!valid) {
-//                        logger.error("createOrderItem 憑證未通過");
-//                        userdataDetails.setMessage("createOrderItem 憑證未通過");
-//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userdataDetails.getStatus())
-//                                .body(new UserdataDetailsResponse(userdataDetails));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (新增訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(新增訂單)使用者錯誤");
-                            throw new RuntimeException("(新增訂單)使用者錯誤");
+                            throw new RuntimeException(username + " - (新增訂單)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
@@ -685,7 +700,7 @@ public class UserServiceImpl implements UserService {
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
                             logger.error("{} : (新增訂單) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException("Token 已過期");
+                            throw new BadRequestException(username + " - Token 已過期");
                         }
                         try {
                             String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
@@ -693,7 +708,7 @@ public class UserServiceImpl implements UserService {
                             Map<String, Object> userSelect = getUserData(userData);
                             if (userSelect == null) {
                                 logger.error("{} : (新增訂單) 使用者不存在", username);
-                                throw new ResourceNotFoundException("使用者不存在");
+                                throw new ResourceNotFoundException(username + " - 使用者不存在");
                             }
                             String permissions = userSelect.get("permissions").toString();
                             userdataDetails.setPermissions(permissions);
@@ -702,31 +717,39 @@ public class UserServiceImpl implements UserService {
                             userMapper.createUserdataDetail(userdataDetails);
                             userdataDetails.setStatus(HttpStatus.OK);
                             logger.info("dataDetails 新增訂單成功");
-                            userdataDetails.setMessage("新增訂單成功");
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
-                            userdataDetails.setCreated_date(((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
-                            userdataDetails.setUpdated_date(((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
                             userdataDetails.setAction_type(ActionType.INSERT.getActionType());
                             userMapper.createUserdataDetailU(userdataDetails);
-                            userdataDetails.setHistory(new ArrayList<>());
-
+                            List<Object> messageList = List.of(
+                                    "帳號 - " + username,
+                                    "權限 - " + permissions,
+                                    username + " - 新增訂單成功",
+                                    order_item,
+                                    "新增日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime()
+                            );
+                            Map<String, List<Object>> message = new TreeMap<>();
+                            message.put("content", messageList);
+                            HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
-                                    .status(userdataDetails.getStatus())
-                                    .body(new UserdataDetailsResponse(userdataDetails));
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            message
+                                    ));
                         } catch (DuplicateKeyException e) {
                             logger.warn("新增訂單已存在，username={}", usernameAccessJwt);
-                            throw new ResourceAlreadyExistsException("新增訂單已存在", e);
+                            throw new ResourceAlreadyExistsException(username + " - 新增訂單已存在", e);
                         } catch (DataIntegrityViolationException e) {
                             logger.warn("新增訂單資料不合法，username={}", usernameAccessJwt);
-                            throw new IsViolationException("新增訂單資料不合法", e);
+                            throw new IsViolationException(username + " - 新增訂單資料不合法", e);
                         } catch (DataAccessException e) {
                             logger.error("新增資料庫錯誤，username={}", usernameAccessJwt);
-                            throw new DBException("系統錯誤，請稍後再試", e);
+                            throw new DBException(username + " - 系統錯誤，請稍後再試", e);
                         }
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (新增訂單)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -735,14 +758,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : createOrderItem 資源忙碌，請重試", username);
-                userdataDetails.setMessage("資源忙碌，請重試");
-                userdataDetails.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 新增訂單，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userdataDetails.getStatus())
-                        .body(new UserdataDetailsResponse(userdataDetails));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -763,27 +793,18 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User queryOrderItem 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "queryOrderItem");
-//                    if (!valid) {
-//                        logger.error("queryOrderItem 憑證未通過");
-//                        userdataDetails.setMessage("queryOrderItem 憑證未通過");
-//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userdataDetails.getStatus())
-//                                .body(new UserdataDetailsResponse(userdataDetails));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (查詢訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(查詢訂單)使用者錯誤");
-                            throw new RuntimeException("(查詢訂單)使用者錯誤");
+                            throw new RuntimeException(username + " - (查詢訂單)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
@@ -802,7 +823,7 @@ public class UserServiceImpl implements UserService {
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
                             logger.error("{} : (查詢訂單) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException("Token 已過期");
+                            throw new BadRequestException(username + " - Token 已過期");
                         }
                         String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
                         userdataDetails.setToken(accessTokenInRedis);
@@ -810,14 +831,18 @@ public class UserServiceImpl implements UserService {
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
                             logger.error("{} : (查詢訂單) 使用者不存在", username);
-                            throw new ResourceNotFoundException("使用者不存在");
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         String permissions = userSelect.get("permissions").toString();
+                        List<Object> messageList = new ArrayList<>();
+                        messageList.add("帳號 - " + username);
+                        messageList.add("權限 - " + permissions);
+                        messageList.add(username + " - 查詢訂單成功");
                         if (Stream.of("ADMIN", "MANAGER").anyMatch(permissions::contains)) {
                             List<String> isUser = userMapper.queryUserSelect();
                             if (isUser.isEmpty()) {
                                 logger.error("{} : {} (查詢訂單) 訂單不存在", username, permissions);
-                                throw new ResourceNotFoundException("訂單不存在");
+                                throw new ResourceNotFoundException(username + " - 訂單不存在");
                             }
                             List<String> isUserNew = new ArrayList<>();
                             for (int i = 0; i < isUser.size(); i++) {
@@ -831,43 +856,41 @@ public class UserServiceImpl implements UserService {
                                 isUserNew.addAll(Arrays.asList(strArray));
                                 isUserNew.add("--------------------");
                             }
-                            userdataDetails.setOrder_item(isUserNew);
-                            userdataDetails.setCreated_date(LocalDateTime.now());
-                            userdataDetails.setUpdated_date(LocalDateTime.now());
-                            userdataDetails.setHistory(new ArrayList<>());
+                            messageList.add(isUserNew);
+                            messageList.add(LocalDateTime.now());
                         } else {
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             if (userdataDetailsSelect == null) {
                                 logger.error("{} : (查詢訂單) 訂單不存在", username);
-                                throw new ResourceNotFoundException("訂單不存在");
+                                throw new ResourceNotFoundException(username + " - 訂單不存在");
                             }
                             if (userdataDetailsSelect.get("order_item") != null) {
                                 String[] strArray = userdataDetailsSelect.get("order_item")
                                         .toString()
                                         .replaceAll("[\\[\\] ]", "")
                                         .split(",");
-                                userdataDetails.setOrder_item(Arrays.asList(strArray));
+                                messageList.add(Arrays.asList(strArray));
                             } else {
-                                userdataDetails.setOrder_item(new ArrayList<>());
+                                messageList.add(List.of(new ArrayList<>()));
                             }
-                            userdataDetails.setCreated_date(
-                                    ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
-                            userdataDetails.setUpdated_date(
-                                    ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
-                            userdataDetails.setHistory(new ArrayList<>());
+                            messageList.add("新增日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
+                            messageList.add("更改日期" + ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
                         }
-                        userdataDetails.setPermissions(permissions);
                         logger.info("dataDetails 查詢訂單成功");
-                        userdataDetails.setMessage("查詢訂單成功");
-                        userdataDetails.setStatus(HttpStatus.OK);
+                        Map<String, List<Object>> message = new TreeMap<>();
+                        message.put("content", messageList);
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (查詢訂單)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
-                    return ResponseEntity
-                            .status(userdataDetails.getStatus())
-                            .body(new UserdataDetailsResponse(userdataDetails));
                 } finally {
                     lock.unlock();
                 }
@@ -875,14 +898,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : queryOrderItem 資源忙碌，請重試", username);
-                userdataDetails.setMessage("資源忙碌，請重試");
-                userdataDetails.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 查詢訂單，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userdataDetails.getStatus())
-                        .body(new UserdataDetailsResponse(userdataDetails));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -904,27 +934,18 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User updateOrderItem 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "updateOrderItem");
-//                    if (!valid) {
-//                        logger.error("updateOrderItem 憑證未通過");
-//                        userdataDetails.setMessage("updateOrderItem 憑證未通過");
-//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userdataDetails.getStatus())
-//                                .body(new UserdataDetailsResponse(userdataDetails));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (更改訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(更改訂單)使用者錯誤");
-                            throw new RuntimeException("(更改訂單)使用者錯誤");
+                            throw new RuntimeException(username + " - (更改訂單)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
@@ -943,16 +964,13 @@ public class UserServiceImpl implements UserService {
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
                             logger.error("{} : (更改訂單) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException("Token 已過期");
+                            throw new BadRequestException(username + " - Token 已過期");
                         }
                         try {
-                            String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
-                            userdataDetails.setToken(accessTokenInRedis);
-
                             Map<String, Object> userSelect = getUserData(userData);
                             if (userSelect == null) {
                                 logger.error("{} : (更改訂單) 使用者不存在", username);
-                                throw new ResourceNotFoundException("使用者不存在");
+                                throw new ResourceNotFoundException(username + " - 使用者不存在");
                             }
                             String permissions = userSelect.get("permissions").toString();
                             if (Stream.of("ADMIN", "MANAGER").anyMatch(permissions::contains)) {
@@ -962,36 +980,46 @@ public class UserServiceImpl implements UserService {
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             if (userdataDetailsSelect == null) {
                                 logger.error("{} : (更改訂單) 訂單不存在", username);
-                                throw new ResourceNotFoundException("訂單不存在");
+                                throw new ResourceNotFoundException(username + " - 訂單不存在");
                             }
 
                             userdataDetails.setPermissions(userdataDetailsSelect.get("permissions").toString());
                             userdataDetails.setOrder_item(order_item);
                             userdataDetails.setOrder_item_str(order_item.toString());
                             userMapper.updateUserdataDetail(userdataDetails);
-                            userdataDetails.setStatus(HttpStatus.OK);
                             logger.info("dataDetails 更改訂單成功");
-                            userdataDetails.setMessage("更改訂單成功");
                             userdataDetailsSelect = getUserDataDetail(userdataDetails);
-                            userdataDetails.setCreated_date(((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
-                            userdataDetails.setUpdated_date(((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
                             userdataDetails.setAction_type(ActionType.UPDATE.getActionType());
                             userMapper.createUserdataDetailU(userdataDetails);
-                            userdataDetails.setHistory(new ArrayList<>());
+                            List<Object> messageList = List.of(
+                                    "帳號 - " + username,
+                                    "權限 - " + permissions,
+                                    username + " - 更改訂單成功",
+                                    "更改訂單的帳號 - " + useruser,
+                                    order_item,
+                                    "新增日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime(),
+                                    "更改日期" + ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime()
+                            );
+                            Map<String, List<Object>> message = new TreeMap<>();
+                            message.put("content", messageList);
+                            HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
-                                    .status(userdataDetails.getStatus())
-                                    .body(new UserdataDetailsResponse(userdataDetails));
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            message
+                                    ));
                         } catch (DataIntegrityViolationException e) {
                             logger.warn("更改訂單資料不合法，username={}", usernameAccessJwt);
-                            throw new IsViolationException("更改訂單資料不合法", e);
+                            throw new IsViolationException(username + " - 更改訂單資料不合法", e);
                         } catch (DataAccessException e) {
                             logger.error("更改資料庫錯誤，username={}", usernameAccessJwt);
-                            throw new DBException("系統錯誤，請稍後再試", e);
+                            throw new DBException(username + " - 系統錯誤，請稍後再試", e);
                         }
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (更改訂單)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -1000,14 +1028,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : updateOrderItem 資源忙碌，請重試", username);
-                userdataDetails.setMessage("資源忙碌，請重試");
-                userdataDetails.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 更改訂單，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userdataDetails.getStatus())
-                        .body(new UserdataDetailsResponse(userdataDetails));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -1028,27 +1063,18 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User deleteOrderItem 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "deleteOrderItem");
-//                    if (!valid) {
-//                        logger.error("deleteOrderItem 憑證未通過");
-//                        userdataDetails.setMessage("deleteOrderItem 憑證未通過");
-//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userdataDetails.getStatus())
-//                                .body(new UserdataDetailsResponse(userdataDetails));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (刪除訂單) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(刪除訂單)使用者錯誤");
-                            throw new RuntimeException("(刪除訂單)使用者錯誤");
+                            throw new RuntimeException(username + " - (刪除訂單)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
@@ -1067,17 +1093,14 @@ public class UserServiceImpl implements UserService {
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
                             logger.error("{} : (刪除訂單) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException("Token 已過期");
+                            throw new BadRequestException(username + " - Token 已過期");
                         }
 
                         try {
-                            String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
-                            userdataDetails.setToken(accessTokenInRedis);
-
                             Map<String, Object> userSelect = getUserData(userData);
                             if (userSelect == null) {
                                 logger.error("{} : (刪除訂單) 使用者不存在", username);
-                                throw new ResourceNotFoundException("使用者不存在");
+                                throw new ResourceNotFoundException(username + " - 使用者不存在");
                             }
                             String permissions = userSelect.get("permissions").toString();
                             if (Stream.of("ADMIN", "MANAGER").anyMatch(permissions::contains)) {
@@ -1087,34 +1110,42 @@ public class UserServiceImpl implements UserService {
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             if (userdataDetailsSelect == null) {
                                 logger.error("{} : (刪除訂單) 訂單不存在", username);
-                                throw new ResourceNotFoundException("訂單不存在");
+                                throw new ResourceNotFoundException(username + " - 訂單不存在");
                             }
                             userdataDetails.setPermissions(userdataDetailsSelect.get("permissions").toString());
                             userdataDetails.setOrder_item(new ArrayList<>());
                             userdataDetails.setOrder_item_str(new ArrayList<>().toString());
                             userMapper.deleteUserdataDetail(userdataDetails);
                             logger.info("dataDetails 訂單刪除成功");
-                            userdataDetails.setMessage("訂單刪除成功");
-                            userdataDetails.setStatus(HttpStatus.OK);
-                            userdataDetails.setCreated_date(((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
-                            userdataDetails.setUpdated_date(((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
                             userdataDetails.setAction_type(ActionType.DELETE.getActionType());
                             userMapper.createUserdataDetailU(userdataDetails);
-                            userdataDetails.setHistory(new ArrayList<>());
+                            List<Object> messageList = List.of(
+                                    "帳號 - " + username,
+                                    "權限 - " + permissions,
+                                    username + " - 訂單刪除成功",
+                                    "刪除訂單的帳號 - " + useruser,
+                                    LocalDateTime.now()
+                            );
+                            Map<String, List<Object>> message = new TreeMap<>();
+                            message.put("content", messageList);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            message
+                                    ));
                         } catch (DataIntegrityViolationException e) {
                             logger.warn("刪除訂單資料不合法，username={}", usernameAccessJwt);
-                            throw new IsViolationException("刪除訂單資料不合法", e);
+                            throw new IsViolationException(username + " - 刪除訂單資料不合法", e);
                         } catch (DataAccessException e) {
                             logger.error("刪除資料庫錯誤，username={}", usernameAccessJwt);
-                            throw new DBException("系統錯誤，請稍後再試", e);
+                            throw new DBException(username + " - 系統錯誤，請稍後再試", e);
                         }
-                        return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (刪除訂單)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -1123,14 +1154,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : deleteOrderItem 資源忙碌，請重試", username);
-                userdataDetails.setMessage("資源忙碌，請重試");
-                userdataDetails.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 訂單刪除，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userdataDetails.getStatus())
-                        .body(new UserdataDetailsResponse(userdataDetails));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -1150,27 +1188,18 @@ public class UserServiceImpl implements UserService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("User historyOrderItem 拿鎖");
                 try {
-//                    boolean valid = CertificateFunction.certificateCheck(keystorePath, "historyOrderItem");
-//                    if (!valid) {
-//                        logger.error("historyOrderItem 憑證未通過");
-//                        userdataDetails.setMessage("historyOrderItem 憑證未通過");
-//                        userdataDetails.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-//                        return ResponseEntity
-//                                .status(userdataDetails.getStatus())
-//                                .body(new UserdataDetailsResponse(userdataDetails));
-//                    }
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (歷史紀錄) Token 不存在或已過期", username);
-                            throw new BadRequestException("Token 不存在或已過期");
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
                             logger.error("(歷史紀錄)使用者錯誤");
-                            throw new RuntimeException("(歷史紀錄)使用者錯誤");
+                            throw new RuntimeException(username + " - (歷史紀錄)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
@@ -1189,24 +1218,15 @@ public class UserServiceImpl implements UserService {
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
                             logger.error("{} : (歷史紀錄) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException("Token 已過期");
+                            throw new BadRequestException(username + " - Token 已過期");
                         }
-                        String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
-                        userdataDetails.setToken(accessTokenInRedis);
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
                             logger.error("{} : (歷史紀錄) 使用者不存在", username);
-                            throw new ResourceNotFoundException("使用者不存在");
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         String permissions = userSelect.get("permissions").toString();
-                        userdataDetails.setPermissions(permissions);
                         logger.info("dataDetails 歷史紀錄查詢成功");
-                        userdataDetails.setMessage("歷史紀錄查詢成功");
-                        userdataDetails.setStatus(HttpStatus.OK);
-                        userdataDetails.setCreated_date(((Timestamp) userSelect.get("created_date")).toLocalDateTime());
-                        userdataDetails.setUpdated_date(((Timestamp) userSelect.get("updated_date")).toLocalDateTime());
-                        userdataDetails.setOrder_item(new ArrayList<>());
-
                         List<String> item = userMapper.selectUserdataDetailUUsernameItem();
                         List<String> historys = new ArrayList<>();
                         for(String itemName : item) {
@@ -1224,17 +1244,27 @@ public class UserServiceImpl implements UserService {
                                 historys.add("--------------------");
                             }
                         }
-                        userdataDetails.setHistory(historys);
-                        // 目前的使用者
-                        userdataDetails.setUsername(usernameAccessJwt);
 
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + permissions,
+                                username + " - 歷史紀錄查詢成功",
+                                historys,
+                                LocalDateTime.now()
+                        );
+                        Map<String, List<Object>> message = new TreeMap<>();
+                        message.put("content", messageList);
+                        HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
-                                .status(userdataDetails.getStatus())
-                                .body(new UserdataDetailsResponse(userdataDetails));
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (歷史紀錄)無效的 JWT token", username);
-                        throw new BadRequestException("無效的 JWT token", e);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
                     lock.unlock();
@@ -1243,14 +1273,21 @@ public class UserServiceImpl implements UserService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : historyOrderItem 資源忙碌，請重試", username);
-                userdataDetails.setMessage("資源忙碌，請重試");
-                userdataDetails.setStatus(HttpStatus.TOO_MANY_REQUESTS);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 歷史紀錄，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
-                        .status(userdataDetails.getStatus())
-                        .body(new UserdataDetailsResponse(userdataDetails));
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();

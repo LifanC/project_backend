@@ -97,38 +97,18 @@
     function show(log = {}) {
         const {
             code = undefined,
-            name = undefined,
-            username = undefined,
-            permissions = undefined,
-            message = undefined,
-            errors = undefined,
             status = undefined,
-            created_date = undefined,
-            updated_date = undefined,
+            message = undefined,
             error = undefined,
             path = undefined,
-            token = undefined,
-            order_item = undefined,
-            history = undefined,
-            data = undefined,
             timestamp = undefined,
         } = log;
         const messageLog = {
             code,
-            name,
-            username,
-            permissions,
-            message,
-            errors,
             status,
-            created_date,
-            updated_date,
+            message,
             error,
             path,
-            token,
-            order_item,
-            history,
-            data,
             timestamp,
         }
         document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
@@ -216,12 +196,12 @@
     // 將值塞入 input 並自動調整寬度
     function setInputValue(inputId, value) {
         const input = document.getElementById(inputId);
-        input.value = value;
-        if (value.length > 22) {
-            input.style.width = (value.length + 1) + "ch";
+        if (value[0].length > 22) {
+            input.style.width = (value[0].length + 1) + "ch";
         } else {
             input.removeAttribute('style');
         }
+        input.value = value[0];
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -248,8 +228,9 @@
             try {
                 const res = await api.post('user/validate', data);
                 show(res);
-                if (res.token) {
-                    setInputValue('token', res.token);
+                let token = res.message.token;
+                if (token) {
+                    setInputValue('token', token);
                 }
             } catch (err) {
                 show(err);
@@ -390,6 +371,7 @@
             let container = document.getElementById('inputContainer');
             container.innerHTML = '';
             if (/^[1-9]\d*$/.test(cnt)) {
+                cnt = (cnt >= 10) ? 10 : cnt;
                 for (let i = 1; i <= cnt; i++) {
                     // 建立 input 元素
                     const input = document.createElement('input');

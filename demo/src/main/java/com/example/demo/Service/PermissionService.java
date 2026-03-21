@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 
 public interface PermissionService {
 
+    ResponseEntity<?> testLogin();
+
     ResponseEntity<?> register(@Valid PermissionRequest request);
 
     ResponseEntity<?> query();

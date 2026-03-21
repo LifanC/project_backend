@@ -38,7 +38,10 @@ public class CertificateFunction {
 //                    "1qaz@WSX"
 //            )
 //    );
-
+//
+//    private final String keystorePath = "permission-keystorePath";
+//    private final String keystorePath = "user-keystorePath";
+//
 //    public static boolean certificateCheck(String key, String name) {
 //
 //        logger.info("permission-keystorePath: {}", keystore.get("permission-keystorePath"));

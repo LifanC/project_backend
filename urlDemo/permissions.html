@@ -97,32 +97,18 @@
     function show(log = {}) {
         const {
             code = undefined,
-            name = undefined,
-            username = undefined,
-            permissions = undefined,
-            message = undefined,
-            errors = undefined,
             status = undefined,
-            created_date = undefined,
-            updated_date = undefined,
+            message = undefined,
             error = undefined,
             path = undefined,
-            users = undefined,
             timestamp = undefined,
         } = log;
         const messageLog = {
             code,
-            name,
-            username,
-            permissions,
-            message,
-            errors,
             status,
-            created_date,
-            updated_date,
+            message,
             error,
             path,
-            users,
             timestamp,
         }
         document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);

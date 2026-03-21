@@ -4,28 +4,21 @@ import com.example.demo.Dto.User.*;
 import com.example.demo.Service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
 @Validated
 public class UsersController {
 
-    private final Logger logger = LoggerFactory.getLogger(UsersController.class);
-
     @Resource
     private UserService userService;
 
     @GetMapping("/testLogin")
-    public Map<String, Object> testLogin() {
-        logger.info("user/testLogin: success");
-        return Map.of("message", "User is working!");
+    public ResponseEntity<?> testLogin() {
+        return userService.testLogin();
     }
 
     @PostMapping("/takeToken")
