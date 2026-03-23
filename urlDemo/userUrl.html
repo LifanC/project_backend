@@ -369,25 +369,27 @@
             }
         });
 
-        document.getElementById('cnt').addEventListener('input', async () => {
-            let cnt = document.getElementById('cnt').value;
-            let container = document.getElementById('inputContainer');
+        const container = document.getElementById('inputContainer');
+        const cntInput = document.getElementById('cnt');
+        function renderInputs(count = 1) {
             container.innerHTML = '';
+            for (let i = 1; i <= count; i++) {
+                const input = document.createElement('input');
+                input.id = 'order' + i;
+                input.placeholder = '資料' + i;
+                container.appendChild(input);
+            }
+        }
+        renderInputs(1);
+        document.getElementById('cnt').addEventListener('input', async () => {
+            let cnt = cntInput.value;
+
             if (/^[1-9]\d*$/.test(cnt)) {
-                cnt = (cnt >= 10) ? 10 : cnt;
-                for (let i = 1; i <= cnt; i++) {
-                    // 建立 input 元素
-                    const input = document.createElement('input');
-
-                    // 設定屬性
-                    input.id = 'order' + i;
-                    input.placeholder = '資料' + i;
-
-                    // 放進容器
-                    container.appendChild(input);
-                }
+                cnt = Math.min(parseInt(cnt), 10);
+                renderInputs(cnt);
             } else {
-                document.getElementById('cnt').value = '';
+                cntInput.value = '';
+                renderInputs(1);
             }
 
         });
@@ -398,6 +400,8 @@
         });
 
     });
+
+
 
 </script>
 
