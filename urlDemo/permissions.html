@@ -8,6 +8,7 @@
 </head>
 <link rel="stylesheet" href="/url.css">
 <script src="/jquery.min.js"></script>
+<script src="/moveFocus.js"></script>
 <script>
     // http://127.0.0.1:5500/permissions.html
     // https://project-frontend-exjf.onrender.com/permissions.html
@@ -93,6 +94,8 @@
         const res = await api.get('permissions/testLogin', null);
         show(res);
     }
+
+    moveFocus('form');
 
     function show(log = {}) {
         const {
@@ -258,10 +261,10 @@
 
         <!-- 左邊功能區 -->
         <div class="left-panel">
-            <div class="form">
+            <div id="form" class="form">
                 <h2>權限設定</h2>
-                <input id="regUser" placeholder="帳號">
-                <input id="regPass" placeholder="密碼">
+                <input id="regUser" placeholder="帳號" maxlength="10">
+                <input id="regPass" placeholder="密碼" maxlength="100">
                 <div class="radio-group">
                     <label>
                         <input type="radio" name="permission" value="GUEST" checked>
@@ -300,10 +303,10 @@
                 <br>可執行功能：查詢、新增、刪除訂單。
             </p>
             <p>USER（一般使用者）
-                <br>可執行功能：查詢、新增、修改、刪除訂單。
+                <br>可執行功能：查詢、新增、更改、刪除訂單。
             </p>
             <p>ADMIN（系統管理員）
-                <br>可執行功能：查詢、修改、刪除、檢視歷史紀錄。
+                <br>可執行功能：查詢、更改、刪除、檢視歷史紀錄。
                 <br>(可查詢之對象資料：GUEST、USER。)
             </p>
             </p>

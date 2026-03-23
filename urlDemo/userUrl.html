@@ -8,6 +8,7 @@
 </head>
 <link rel="stylesheet" href="/url.css">
 <script src="/jquery.min.js"></script>
+<script src="/moveFocus.js"></script>
 <script>
     // http://127.0.0.1:5500/userUrl.html
     // https://project-frontend-exjf.onrender.com/userUrl.html
@@ -93,6 +94,8 @@
         const res = await api.get('user/testLogin', null);
         show(res);
     }
+
+    moveFocus('form');
 
     function show(log = {}) {
         const {
@@ -403,10 +406,10 @@
 
         <!-- 左邊功能區 -->
         <div class="left-panel">
-            <div class="form">
+            <div id="form" class="form">
                 <h2>登入</h2>
-                <input id="loginUser" placeholder="帳號">
-                <input id="loginPass" placeholder="密碼">
+                <input id="loginUser" placeholder="帳號" maxlength="10">
+                <input id="loginPass" placeholder="密碼" maxlength="100">
                 <button id="btnTakeToken">取得 Token</button>
                 <button id="btnValidate">驗證 Token</button>
                 <input id="token" placeholder="Token">
