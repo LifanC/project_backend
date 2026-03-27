@@ -286,7 +286,8 @@ public class UserServiceImpl implements UserService {
                         String accessRedisKey = redisKey.get("access")
                                 .replace("{1}", "*")
                                 .replace("{2}", usernameJwt);
-                        int cnt = 10;
+                        // 避免 Redis key 無限制增加導致記憶體耗盡
+                        int cnt = 5;
                         ScanOptions options = ScanOptions.scanOptions()
                                 .match(accessRedisKey)
                                 .count(cnt)
@@ -308,7 +309,7 @@ public class UserServiceImpl implements UserService {
                         // 上限數量
                         int maximumQuantity = 20;
                         if (redisCount >= maximumQuantity) {
-                            // Redis「我希望每次 SCAN 返回大約 10 個 key」
+                            // Redis「我希望每次 SCAN 返回大約 5 個 key」
                             // 這是一個 建議值，Redis 可能返回多於或少於這個數量，取決於內部算法。
                             redisDels(accessRedisKey, cnt);
                         }
