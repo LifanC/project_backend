@@ -8,8 +8,7 @@ import java.util.Map;
 
 public class ApiResponse {
 
-    public static Map<String, Object> api(HttpStatus code,
-                                               Map<String, List<Object>> message) {
+    public static Map<String, Object> api(HttpStatus code, Map<String, List<Object>> message) {
         return Map.of(
                 "code", code,
                 "status", code.value(),

@@ -21,7 +21,6 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException ex) {
 
         Map<String, String> fieldErrors = new TreeMap<>();
-
         ex.getBindingResult()
                 .getFieldErrors()
                 .forEach(error -> {
