@@ -136,8 +136,8 @@ public class PermissionServiceImpl implements PermissionService {
                 Thread.sleep(20);
                 logger.error("{} : register 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
-                        "帳號-" + username,
-                        "權限-" + permissions,
+                        "帳號 -" + username,
+                        "權限 -" + permissions,
                         username + " - 註冊，資源忙碌，請重試"
                 );
                 Map<String, List<Object>> message = Map.of("content", messageList);
@@ -267,8 +267,8 @@ public class PermissionServiceImpl implements PermissionService {
                 Thread.sleep(20);
                 logger.error("{} : update 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
-                        "帳號-" + username,
-                        "權限-" + permissions,
+                        "帳號 -" + username,
+                        "權限 -" + permissions,
                         username + " - 更改權限，資源忙碌，請重試"
                 );
                 Map<String, List<Object>> message = Map.of("content", messageList);
@@ -342,7 +342,7 @@ public class PermissionServiceImpl implements PermissionService {
                 Thread.sleep(20);
                 logger.error("{} : delete 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
-                        "帳號-" + username,
+                        "帳號 -" + username,
                         username + " - 刪除權限，資源忙碌，請重試"
                 );
                 Map<String, List<Object>> message = Map.of("content", messageList);
