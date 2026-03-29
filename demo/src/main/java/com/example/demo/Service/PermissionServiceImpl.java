@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
-@Transactional
 public class PermissionServiceImpl implements PermissionService {
 
     private final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
@@ -159,6 +158,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> query() {
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
@@ -212,6 +212,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> update(PermissionRequest request) {
         final String username = request.getUsername().trim();
         final String password = request.getPassword().trim();
@@ -290,6 +291,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> delete(final String username, final String password) {
         if (StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             throw new RuntimeException(username + " - 刪除帳號密碼未輸入");

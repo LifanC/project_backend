@@ -9,401 +9,7 @@
 <link rel="stylesheet" href="/url.css">
 <script src="/jquery.min.js"></script>
 <script src="/moveFocus.js"></script>
-<script>
-    // http://127.0.0.1:5500/userUrl.html
-    // https://project-frontend-exjf.onrender.com/userUrl.html
-    // http://localhost:8080/api/v1/
-    // https://project-backend-2olo.onrender.com/api/v1/
-    const BASES = [
-        'http://localhost:8080/api/v1/',
-        'https://project-backend-2olo.onrender.com/api/v1/'
-    ];
-    var workingBase = localStorage.getItem('workingBase');
-
-    const SafetyUsername = 'lukechen';
-    const SafetyPassword = '1qaz@WSX';
-    const authHeader = 'Basic ' + utf8ToB64(SafetyUsername + ':' + SafetyPassword);
-
-    function utf8ToB64(str) {
-        return btoa(unescape(encodeURIComponent(str)));
-    }
-
-    const api = {
-        get: (path, data = null) => {
-            return resolveRequest('GET', path, data)
-        },
-        post: (path, data) => {
-            return resolveRequest('POST', path, data)
-        },
-        put: (path, data) => {
-            return resolveRequest('PUT', path, data)
-        },
-        delete: (path, data = null) => {
-            return resolveRequest('DELETE', path, data)
-        }
-    };
-
-    const methodMap = new Map([
-        ['GET', getJSON],
-        ['POST', postJSON],
-        ['PUT', putJSON],
-        ['DELETE', deleteJSON]
-    ]);
-
-    async function resolveRequest(method, path, data) {
-        const fn = methodMap.get(method);
-        if (workingBase) {
-            try {
-                console.log('使用已記住 API:', workingBase + path);
-                return await fn(workingBase + path, data);
-            } catch (err) {
-                if (isFetchNetworkError(err)) {
-                    console.warn('API 掛了:', base);
-                    workingBase = null;
-                    localStorage.removeItem('workingBase');
-                }
-                return err;
-            }
-        }
-
-        for (const base of BASES) {
-            try {
-                console.log('嘗試 API:', base + path);
-
-                workingBase = base;
-                const res = await fn(base + path, null);
-
-                localStorage.setItem('workingBase', base);
-                return res;
-            } catch (err) {
-                if (isFetchNetworkError(err)) {
-                    console.warn('API 掛了:', base);
-                    continue;
-                }
-                return err;
-            }
-        }
-    }
-
-    function isFetchNetworkError(err) {
-        return err instanceof TypeError && err.message.includes('fetch');
-    }
-
-    testLogin()
-    async function testLogin() {
-        const res = await api.get('user/testLogin', null);
-        show(res);
-    }
-
-    moveFocus('form');
-
-    function show(log = {}) {
-        const {
-            code = undefined,
-            status = undefined,
-            message = undefined,
-            error = undefined,
-            path = undefined,
-            timestamp = undefined,
-        } = log;
-        const messageLog = {
-            code,
-            status,
-            message,
-            error,
-            path,
-            timestamp,
-        }
-        document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
-    }
-
-    // POST JSON helper
-    async function postJSON(url, data) {
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': authHeader
-                },
-                body: JSON.stringify(data)
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // GET helper with query params
-    async function getJSON(url, params) {
-        const query = params ? '?' + new URLSearchParams(params) : '';
-        try {
-            const res = await fetch(url + query, {
-                method: 'GET',
-                headers: {
-                    'Authorization': authHeader,
-                    'Accept': 'application/json'
-                }
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // PUT JSON helper
-    async function putJSON(url, data) {
-        try {
-            const res = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': authHeader
-                },
-                body: JSON.stringify(data)
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // DELETE JSON helper
-    async function deleteJSON(url, params) {
-        const del = params ? '?' + new URLSearchParams(params) : '';
-        try {
-            const res = await fetch(url + del, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': authHeader,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(params)
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // 將值塞入 input 並自動調整寬度
-    function setInputValue(inputId, value) {
-        const input = document.getElementById(inputId);
-        if (value[0].length > 22) {
-            input.style.width = (value[0].length + 1) + "ch";
-        } else {
-            input.removeAttribute('style');
-        }
-        input.value = value[0];
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        // 取得 Token
-        document.getElementById('btnTakeToken').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value,
-                password: document.getElementById('loginPass').value
-            };
-            try {
-                const res = await api.post('user/takeToken', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 驗證 Token
-        document.getElementById('btnValidate').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value
-            };
-            try {
-                const res = await api.post('user/validate', data);
-                show(res);
-                let token = res.message.token;
-                if (token) {
-                    setInputValue('token', token);
-                }
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 登出
-        document.getElementById('btnLogout').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/logout', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-            setInputValue('token', '');
-        });
-
-        // 查使用者
-        document.getElementById('btnQueryUser').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/queryUser', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 新增訂單
-        document.getElementById('btnCreate').addEventListener('click', async () => {
-            let container = document.getElementById('inputContainer');
-            let cnt = container.getElementsByTagName('input').length;
-            let item = [];
-            for (let i = 1; i <= cnt; i++) {
-                item.push(document.getElementById('order' + i).value);
-            }
-            let order_item = [];
-            for (let index = 0; index < item.length; index++) {
-                let element = item[index];
-                if (element) {
-                    order_item.push(element)
-                }
-            }
-            const data = {
-                username: document.getElementById('loginUser').value,
-                order_item: order_item,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/createOrderItem', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 查詢訂單
-        document.getElementById('btnQuery').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/queryOrderItem', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 更改訂單
-        document.getElementById('btnUpdate').addEventListener('click', async () => {
-            let container = document.getElementById('inputContainer');
-            let cnt = container.getElementsByTagName('input').length;
-            let item = [];
-            for (let i = 1; i <= cnt; i++) {
-                item.push(document.getElementById('order' + i).value);
-            }
-            let order_item = [];
-            for (let index = 0; index < item.length; index++) {
-                let element = item[index];
-                if (element) {
-                    order_item.push(element)
-                }
-            }
-            const data = {
-                username: document.getElementById('loginUser').value,
-                useruser: document.getElementById('UserUpdater').value,
-                order_item: order_item,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/updateOrderItem', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 刪除訂單
-        document.getElementById('btnDelete').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value,
-                useruser: document.getElementById('UserDelete').value,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/deleteOrderItem', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 歷史訂單
-        document.getElementById('btnHistory').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('loginUser').value,
-                token: document.getElementById('token').value
-            };
-            try {
-                const res = await api.post('user/historyOrderItem', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        const container = document.getElementById('inputContainer');
-        const cntInput = document.getElementById('cnt');
-        function renderInputs(count = 1) {
-            container.innerHTML = '';
-            for (let i = 1; i <= count; i++) {
-                const input = document.createElement('input');
-                input.id = 'order' + i;
-                input.placeholder = '資料' + i;
-                container.appendChild(input);
-            }
-        }
-        renderInputs(1);
-        document.getElementById('cnt').addEventListener('input', async () => {
-            let cnt = cntInput.value;
-
-            if (/^[1-9]\d*$/.test(cnt)) {
-                cnt = Math.min(parseInt(cnt), 10);
-                renderInputs(cnt);
-            } else {
-                cntInput.value = '';
-                renderInputs(1);
-            }
-
-        });
-
-        document.getElementById('token').addEventListener('input', async () => {
-            let token = document.getElementById('token').value;
-            setInputValue('token', token);
-        });
-
-    });
-
-
-
-</script>
+<script src="/userUrl.js"></script>
 
 <body>
     <div class="container">
@@ -411,67 +17,168 @@
         <!-- 左邊功能區 -->
         <div class="left-panel">
             <div id="form" class="form">
-                <h2>登入</h2>
-                <input id="loginUser" placeholder="帳號" maxlength="10">
-                <input id="loginPass" placeholder="密碼" maxlength="100">
-                <button id="btnTakeToken">取得 Token</button>
-                <button id="btnValidate">驗證 Token</button>
-                <input id="token" placeholder="Token">
-                <button id="btnLogout">登出</button>
-                <h2>訂單</h2>
-                <button id="btnQueryUser">查詢使用者名單</button>
-                <input id="cnt" placeholder="數量">
-                <div id="inputContainer"></div>
-                <button id="btnCreate">新增訂單</button>
-                <button id="btnQuery">查詢訂單</button>
-                <input id="UserUpdater" placeholder="要更改訂單的帳號">
-                <button id="btnUpdate">更改訂單</button>
-                <input id="UserDelete" placeholder="要刪除訂單的帳號">
-                <button id="btnDelete">刪除訂單</button>
-                <button id="btnHistory">歷史訂單</button>
+                <table class="url-table">
+                    <tr>
+                        <th>
+                            <h2>登入</h2>
+                        </th>
+                        <th colspan="2">
+                            <h2>功能</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">
+                            <input id="loginUser" placeholder="帳號" maxlength="10">
+                            <input id="loginPass" placeholder="密碼" maxlength="100">
+                        </td>
+                        <td>1</td>
+                        <td>
+                            <button id="btnTakeToken">取得 Token</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>
+                            <button id="btnValidate">驗證 Token</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="token" placeholder="Token">
+                        </td>
+                        <td>3</td>
+                        <td>
+                            <button id="btnLogout">登出</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            <h2>訂單</h2>
+                        </th>
+                        <td>4</td>
+                        <td>
+                            <button id="btnQueryUser">查詢使用者名單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <input id="cnt" placeholder="數量">
+                            <div id="inputContainer"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>資料輸入完</td>
+                        <td>5</td>
+                        <td>
+                            <button id="btnCreate">新增訂單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>直接查詢訂單</td>
+                        <td>6</td>
+                        <td>
+                            <button id="btnQuery">查詢訂單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="UserUpdater" placeholder="要更改訂單的帳號">
+                        </td>
+                        <td>7</td>
+                        <td>
+                            <button id="btnUpdate">更改訂單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="UserDelete" placeholder="要刪除訂單的帳號">
+                        </td>
+                        <td>8</td>
+                        <td>
+                            <button id="btnDelete">刪除訂單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>直接歷史訂單</td>
+                        <td>9</td>
+                        <td>
+                            <button id="btnHistory">歷史訂單</button>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
 
         <!-- 右邊說明文字 -->
         <div class="right-panel">
             <h3>操作說明</h3>
-            <p>1. 使用者需輸入帳號與密碼進行登入，最多可連續失敗 5 次。
-                <br>若連續登入失敗超過 5 次，系統將鎖定帳號 60 秒，期間無法再次登入。
-            </p>
-            <p>2. 步驟一：取得Token
-                <br>使用者登入成功後，系統會核發一組 Token 作為後續操作的身份識別憑證。
-            </p>
-            <p>3. 步驟二：驗證Token
-                <br>系統會先驗證原始 Token 的有效性，驗證通過後，再簽發一組暫時 Token 供特定作業使用。
-            </p>
-            <p>4. 登出
-                <br>使用者登出時，系統會同時刪除該帳號的 Token 以及暫時 Token，以確保帳號安全。
-            </p>
-            <p>5. 查詢使用者名單
-                <br>可查詢「客人」與「一般使用者」名單。
-                <br>操作權限限制：僅限具有 ADMIN、MANAGER 權限的使用者可執行。
-            </p>
-            <p>6. 新增訂單
-                <br>用於建立新訂單資料。
-                <br>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。
-            </p>
-            <p>7. 查詢訂單
-                <br>可依條件查詢既有訂單資料。
-                <br>操作權限限制：GUEST、USER、ADMIN、MANAGER 皆可執行。
-            </p>
-            <p>8. 更改訂單
-                <br>用於修改既有訂單內容。
-                <br>操作權限限制：僅限具有 USER、ADMIN 權限的使用者可執行。
-            </p>
-            <p>9. 刪除訂單
-                <br>用於刪除既有訂單，請謹慎操作，避免誤刪。
-                <br>操作權限限制：GUEST、USER、ADMIN、MANAGER 皆可執行。
-            </p>
-            <p>10. 歷史訂單
-                <br>可查詢已完成或封存的歷史訂單紀錄。
-                <br>操作權限限制：僅限具有 ADMIN、MANAGER 權限的使用者可執行。
-                <br>(可查詢之對象資料：GUEST、USER。)
-            </p>
+            <ol>
+                <li>
+                    <dl>
+                        <dt>使用者需輸入帳號與密碼進行登入，最多可連續失敗 5 次。</dt>
+                        <dd>若連續登入失敗超過 5 次，系統將鎖定帳號 60 秒，期間無法再次登入。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>步驟一：取得Token</dt>
+                        <dd>使用者登入成功後，系統會核發一組 Token 作為後續操作的身份識別憑證。</dd>
+                    </dl>
+                    <dl>
+                        <dt>步驟二：驗證Token</dt>
+                        <dd>系統會先驗證原始 Token 的有效性，驗證通過後，再簽發一組暫時 Token 供特定作業使用。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>登出</dt>
+                        <dd>使用者登出時，系統會同時刪除該帳號的 Token 以及暫時 Token，以確保帳號安全。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢使用者名單</dt>
+                        <dd>可查詢「客人」與「一般使用者」名單。</dd>
+                        <dd>操作權限限制：僅限具有 ADMIN、MANAGER 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>新增訂單</dt>
+                        <dd>用於建立新訂單資料。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢訂單</dt>
+                        <dd>可依條件查詢既有訂單資料。</dd>
+                        <dd>操作權限限制：GUEST、USER、ADMIN、MANAGER 皆可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>更改訂單</dt>
+                        <dd>用於修改既有訂單內容。</dd>
+                        <dd>操作權限限制：僅限具有 USER、ADMIN 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>刪除訂單</dt>
+                        <dd>用於刪除既有訂單，請謹慎操作，避免誤刪。</dd>
+                        <dd>操作權限限制：GUEST、USER、ADMIN、MANAGER 皆可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>歷史訂單</dt>
+                        <dd>可查詢已完成或封存的歷史訂單紀錄。</dd>
+                        <dd>操作權限限制：僅限具有 ADMIN、MANAGER 權限的使用者可執行。</dd>
+                        <dd>(可查詢之對象資料：GUEST、USER。)</dd>
+                    </dl>
+                </li>
+            </ol>
         </div>
     </div>
     <section>

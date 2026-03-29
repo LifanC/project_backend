@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.Dto.Permissions.PermissionRequest;
 import com.example.demo.Service.PermissionService;
 import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +23,7 @@ public class PermissionsController {
     }
 
     @PostMapping("/register")
+    @PermitAll
     public ResponseEntity<?> register(
             @Valid
             @RequestBody
@@ -30,11 +32,13 @@ public class PermissionsController {
     }
 
     @GetMapping("/query")
+    @PermitAll
     public ResponseEntity<?> query() {
         return permissionService.query();
     }
 
     @PutMapping("/update")
+    @PermitAll
     public ResponseEntity<?> update(
             @Valid
             @RequestBody
@@ -43,6 +47,7 @@ public class PermissionsController {
     }
 
     @DeleteMapping("/delete")
+    @PermitAll
     public ResponseEntity<?> delete(
             @RequestParam
             String username,

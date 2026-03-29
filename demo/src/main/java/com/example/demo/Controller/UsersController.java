@@ -1,8 +1,11 @@
 package com.example.demo.Controller;
 
+import com.example.demo.Aspect.Permissions;
 import com.example.demo.Dto.User.*;
+import com.example.demo.Security.Annotation.CheckRole;
 import com.example.demo.Service.UserService;
 import jakarta.annotation.Resource;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +25,7 @@ public class UsersController {
     }
 
     @PostMapping("/takeToken")
+    @PermitAll
     public ResponseEntity<?> takeToken(
             @Valid
             @RequestBody
@@ -30,6 +34,7 @@ public class UsersController {
     }
 
     @PostMapping("/validate")
+    @PermitAll
     public ResponseEntity<?> validate(
             @Valid
             @RequestBody
@@ -38,6 +43,7 @@ public class UsersController {
     }
 
     @PostMapping("/logout")
+    @PermitAll
     public ResponseEntity<?> logout(
             @Valid
             @RequestBody
@@ -46,6 +52,7 @@ public class UsersController {
     }
 
     @PostMapping("/queryUser")
+    @CheckRole(Permissions.USER_ITEM_QUERY)
     public ResponseEntity<?> queryUser(
             @Valid
             @RequestBody
@@ -54,6 +61,7 @@ public class UsersController {
     }
 
     @PostMapping("/createOrderItem")
+    @CheckRole(Permissions.ORDER_ITEM_CREATE)
     public ResponseEntity<?> createOrderItem(
             @Valid
             @RequestBody
@@ -62,6 +70,7 @@ public class UsersController {
     }
 
     @PostMapping("/queryOrderItem")
+    @CheckRole(Permissions.ORDER_ITEM_QUERY)
     public ResponseEntity<?> queryOrderItem(
             @Valid
             @RequestBody
@@ -70,6 +79,7 @@ public class UsersController {
     }
 
     @PostMapping("/updateOrderItem")
+    @CheckRole(Permissions.ORDER_ITEM_UPDATE)
     public ResponseEntity<?> updateOrderItem(
             @Valid
             @RequestBody
@@ -78,6 +88,7 @@ public class UsersController {
     }
 
     @PostMapping("/deleteOrderItem")
+    @CheckRole(Permissions.ORDER_ITEM_DELETE)
     public ResponseEntity<?> deleteOrderItem(
             @Valid
             @RequestBody
@@ -86,6 +97,7 @@ public class UsersController {
     }
 
     @PostMapping("/historyOrderItem")
+    @CheckRole(Permissions.ORDER_ITEM_HISTORY)
     public ResponseEntity<?> historyOrderItem(
             @Valid
             @RequestBody

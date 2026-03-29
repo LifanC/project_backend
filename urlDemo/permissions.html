@@ -9,252 +9,7 @@
 <link rel="stylesheet" href="/url.css">
 <script src="/jquery.min.js"></script>
 <script src="/moveFocus.js"></script>
-<script>
-    // http://127.0.0.1:5500/permissions.html
-    // https://project-frontend-exjf.onrender.com/permissions.html
-    // http://localhost:8080/api/v1/
-    // https://project-backend-2olo.onrender.com/api/v1/
-    const BASES = [
-        'http://localhost:8080/api/v1/',
-        'https://project-backend-2olo.onrender.com/api/v1/'
-    ];
-    let workingBase = localStorage.getItem('workingBase');
-
-    const SafetyUsername = 'lukechen';
-    const SafetyPassword = '1qaz@WSX';
-    const authHeader = 'Basic ' + utf8ToB64(SafetyUsername + ':' + SafetyPassword);
-
-    function utf8ToB64(str) {
-        return btoa(unescape(encodeURIComponent(str)));
-    }
-
-    const api = {
-        get: (path, data = null) => {
-            return resolveRequest('GET', path, data)
-        },
-        post: (path, data) => {
-            return resolveRequest('POST', path, data)
-        },
-        put: (path, data) => {
-            return resolveRequest('PUT', path, data)
-        },
-        delete: (path, data = null) => {
-            return resolveRequest('DELETE', path, data)
-        }
-    };
-
-    const methodMap = new Map([
-        ['GET', getJSON],
-        ['POST', postJSON],
-        ['PUT', putJSON],
-        ['DELETE', deleteJSON]
-    ]);
-
-    async function resolveRequest(method, path, data) {
-        const fn = methodMap.get(method);
-        if (workingBase) {
-            try {
-                console.log('使用已記住 API:', workingBase + path);
-                return await fn(workingBase + path, data);
-            } catch (err) {
-                if (isFetchNetworkError(err)) {
-                    console.warn('API 掛了:', base);
-                    workingBase = null;
-                    localStorage.removeItem('workingBase');
-                }
-                return err;
-            }
-        }
-
-        for (const base of BASES) {
-            try {
-                console.log('嘗試 API:', base + path);
-
-                workingBase = base;
-                const res = await fn(base + path, null);
-
-                localStorage.setItem('workingBase', base);
-                return res;
-            } catch (err) {
-                if (isFetchNetworkError(err)) {
-                    console.warn('API 掛了:', base);
-                    continue;
-                }
-                return err;
-            }
-        }
-    }
-
-    function isFetchNetworkError(err) {
-        return err instanceof TypeError && err.message.includes('fetch');
-    }
-
-    testLogin()
-    async function testLogin() {
-        const res = await api.get('permissions/testLogin', null);
-        show(res);
-    }
-
-    moveFocus('form');
-
-    function show(log = {}) {
-        const {
-            code = undefined,
-            status = undefined,
-            message = undefined,
-            error = undefined,
-            path = undefined,
-            timestamp = undefined,
-        } = log;
-        const messageLog = {
-            code,
-            status,
-            message,
-            error,
-            path,
-            timestamp,
-        }
-        document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
-    }
-
-    // POST JSON helper
-    async function postJSON(url, data) {
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': authHeader
-                },
-                body: JSON.stringify(data)
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // GET helper with query params
-    async function getJSON(url, params) {
-        const query = params ? '?' + new URLSearchParams(params) : '';
-        try {
-            const res = await fetch(url + query, {
-                method: 'GET',
-                headers: {
-                    'Authorization': authHeader,
-                    'Accept': 'application/json'
-                }
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // PUT JSON helper
-    async function putJSON(url, data) {
-        try {
-            const res = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Authorization': authHeader
-                },
-                body: JSON.stringify(data)
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    // DELETE JSON helper
-    async function deleteJSON(url, params) {
-        const del = params ? '?' + new URLSearchParams(params) : '';
-        try {
-            const res = await fetch(url + del, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': authHeader,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(params)
-            });
-            const json = await res.json();
-            if (!res.ok) throw json;
-            return json;
-        } catch (err) {
-            return Promise.reject(err);
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        // 註冊
-        document.getElementById('btnRegister').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('regUser').value,
-                password: document.getElementById('regPass').value,
-                permissions: document.querySelector('input[name="permission"]:checked').value
-            };
-            try {
-                const res = await api.post('permissions/register', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 查詢
-        document.getElementById('btnQuery').addEventListener('click', async () => {
-            try {
-                const res = await api.get('permissions/query', null);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 更改權限
-        document.getElementById('btnUpdate').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('regUser').value,
-                password: document.getElementById('regPass').value,
-                permissions: document.querySelector('input[name="permission"]:checked').value
-            };
-            try {
-                const res = await api.put('permissions/update', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-        // 刪除
-        document.getElementById('btnDelete').addEventListener('click', async () => {
-            const data = {
-                username: document.getElementById('regUser').value,
-                password: document.getElementById('regPass').value
-            };
-            try {
-                const res = await api.delete('permissions/delete', data);
-                show(res);
-            } catch (err) {
-                show(err);
-            }
-        });
-
-    });
-
-</script>
+<script src="/permissions.js"></script>
 
 <body>
     <div class="container">
@@ -262,58 +17,80 @@
         <!-- 左邊功能區 -->
         <div class="left-panel">
             <div id="form" class="form">
-                <h2>權限設定</h2>
-                <input id="regUser" placeholder="帳號" maxlength="10">
-                <input id="regPass" placeholder="密碼" maxlength="100">
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="permission" value="GUEST" checked>
-                        客人
-                    </label>
-                    <label>
-                        <input type="radio" name="permission" value="USER">
-                        一般使用者
-                    </label>
-                    <label>
-                        <input type="radio" name="permission" value="ADMIN">
-                        系統管理員
-                    </label>
-                    <label>
-                        <input type="radio" name="permission" value="MANAGER">
-                        部門主管或中階管理者
-                    </label>
-                </div>
-                <button id="btnRegister">註冊</button>
-                <button id="btnQuery">查詢</button>
-                <button id="btnUpdate">更改權限</button>
-                <button id="btnDelete">刪除</button>
+                <table class="url-table">
+                    <tr>
+                        <th>
+                            <h2>權限設定</h2>
+                        </th>
+                        <th colspan="2">
+                            <h2>功能</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td rowspan="4">
+                            <input id="regUser" placeholder="帳號" maxlength="10">
+                            <input id="regPass" placeholder="密碼" maxlength="100">
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="permission" value="GUEST" checked>
+                                    客人
+                                </label>
+                                <label>
+                                    <input type="radio" name="permission" value="USER">
+                                    一般使用者
+                                </label>
+                                <label>
+                                    <input type="radio" name="permission" value="ADMIN">
+                                    系統管理員
+                                </label>
+                                <label>
+                                    <input type="radio" name="permission" value="MANAGER">
+                                    部門主管或中階管理者
+                                </label>
+                            </div>
+                        </td>
+                        <td>1</td>
+                        <td><button id="btnRegister">註冊</button></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><button id="btnQuery">查詢</button></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><button id="btnUpdate">更改權限</button></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><button id="btnDelete">刪除</button></td>
+                    </tr>
+                </table>
             </div>
         </div>
 
         <!-- 右邊說明文字 -->
         <div class="right-panel">
             <h3>操作說明</h3>
-            <p>1. 請先輸入帳號與密碼完成註冊。</p>
-            <p>2. 於註冊流程中選擇適當的使用者角色。</p>
-            <p>3. 點擊「查詢」可檢視目前的使用者清單。</p>
-            <p>4. 點擊「更改權限」可調整使用者的權限設定。</p>
-            <p>5. 若需刪除帳號，請務必再次確認，避免誤刪。</p>
+            <ol>
+                <li>請先輸入帳號與密碼完成註冊。</li>
+                <li>於註冊流程中選擇適當的使用者角色。</li>
+                <li>點擊「查詢」可檢視目前的使用者清單。</li>
+                <li>點擊「更改權限」可調整使用者的權限設定。</li>
+                <li>若需刪除帳號，請務必再次確認，避免誤刪。</li>
+            </ol>
             <h3>【使用者角色與權限】</h3>
-            <p>GUEST（客人）
-                <br>可執行功能：查詢、新增、刪除訂單。
-            </p>
-            <p>USER（一般使用者）
-                <br>可執行功能：查詢、新增、更改、刪除訂單。
-            </p>
-            <p>ADMIN（系統管理員）
-                <br>可執行功能：查詢、更改、刪除、檢視歷史紀錄。
-                <br>(可查詢之對象資料：GUEST、USER。)
-            </p>
-            </p>
-            <p>MANAGER（部門主管）
-                <br>可執行功能：查詢、刪除、檢視歷史紀錄。
-                <br>(可查詢之對象資料：GUEST、USER。)
-            </p>
+            <dl>
+                <dt>GUEST（客人）</dt>
+                <dd>可執行功能：查詢、新增、刪除訂單。</dd>
+                <dt>USER（一般使用者）</dt>
+                <dd>可執行功能：查詢、新增、更改、刪除訂單。</dd>
+                <dt>ADMIN（系統管理員）</dt>
+                <dd>可執行功能：查詢、更改、刪除、檢視歷史紀錄。</dd>
+                <dd>(可查詢之對象資料：GUEST、USER。)</dd>
+                <dt>MANAGER（部門主管）</dt>
+                <dd>可執行功能：查詢、刪除、檢視歷史紀錄。</dd>
+                <dd>(可查詢之對象資料：GUEST、USER。)</dd>
+            </dl>
         </div>
     </div>
     <section>

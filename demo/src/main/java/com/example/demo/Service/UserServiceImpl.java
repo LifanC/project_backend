@@ -1,6 +1,5 @@
 package com.example.demo.Service;
 
-import com.example.demo.Aspect.Permissions;
 import com.example.demo.Common.ActionType;
 import com.example.demo.Common.Context;
 import com.example.demo.Dto.ApiResponse;
@@ -8,13 +7,11 @@ import com.example.demo.Dto.User.*;
 import com.example.demo.Exception.*;
 import com.example.demo.Mapper.SecretMapper;
 import com.example.demo.Mapper.UserMapper;
-import com.example.demo.Security.Annotation.CheckRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.Resource;
-import jakarta.annotation.security.PermitAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -110,7 +107,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @PermitAll
     public ResponseEntity<?> takeToken(UserRequest request) {
         final String username = request.getUsername();
         final String password = request.getPassword();
@@ -230,7 +226,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @PermitAll
     public ResponseEntity<?> validate(UserTokenValidateRequest request) {
         final String username = request.getUsername();
         UserData userData = new UserData(username);
@@ -380,7 +375,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @PermitAll
     public ResponseEntity<?> logout(QueryUserRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -551,7 +545,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CheckRole(Permissions.USER_ITEM_QUERY)
     public ResponseEntity<?> queryUser(QueryUserRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -659,7 +652,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CheckRole(Permissions.ORDER_ITEM_CREATE)
     public ResponseEntity<?> createOrderItem(CreateOrderItemRequest request) {
         final String username = request.getUsername();
         List<String> order_item = request.getOrder_item();
@@ -783,7 +775,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CheckRole(Permissions.ORDER_ITEM_QUERY)
     public ResponseEntity<?> queryOrderItem(QueryOrderItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -922,7 +913,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CheckRole(Permissions.ORDER_ITEM_UPDATE)
+    @Transactional
     public ResponseEntity<?> updateOrderItem(UpdateOrderItemRequest request) {
         final String username = request.getUsername();
         List<String> order_item = request.getOrder_item();
@@ -1052,7 +1043,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CheckRole(Permissions.ORDER_ITEM_DELETE)
+    @Transactional
     public ResponseEntity<?> deleteOrderItem(DeleteOrderItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -1178,7 +1169,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @CheckRole(Permissions.ORDER_ITEM_HISTORY)
+    @Transactional
     public ResponseEntity<?> historyOrderItem(QueryOrderItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
