@@ -11,7 +11,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,14 +48,20 @@ public class UserServiceImpl implements UserService {
     @Value("${jwt.expirationSeconds}")
     private long expirationSeconds;
 
-    @Resource
-    private SecretMapper secretMapper;
+    private final SecretMapper secretMapper;
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+
+    public UserServiceImpl(
+            SecretMapper secretMapper,
+            UserMapper userMapper,
+            StringRedisTemplate stringRedisTemplate) {
+        this.secretMapper = secretMapper;
+        this.userMapper = userMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 

@@ -10,7 +10,6 @@ import com.example.demo.Mapper.PermissionMapper;
 import com.example.demo.Mapper.RoleMapper;
 import com.example.demo.Mapper.UserMapper;
 import io.micrometer.common.util.StringUtils;
-import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.*;
@@ -30,14 +29,18 @@ public class PermissionServiceImpl implements PermissionService {
 
     private final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
 
-    @Resource
-    private PermissionMapper permissionMapper;
+    private final PermissionMapper permissionMapper;
+    private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
 
-    @Resource
-    private UserMapper userMapper;
-
-    @Resource
-    private RoleMapper roleMapper;
+    public PermissionServiceImpl(
+            PermissionMapper permissionMapper,
+            UserMapper userMapper,
+            RoleMapper roleMapper) {
+        this.permissionMapper = permissionMapper;
+        this.userMapper = userMapper;
+        this.roleMapper = roleMapper;
+    }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 

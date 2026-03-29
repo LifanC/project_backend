@@ -16,8 +16,12 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class UsersController {
 
-    @Resource
-    private UserService userService;
+    private final UserService userService;
+
+    public UsersController(
+            UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping("/testLogin")
     public ResponseEntity<?> testLogin() {
