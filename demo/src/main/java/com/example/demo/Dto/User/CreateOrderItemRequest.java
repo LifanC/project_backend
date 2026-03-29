@@ -8,11 +8,10 @@ import java.util.List;
 public class CreateOrderItemRequest implements OrderRequest {
 
     private String username;
-    @NotEmpty(message = "訂單不可為空")
 
+    @NotEmpty(message = "訂單不可為空")
     private List<@NotBlank(message = "訂單內容不可為空") String> order_item;
 
-    @NotBlank(message = "Token不可為空")
     private String token;
 
     @Override
@@ -26,5 +25,13 @@ public class CreateOrderItemRequest implements OrderRequest {
 
     public String getToken() {
         return token;
+    }
+
+    public void setAuthHeader(String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        if ("Bearer".equals(token.trim())) {
+            throw new RuntimeException(username + " - Token 不可為空");
+        }
+        this.token = token;
     }
 }

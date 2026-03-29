@@ -1,11 +1,7 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Aspect.Permissions;
 import com.example.demo.Dto.User.*;
-import com.example.demo.Security.Annotation.CheckRole;
 import com.example.demo.Service.UserService;
-import jakarta.annotation.Resource;
-import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -29,7 +25,6 @@ public class UsersController {
     }
 
     @PostMapping("/takeToken")
-    @PermitAll
     public ResponseEntity<?> takeToken(
             @Valid
             @RequestBody
@@ -38,7 +33,6 @@ public class UsersController {
     }
 
     @PostMapping("/validate")
-    @PermitAll
     public ResponseEntity<?> validate(
             @Valid
             @RequestBody
@@ -47,65 +41,72 @@ public class UsersController {
     }
 
     @PostMapping("/logout")
-    @PermitAll
     public ResponseEntity<?> logout(
             @Valid
             @RequestBody
-            QueryUserRequest request) {
+            QueryUserRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.logout(request);
     }
 
     @PostMapping("/queryUser")
-    @CheckRole(Permissions.USER_ITEM_QUERY)
     public ResponseEntity<?> queryUser(
             @Valid
             @RequestBody
-            QueryUserRequest request) {
+            QueryUserRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.queryUser(request);
     }
 
     @PostMapping("/createOrderItem")
-    @CheckRole(Permissions.ORDER_ITEM_CREATE)
     public ResponseEntity<?> createOrderItem(
             @Valid
             @RequestBody
-            CreateOrderItemRequest request) {
+            CreateOrderItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.createOrderItem(request);
     }
 
     @PostMapping("/queryOrderItem")
-    @CheckRole(Permissions.ORDER_ITEM_QUERY)
     public ResponseEntity<?> queryOrderItem(
             @Valid
             @RequestBody
-            QueryOrderItemRequest request) {
+            QueryOrderItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.queryOrderItem(request);
     }
 
     @PostMapping("/updateOrderItem")
-    @CheckRole(Permissions.ORDER_ITEM_UPDATE)
     public ResponseEntity<?> updateOrderItem(
             @Valid
             @RequestBody
-            UpdateOrderItemRequest request) {
+            UpdateOrderItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.updateOrderItem(request);
     }
 
     @PostMapping("/deleteOrderItem")
-    @CheckRole(Permissions.ORDER_ITEM_DELETE)
     public ResponseEntity<?> deleteOrderItem(
             @Valid
             @RequestBody
-            DeleteOrderItemRequest request) {
+            DeleteOrderItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.deleteOrderItem(request);
     }
 
     @PostMapping("/historyOrderItem")
-    @CheckRole(Permissions.ORDER_ITEM_HISTORY)
     public ResponseEntity<?> historyOrderItem(
             @Valid
             @RequestBody
-            QueryOrderItemRequest request) {
+            QueryOrderItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
         return userService.historyOrderItem(request);
     }
 }

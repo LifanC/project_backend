@@ -7,7 +7,6 @@ import com.example.demo.Exception.ResourceNotFoundException;
 import com.example.demo.Mapper.RoleMapper;
 import com.example.demo.Mapper.UserMapper;
 import com.example.demo.Security.Annotation.CheckRole;
-import jakarta.annotation.Resource;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -26,11 +25,15 @@ public class CommonAspect {
 
     private final Logger logger = LoggerFactory.getLogger(CommonAspect.class);
 
-    @Resource
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
 
-    @Resource
-    private RoleMapper roleMapper;
+    public CommonAspect(
+            UserMapper userMapper,
+            RoleMapper roleMapper) {
+        this.userMapper = userMapper;
+        this.roleMapper = roleMapper;
+    }
 
     // 單次回源鎖
     private final ReentrantLock lock = new ReentrantLock();
@@ -95,7 +98,7 @@ public class CommonAspect {
                 logger.error("checkRole 資源忙碌，請重試");
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();

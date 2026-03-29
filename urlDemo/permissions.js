@@ -8,14 +8,6 @@ const BASES = [
 ];
 let workingBase = localStorage.getItem('workingBase');
 
-const SafetyUsername = 'lukechen';
-const SafetyPassword = '1qaz@WSX';
-const authHeader = 'Basic ' + utf8ToB64(SafetyUsername + ':' + SafetyPassword);
-
-function utf8ToB64(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-}
-
 const api = {
     get: (path, data = null) => {
         return resolveRequest('GET', path, data)
@@ -59,7 +51,7 @@ async function resolveRequest(method, path, data) {
             console.log('嘗試 API:', base + path);
 
             workingBase = base;
-            const res = await fn(base + path, null);
+            const res = await fn(base + path, data);
 
             localStorage.setItem('workingBase', base);
             return res;
@@ -112,8 +104,7 @@ async function postJSON(url, data) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': authHeader
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
@@ -132,7 +123,6 @@ async function getJSON(url, params) {
         const res = await fetch(url + query, {
             method: 'GET',
             headers: {
-                'Authorization': authHeader,
                 'Accept': 'application/json'
             }
         });
@@ -151,8 +141,7 @@ async function putJSON(url, data) {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': authHeader
+                'Accept': 'application/json'
             },
             body: JSON.stringify(data)
         });
@@ -171,7 +160,6 @@ async function deleteJSON(url, params) {
         const res = await fetch(url + del, {
             method: 'DELETE',
             headers: {
-                'Authorization': authHeader,
                 'Accept': 'application/json'
             },
             body: JSON.stringify(params)

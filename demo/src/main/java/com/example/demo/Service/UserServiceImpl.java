@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Aspect.Permissions;
 import com.example.demo.Common.ActionType;
 import com.example.demo.Common.Context;
 import com.example.demo.Dto.ApiResponse;
@@ -7,6 +8,7 @@ import com.example.demo.Dto.User.*;
 import com.example.demo.Exception.*;
 import com.example.demo.Mapper.SecretMapper;
 import com.example.demo.Mapper.UserMapper;
+import com.example.demo.Security.Annotation.CheckRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -23,7 +25,6 @@ import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -132,7 +133,7 @@ public class UserServiceImpl implements UserService {
                     if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey))) {
                         Long ttl = stringRedisTemplate.getExpire(lockKey, TimeUnit.SECONDS);
                         logger.error("{} : 連續錯誤{}次，帳號暫時被鎖，請稍後再試({}秒)", username, maxFailAttempts, ttl);
-                        throw new LockedException(username + " - 連續錯誤" + maxFailAttempts + "次，帳號暫時被鎖，請稍後再試(" + ttl + "秒)");
+                        throw new RuntimeException(username + " - 連續錯誤" + maxFailAttempts + "次，帳號暫時被鎖，請稍後再試(" + ttl + "秒)");
                     }
                     Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
@@ -539,7 +540,7 @@ public class UserServiceImpl implements UserService {
         String blacklistRedisKey = redisKey.get("blacklist").replace("{1}", usernameAccessJwtId);
         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
             logger.error("{} : Token 已被撤銷", username);
-            throw new RuntimeException("Token 已被撤銷");
+            throw new RuntimeException(username + " - Token 已被撤銷");
         }
         return Jwts.parserBuilder()
                 .setSigningKey(key)  // 你生成 token 時用的密鑰
@@ -550,6 +551,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.USER_ITEM_QUERY)
     public ResponseEntity<?> queryUser(QueryUserRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -657,6 +659,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.ORDER_ITEM_CREATE)
     public ResponseEntity<?> createOrderItem(CreateOrderItemRequest request) {
         final String username = request.getUsername();
         List<String> order_item = request.getOrder_item();
@@ -780,6 +783,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.ORDER_ITEM_QUERY)
     public ResponseEntity<?> queryOrderItem(QueryOrderItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -834,13 +838,22 @@ public class UserServiceImpl implements UserService {
                         List<Object> messageList = new ArrayList<>();
                         messageList.add("帳號 - " + username);
                         messageList.add("權限 - " + permissions);
-                        messageList.add(username + " - 查詢訂單成功");
                         if (Stream.of("ADMIN", "MANAGER").anyMatch(permissions::contains)) {
                             List<String> isUser = userMapper.queryUserSelect();
                             if (isUser.isEmpty()) {
                                 logger.error("{} : {} (查詢訂單) 訂單不存在", username, permissions);
-                                throw new ResourceNotFoundException(username + " - 訂單不存在");
+                                Map<String, List<Object>> message = new TreeMap<>();
+                                messageList.add("使用者 - 訂單不存在");
+                                message.put("content", messageList);
+                                HttpStatus status = HttpStatus.NOT_FOUND;
+                                return ResponseEntity
+                                        .status(status)
+                                        .body(ApiResponse.api(
+                                                status,
+                                                message
+                                        ));
                             }
+                            messageList.add(username + " - 查詢訂單成功");
                             List<String> isUserNew = new ArrayList<>();
                             for (int i = 0; i < isUser.size(); i++) {
                                 String data = isUser.get(i);
@@ -861,6 +874,7 @@ public class UserServiceImpl implements UserService {
                                 logger.error("{} : (查詢訂單) 訂單不存在", username);
                                 throw new ResourceNotFoundException(username + " - 訂單不存在");
                             }
+                            messageList.add(username + " - 查詢訂單成功");
                             if (userdataDetailsSelect.get("order_item") != null) {
                                 String[] strArray = userdataDetailsSelect.get("order_item")
                                         .toString()
@@ -919,6 +933,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.ORDER_ITEM_UPDATE)
     public ResponseEntity<?> updateOrderItem(UpdateOrderItemRequest request) {
         final String username = request.getUsername();
         List<String> order_item = request.getOrder_item();
@@ -1049,6 +1064,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.ORDER_ITEM_DELETE)
     public ResponseEntity<?> deleteOrderItem(DeleteOrderItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -1175,6 +1191,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.ORDER_ITEM_HISTORY)
     public ResponseEntity<?> historyOrderItem(QueryOrderItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();

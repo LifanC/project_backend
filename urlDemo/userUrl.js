@@ -8,20 +8,12 @@ const BASES = [
 ];
 var workingBase = localStorage.getItem('workingBase');
 
-const SafetyUsername = 'lukechen';
-const SafetyPassword = '1qaz@WSX';
-const authHeader = 'Basic ' + utf8ToB64(SafetyUsername + ':' + SafetyPassword);
-
-function utf8ToB64(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-}
-
 const api = {
     get: (path, data = null) => {
         return resolveRequest('GET', path, data)
     },
-    post: (path, data) => {
-        return resolveRequest('POST', path, data)
+    post: (path, data, token) => {
+        return resolveRequest('POST', path, data, token)
     },
     put: (path, data) => {
         return resolveRequest('PUT', path, data)
@@ -38,12 +30,12 @@ const methodMap = new Map([
     ['DELETE', deleteJSON]
 ]);
 
-async function resolveRequest(method, path, data) {
+async function resolveRequest(method, path, data, token) {
     const fn = methodMap.get(method);
     if (workingBase) {
         try {
             console.log('使用已記住 API:', workingBase + path);
-            return await fn(workingBase + path, data);
+            return await fn(workingBase + path, data, token);
         } catch (err) {
             if (isFetchNetworkError(err)) {
                 console.warn('API 掛了:', base);
@@ -59,7 +51,7 @@ async function resolveRequest(method, path, data) {
             console.log('嘗試 API:', base + path);
 
             workingBase = base;
-            const res = await fn(base + path, null);
+            const res = await fn(base + path, data, token);
 
             localStorage.setItem('workingBase', base);
             return res;
@@ -106,7 +98,8 @@ function show(log = {}) {
 }
 
 // POST JSON helper
-async function postJSON(url, data) {
+async function postJSON(url, data, token) {
+    const authHeader = `Bearer ${token}`;
     try {
         const res = await fetch(url, {
             method: 'POST',
@@ -126,14 +119,15 @@ async function postJSON(url, data) {
 }
 
 // GET helper with query params
-async function getJSON(url, params) {
+async function getJSON(url, params, token) {
+    const authHeader = `Bearer ${token}`;
     const query = params ? '?' + new URLSearchParams(params) : '';
     try {
         const res = await fetch(url + query, {
             method: 'GET',
             headers: {
-                'Authorization': authHeader,
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': authHeader
             }
         });
         const json = await res.json();
@@ -145,7 +139,8 @@ async function getJSON(url, params) {
 }
 
 // PUT JSON helper
-async function putJSON(url, data) {
+async function putJSON(url, data, token) {
+    const authHeader = `Bearer ${token}`;
     try {
         const res = await fetch(url, {
             method: 'PUT',
@@ -165,14 +160,15 @@ async function putJSON(url, data) {
 }
 
 // DELETE JSON helper
-async function deleteJSON(url, params) {
+async function deleteJSON(url, params, token) {
+    const authHeader = `Bearer ${token}`;
     const del = params ? '?' + new URLSearchParams(params) : '';
     try {
         const res = await fetch(url + del, {
             method: 'DELETE',
             headers: {
-                'Authorization': authHeader,
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Authorization': authHeader
             },
             body: JSON.stringify(params)
         });
@@ -226,11 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 登出
     document.getElementById('btnLogout').addEventListener('click', async () => {
         const data = {
-            username: document.getElementById('loginUser').value,
-            token: document.getElementById('token').value
+            username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('user/logout', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/logout', data, token);
             show(res);
         } catch (err) {
             show(err);
@@ -241,11 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 查使用者
     document.getElementById('btnQueryUser').addEventListener('click', async () => {
         const data = {
-            username: document.getElementById('loginUser').value,
-            token: document.getElementById('token').value
+            username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('user/queryUser', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/queryUser', data, token);
             show(res);
         } catch (err) {
             show(err);
@@ -269,11 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const data = {
             username: document.getElementById('loginUser').value,
-            order_item: order_item,
-            token: document.getElementById('token').value
+            order_item: order_item
         };
         try {
-            const res = await api.post('user/createOrderItem', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/createOrderItem', data, token);
             show(res);
         } catch (err) {
             show(err);
@@ -283,11 +279,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 查詢訂單
     document.getElementById('btnQuery').addEventListener('click', async () => {
         const data = {
-            username: document.getElementById('loginUser').value,
-            token: document.getElementById('token').value
+            username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('user/queryOrderItem', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/queryOrderItem', data, token);
             show(res);
         } catch (err) {
             show(err);
@@ -312,11 +308,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             username: document.getElementById('loginUser').value,
             useruser: document.getElementById('UserUpdater').value,
-            order_item: order_item,
-            token: document.getElementById('token').value
+            order_item: order_item
         };
         try {
-            const res = await api.post('user/updateOrderItem', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/updateOrderItem', data, token);
             show(res);
         } catch (err) {
             show(err);
@@ -327,11 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnDelete').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('UserDelete').value,
-            token: document.getElementById('token').value
+            useruser: document.getElementById('UserDelete').value
         };
         try {
-            const res = await api.post('user/deleteOrderItem', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/deleteOrderItem', data, token);
             show(res);
         } catch (err) {
             show(err);
@@ -341,11 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 歷史訂單
     document.getElementById('btnHistory').addEventListener('click', async () => {
         const data = {
-            username: document.getElementById('loginUser').value,
-            token: document.getElementById('token').value
+            username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('user/historyOrderItem', data);
+            let token = document.getElementById('token').value
+            const res = await api.post('user/historyOrderItem', data, token);
             show(res);
         } catch (err) {
             show(err);
