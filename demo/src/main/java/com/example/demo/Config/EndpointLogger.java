@@ -24,6 +24,7 @@ public class EndpointLogger implements CommandLineRunner {
         // 指定 Controller 名稱
         List<String> targetControllers = List.of(
             "PermissionsController",
+            "ProductsController",
             "UsersController"
         );
         // 指定方法名稱（可為 null 表示全部方法）

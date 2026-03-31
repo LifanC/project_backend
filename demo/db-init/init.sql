@@ -190,4 +190,197 @@ VALUES (1, 2),
        (4, 5),
        (4, 6);
 
+-- interviewworks_schema.products definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.products;
+
+CREATE TABLE interviewworks_schema.products (
+                                                product_id varchar NOT NULL,
+                                                products_name varchar NULL,
+                                                price int8 NULL DEFAULT 0,
+                                                stock int8 NULL DEFAULT 0,
+                                                description varchar NULL,
+                                                created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                CONSTRAINT products_pk PRIMARY KEY (product_id)
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.products
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.quotations definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.quotations;
+
+CREATE TABLE interviewworks_schema.quotations (
+                                                  quotation_id varchar PRIMARY KEY,
+                                                  username varchar(10) NOT NULL,
+                                                  status varchar(100) NOT NULL DEFAULT NULL::character varying,
+                                                  total_price int8 DEFAULT 0,
+                                                  created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                  updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                  CONSTRAINT quotations_pkey PRIMARY KEY (quotation_id),
+                                                  CONSTRAINT quotations_status_check CHECK (
+                                                    status IN ('draft', 'sent', 'accepted', 'rejected')
+                                                  )
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.quotations
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.quotation_items definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.quotation_items;
+
+CREATE TABLE interviewworks_schema.quotation_items (
+                                                       quotation_id varchar NULL,
+                                                       product_id varchar NULL,
+                                                       quantity int8 NULL DEFAULT 0,
+                                                       price int8 NULL DEFAULT 0,
+                                                       created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                       updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                       CONSTRAINT quotation_items_pk PRIMARY KEY (quotation_id),
+                                                       CONSTRAINT quotation_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.quotation_items
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.orders definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.orders;
+
+CREATE TABLE interviewworks_schema.orders (
+                                              quotation_id varchar NULL,
+                                              status varchar(100) NOT NULL DEFAULT NULL::character varying,
+                                              total_price int8 NULL DEFAULT 0,
+                                              created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                              updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                              CONSTRAINT orders_status_check CHECK (
+                                                status IN ('pending', 'confirmed', 'cancelled')
+                                              ),
+                                              CONSTRAINT orders_fk FOREIGN KEY (quotation_id) REFERENCES interviewworks_schema.quotations(quotation_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.orders
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.order_items definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.order_items;
+
+CREATE TABLE interviewworks_schema.order_items (
+                                                   order_id varchar NULL,
+                                                   product_id varchar NULL,
+                                                   quantity int8 NULL DEFAULT 0,
+                                                   price int8 NULL DEFAULT 0,
+                                                   created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                   updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                   CONSTRAINT order_items_pk PRIMARY KEY (order_id),
+                                                   CONSTRAINT order_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.order_items
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.shipments definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.shipments;
+
+CREATE TABLE interviewworks_schema.shipments (
+                                                 order_id varchar NULL,
+                                                 status varchar(100) NOT NULL DEFAULT NULL::character varying,
+                                                 tracking_number varchar NULL,
+                                                 created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                 updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                                 CONSTRAINT shipments_status_check CHECK (
+                                                    status IN ('preparing', 'shipped', 'delivered')
+                                                 ),
+                                                 CONSTRAINT shipments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.order_items(order_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.shipments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.shipment_items definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.shipment_items;
+
+CREATE TABLE interviewworks_schema.shipment_items (
+                                                      shipment_id varchar NULL,
+                                                      product_id varchar NULL,
+                                                      quantity int8 NULL DEFAULT 0,
+                                                      created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                      updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                      CONSTRAINT shipment_items_pk PRIMARY KEY (shipment_id),
+                                                      CONSTRAINT shipment_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.shipment_items
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+-- interviewworks_schema.payments definition
+
+-- Drop table
+
+-- DROP TABLE interviewworks_schema.payments;
+
+CREATE TABLE interviewworks_schema.payments (
+                                                order_id varchar NULL,
+                                                amount int8 NULL DEFAULT 0,
+                                                status varchar(100) NOT NULL DEFAULT NULL::character varying,
+                                                payments_method varchar(100) NOT NULL DEFAULT NULL::character varying,
+                                                created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                CONSTRAINT payments_status_check CHECK (
+                                                    status IN ('unpaid', 'partial', 'paid')
+                                                ),
+                                                CONSTRAINT payments_payments_method_check CHECK (
+                                                    status IN ('cash', 'credit_card', 'transfer')
+                                                ),
+                                                CONSTRAINT payments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.order_items(order_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+
+-- 建立觸發器
+CREATE TRIGGER trigger_update_updated_date
+    BEFORE UPDATE ON interviewworks_schema.payments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_date();
+
+
 

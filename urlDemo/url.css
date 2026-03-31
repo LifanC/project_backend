@@ -30,6 +30,7 @@
   }
 
   .form input,
+  .form textarea,
   .form button {
       padding: 10px 12px;
       border: 1px solid #ccc;

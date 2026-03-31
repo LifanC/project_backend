@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.ProductMapper">
+
+    <select id="selectMaxProductId" resultType="java.lang.String">
+        select LPAD(
+                       cast(
+                               (COALESCE(MAX(cast(product_id as INTEGER)), 0) + 1) as VARCHAR
+                       ), 5, '0')
+        from "interviewworks_schema"."products"
+    </select>
+
+    <insert id="create">
+        insert
+        into "interviewworks_schema"."products" (product_id,
+                                                 products_name,
+                                                 price,
+                                                 stock,
+                                                 description)
+        values (#{product_id},
+                #{products_name},
+                #{price},
+                #{stock},
+                #{description})
+    </insert>
+
+    <select id="select" resultType="java.util.Map">
+        select
+            product_id,
+            products_name,
+            price,
+            stock,
+            description,
+            created_date,
+            updated_date
+        from "interviewworks_schema"."products" p
+        <where>
+            <if test="product_id != null and product_id != ''">
+                product_id = #{product_id}
+            </if>
+        </where>
+        order by p.product_id desc
+    </select>
+
+    <update id="update">
+        update "interviewworks_schema"."products"
+        <set>
+            <if test="products_name != null and products_name != ''">
+                products_name = #{products_name},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="stock != null">
+                stock = #{stock},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+        </set>
+        where product_id = #{product_id}
+    </update>
+
+    <delete id="delete">
+        delete
+        from "interviewworks_schema"."products"
+        where product_id = #{product_id}
+    </delete>
+
+
+</mapper>

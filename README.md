@@ -88,10 +88,54 @@ project_backend/
 ### 1. 提供使用者身分驗證與權限控管機制，確保僅授權使用者可存取對應的 API 資源。
 - *GUEST（客人）可執行功能：查詢、新增、刪除訂單。*
 - *USER（一般使用者）可執行功能：查詢、新增、修改、刪除訂單。*
-- *ADMIN（系統管理員）可執行功能：查詢、修改、刪除、檢視歷史紀錄。* *(可查詢之對象資料：GUEST、USER)*)
+- *ADMIN（系統管理員）可執行功能：查詢、修改、刪除、檢視歷史紀錄。* *(可查詢之對象資料：GUEST、USER)*
 - *MANAGER（部門主管）可執行功能：查詢、刪除、檢視歷史紀錄。* *(可查詢之對象資料：GUEST、USER)*
 ### 2. JWT 驗證流程: Token 驗證 → Redis 檢查 → 允許存取
 - *商業邏輯層 : Controller 只負責接收與回傳，Service 處理業務邏輯*
 - *解析 JWT*
 - *檢查 Redis*
 - *查使用者（DB or Cache）*
+## 7. 額外功能
+### 1. 📄 報價管理
+- *建立報價*
+- *編輯商品*
+- *送出報價*
+### 2. 📦 訂單管理
+- *從報價轉訂單（按鈕🔥）*
+- *查看訂單詳情*
+### 3. 🚚 出貨管理
+- *建立出貨單*
+- *更新物流狀態*
+### 4. 💰 收款管理
+- *新增付款*
+- *查看未付款訂單*
+## 8. 設計流程
+- *1. 客戶（Customer）*
+- *2. 商品（Product）*
+- *3. 報價（Quotation）*
+- *4. 訂單（Order）*
+- *5. 出貨（Shipment）*
+- *6. 收款（Payment）*
+- *流程：Customer → Quotation → Order → Shipment → Payment*
+- *~*
+- *報價（quotations）
+- *status -- draft（草稿） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
+- *~*
+- *訂單（orders）
+- *quotation_id -- 從報價轉來
+- *status -- pending（待處理） / confirmed（已確認） / cancelled（取消）
+- *~*
+- *出貨（shipments）
+- *order_id -- 從訂單轉來
+- *status -- preparing（備貨中） / shipped（已出貨） / delivered（已送達）
+- *~*
+- *收款（payments）
+- *order_id -- 從訂單轉來
+- *status -- unpaid（未付） / partial（部分） / paid（已付）
+- *method -- cash（現金） / credit_card（信用卡） / transfer（轉帳）
+- *~*
+- *1. 一個 customer → 多個 quotations
+- *2. 一個 quotation → 多個 quotation_items
+- *3. 一個 quotation（accepted）→ 一個 order
+- *4. 一個 order → 多個 shipments
+- *5. 一個 order → 多個 payments
