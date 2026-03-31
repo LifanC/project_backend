@@ -197,14 +197,13 @@ VALUES (1, 2),
 -- DROP TABLE interviewworks_schema.products;
 
 CREATE TABLE interviewworks_schema.products (
-                                                product_id varchar NOT NULL,
+                                                product_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                                 products_name varchar NULL,
                                                 price int8 NULL DEFAULT 0,
                                                 stock int8 NULL DEFAULT 0,
                                                 description varchar NULL,
                                                 created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                CONSTRAINT products_pk PRIMARY KEY (product_id)
+                                                updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 建立觸發器
@@ -220,13 +219,12 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.quotations;
 
 CREATE TABLE interviewworks_schema.quotations (
-                                                  quotation_id varchar PRIMARY KEY,
+                                                  quotation_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
                                                   username varchar(10) NOT NULL,
                                                   status varchar(100) NOT NULL DEFAULT NULL::character varying,
                                                   total_price int8 DEFAULT 0,
                                                   created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                   updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                  CONSTRAINT quotations_pkey PRIMARY KEY (quotation_id),
                                                   CONSTRAINT quotations_status_check CHECK (
                                                     status IN ('draft', 'sent', 'accepted', 'rejected')
                                                   )
@@ -245,13 +243,12 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.quotation_items;
 
 CREATE TABLE interviewworks_schema.quotation_items (
-                                                       quotation_id varchar NULL,
-                                                       product_id varchar NULL,
+                                                       quotation_id INT NULL,
+                                                       product_id INT NULL,
                                                        quantity int8 NULL DEFAULT 0,
                                                        price int8 NULL DEFAULT 0,
                                                        created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                        updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                       CONSTRAINT quotation_items_pk PRIMARY KEY (quotation_id),
                                                        CONSTRAINT quotation_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
@@ -268,7 +265,7 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.orders;
 
 CREATE TABLE interviewworks_schema.orders (
-                                              quotation_id varchar NULL,
+                                              quotation_id INT NULL,
                                               status varchar(100) NOT NULL DEFAULT NULL::character varying,
                                               total_price int8 NULL DEFAULT 0,
                                               created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -292,13 +289,12 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.order_items;
 
 CREATE TABLE interviewworks_schema.order_items (
-                                                   order_id varchar NULL,
-                                                   product_id varchar NULL,
+                                                   order_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                                   product_id INT NULL,
                                                    quantity int8 NULL DEFAULT 0,
                                                    price int8 NULL DEFAULT 0,
                                                    created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                    updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                   CONSTRAINT order_items_pk PRIMARY KEY (order_id),
                                                    CONSTRAINT order_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
@@ -315,7 +311,7 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.shipments;
 
 CREATE TABLE interviewworks_schema.shipments (
-                                                 order_id varchar NULL,
+                                                 order_id INT NULL,
                                                  status varchar(100) NOT NULL DEFAULT NULL::character varying,
                                                  tracking_number varchar NULL,
                                                  created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -339,12 +335,11 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.shipment_items;
 
 CREATE TABLE interviewworks_schema.shipment_items (
-                                                      shipment_id varchar NULL,
-                                                      product_id varchar NULL,
+                                                      shipment_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                                      product_id INT NULL,
                                                       quantity int8 NULL DEFAULT 0,
                                                       created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                       updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                      CONSTRAINT shipment_items_pk PRIMARY KEY (shipment_id),
                                                       CONSTRAINT shipment_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
@@ -361,7 +356,7 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.payments;
 
 CREATE TABLE interviewworks_schema.payments (
-                                                order_id varchar NULL,
+                                                order_id INT NULL,
                                                 amount int8 NULL DEFAULT 0,
                                                 status varchar(100) NOT NULL DEFAULT NULL::character varying,
                                                 payments_method varchar(100) NOT NULL DEFAULT NULL::character varying,
@@ -381,6 +376,18 @@ CREATE TRIGGER trigger_update_updated_date
     BEFORE UPDATE ON interviewworks_schema.payments
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_date();
+
+-- 確保 sequence 從 1 開始（清空表格並重置）
+ALTER SEQUENCE interviewworks_schema.products_product_id_seq RESTART WITH 1;
+
+-- 插入假資料範例（50筆）
+INSERT INTO interviewworks_schema.products (products_name, price, stock, description)
+SELECT
+    CONCAT('測試', n) AS products_name,
+    FLOOR(100 + RANDOM() * 900) AS price,   -- 價格 100~1000
+    FLOOR(RANDOM() * 100) AS stock,          -- 庫存 0~99
+    CONCAT('描述', n) AS description
+FROM generate_series(1,50) AS s(n);
 
 
 
