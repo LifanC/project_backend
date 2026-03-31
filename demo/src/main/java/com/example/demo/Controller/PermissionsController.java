@@ -3,6 +3,7 @@ package com.example.demo.Controller;
 import com.example.demo.Dto.Permissions.PermissionRequest;
 import com.example.demo.Service.PermissionService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -48,7 +49,9 @@ public class PermissionsController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(
             @RequestParam
+            @NotBlank(message = "刪除帳號未輸入")
             String username,
+            @NotBlank(message = "刪除密碼未輸入")
             String password) {
         return permissionService.delete(username, password);
     }

@@ -9,7 +9,6 @@ import com.example.demo.Exception.IsViolationException;
 import com.example.demo.Exception.ResourceAlreadyExistsException;
 import com.example.demo.Exception.ResourceNotFoundException;
 import com.example.demo.Mapper.ProductMapper;
-import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -19,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
 
 @Service
 public class ProductsServiceImpl implements ProductsService {
@@ -85,7 +87,7 @@ public class ProductsServiceImpl implements ProductsService {
                         messageList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
                         messageList.add("商品名稱 - " + products_name);
                         messageList.add("價格 - " + price);
-                        messageList.add("庫存 - " + stock);
+                        messageList.add("庫存量 - " + stock);
                         messageList.add("描述 - " + description);
                         messageList.add("新增日期" + ((Timestamp) productsSelect.getFirst().get("created_date")).toLocalDateTime());
                         messageList.add("更改日期" + ((Timestamp) productsSelect.getFirst().get("updated_date")).toLocalDateTime());
@@ -161,9 +163,10 @@ public class ProductsServiceImpl implements ProductsService {
                         messageList.add("商品編號 - " + productId);
                         messageList.add("商品名稱 - " + products_name);
                         messageList.add("價格 - " + price);
-                        messageList.add("庫存 - " + stock);
+                        messageList.add("庫存量 - " + stock);
                         messageList.add("描述 - " + description);
                         messageList.add("新增日期" + ((Timestamp) map.get("created_date")).toLocalDateTime());
+                        messageList.add("更改日期" + ((Timestamp) map.get("updated_date")).toLocalDateTime());
                         messageList.add("---------------------------------------");
                     }
                     Map<String, List<Object>> message = Map.of("content", messageList);
@@ -205,10 +208,22 @@ public class ProductsServiceImpl implements ProductsService {
 
     @Override
     public ResponseEntity<?> update(UpdateProductsRequest request) {
+        if (Stream.of(
+                request.getProducts_name(),
+                request.getPrice(),
+                request.getStock(),
+                request.getDescription()
+        ).noneMatch(StringUtils::hasText)) {
+            throw new ResourceNotFoundException("更改商品欄位至少輸入一項");
+        }
         final String products_name = request.getProducts_name();
-        final BigDecimal price = StringUtils.isEmpty(request.getPrice()) ? null : new BigDecimal(request.getPrice());
-        final BigDecimal stock = StringUtils.isEmpty(request.getStock()) ? null : new BigDecimal(request.getStock());
         final String description = request.getDescription();
+        final BigDecimal price = StringUtils.hasText(request.getPrice())
+                ? new BigDecimal(request.getPrice())
+                : null;
+        final BigDecimal stock = StringUtils.hasText(request.getStock())
+                ? new BigDecimal(request.getStock())
+                : null;
         final String productId = request.getProduct_id();
         Product product = new Product(products_name, price, stock, description);
         product.setProduct_id(productId);
@@ -217,19 +232,18 @@ public class ProductsServiceImpl implements ProductsService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Products update 拿鎖");
                 try {
-                    List<Map<String, Object>> productsSelect = getProduct(product);
-                    if (productsSelect.isEmpty()) {
+                    int cnt = productMapper.update(product);
+                    if (cnt == 0) {
                         throw new ResourceNotFoundException("更改商品不存在");
                     }
-                    productMapper.update(product);
                     logger.info("Products 商品更改成功");
-                    productsSelect = getProduct(product);
+                    List<Map<String, Object>> productsSelect = getProduct(product);
                     List<Object> messageList = List.of(
                             "---------------------------------------",
                             "商品編號 - " + productId,
                             "商品名稱 - " + productsSelect.getFirst().get("products_name"),
                             "價格 - " + productsSelect.getFirst().get("price"),
-                            "庫存 - " + productsSelect.getFirst().get("stock"),
+                            "庫存量 - " + productsSelect.getFirst().get("stock"),
                             "描述 - " + productsSelect.getFirst().get("description"),
                             "更改日期" + ((Timestamp) productsSelect.getFirst().get("updated_date")).toLocalDateTime(),
                             "---------------------------------------");
@@ -279,18 +293,15 @@ public class ProductsServiceImpl implements ProductsService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Products delete 拿鎖");
                 try {
-                    List<Map<String, Object>> productsSelect = getProduct(product);
-                    if (productsSelect.isEmpty()) {
+                    int cnt = productMapper.delete(product);
+                    if (cnt == 0) {
                         throw new ResourceNotFoundException("刪除商品不存在");
                     }
                     List<Object> messageList = List.of(
                             "---------------------------------------",
                             "商品編號 - " + productId,
-                            "商品名稱 - " + productsSelect.getFirst().get("products_name"),
-                            "描述 - " + productsSelect.getFirst().get("description"),
                             "刪除日期" + LocalDateTime.now(),
                             "---------------------------------------");
-                    productMapper.delete(product);
                     logger.info("Products 商品刪除成功");
                     Map<String, List<Object>> message = Map.of("content", messageList);
                     HttpStatus status = HttpStatus.OK;

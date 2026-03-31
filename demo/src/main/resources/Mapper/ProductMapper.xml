@@ -48,10 +48,10 @@
             <if test="products_name != null and products_name != ''">
                 products_name = #{products_name},
             </if>
-            <if test="price != null">
+            <if test="price != null and price != ''">
                 price = #{price},
             </if>
-            <if test="stock != null">
+            <if test="stock != null and stock != ''">
                 stock = #{stock},
             </if>
             <if test="description != null and description != ''">

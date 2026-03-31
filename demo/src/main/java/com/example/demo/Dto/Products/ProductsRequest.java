@@ -1,6 +1,7 @@
 package com.example.demo.Dto.Products;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public class ProductsRequest {
 
@@ -8,9 +9,17 @@ public class ProductsRequest {
     private String products_name;
 
     @NotBlank(message = "價格不可為空")
+    @Pattern(
+            regexp = "^-?\\d+(\\.\\d+)?$",
+            message = "價格不可包含英文與中文"
+    )
     private String price;
 
     @NotBlank(message = "庫存量不可為空")
+    @Pattern(
+            regexp = "^\\d+$",
+            message = "庫存量不可包含英文、中文與小數"
+    )
     private String stock;
 
     @NotBlank(message = "描述不可為空")

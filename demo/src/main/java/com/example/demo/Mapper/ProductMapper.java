@@ -15,7 +15,7 @@ public interface ProductMapper {
 
     List<Map<String, Object>> select(Product product);
 
-    void update(Product product);
+    int update(Product product);
 
-    void delete(Product product);
+    int delete(Product product);
 }
