@@ -52,35 +52,49 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>
-                            <h2>訂單</h2>
-                        </th>
+                        <th></th>
                         <td>4</td>
                         <td>
                             <button id="btnQueryUser">查詢使用者名單</button>
                         </td>
                     </tr>
+                </table>
+                <br>
+                <table class="url-table">
                     <tr>
-                        <td colspan="3">
-                            <input id="cnt" placeholder="數量">
-                            <div id="inputContainer"></div>
-                        </td>
+                        <th colspan="2">
+                            <h2>商品</h2>
+                        </th>
                     </tr>
                     <tr>
-                        <td>資料輸入完</td>
+                        <td>直接查詢商品</td>
+                        <td>
+                            <button id="productsSelect">查詢</button>
+                        </td>
+                    </tr>
+                </table>
+                <section>
+                    <pre id="products_result" class="products_pre"></pre>
+                </section>
+                <br>
+                <table class="url-table">
+                    <tr>
+                        <td>
+                            <input id="product_id" placeholder="輸入商品編號">
+                        </td>
                         <td>5</td>
                         <td>
-                            <button id="btnCreate">新增訂單</button>
+                            <button id="btnCar">新增購物車</button>
                         </td>
                     </tr>
-                    <tr>
+                    <!-- <tr>
                         <td>直接查詢訂單</td>
                         <td>6</td>
                         <td>
                             <button id="btnQuery">查詢訂單</button>
                         </td>
-                    </tr>
-                    <tr>
+                    </tr> -->
+                    <!-- <tr>
                         <td>
                             <input id="UserUpdater" placeholder="要更改訂單的帳號">
                         </td>
@@ -88,8 +102,8 @@
                         <td>
                             <button id="btnUpdate">更改訂單</button>
                         </td>
-                    </tr>
-                    <tr>
+                    </tr> -->
+                    <!-- <tr>
                         <td>
                             <input id="UserDelete" placeholder="要刪除訂單的帳號">
                         </td>
@@ -97,14 +111,14 @@
                         <td>
                             <button id="btnDelete">刪除訂單</button>
                         </td>
-                    </tr>
-                    <tr>
+                    </tr> -->
+                    <!-- <tr>
                         <td>直接歷史訂單</td>
                         <td>9</td>
                         <td>
                             <button id="btnHistory">歷史訂單</button>
                         </td>
-                    </tr>
+                    </tr> -->
                 </table>
             </div>
         </div>
@@ -183,7 +197,7 @@
     </div>
     <section>
         <h3>API Result</h3>
-        <pre id="result"></pre>
+        <pre id="result" class="pre"></pre>
     </section>
 </body>
 

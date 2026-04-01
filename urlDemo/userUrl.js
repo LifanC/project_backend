@@ -38,7 +38,7 @@ async function resolveRequest(method, path, data, token) {
             return await fn(workingBase + path, data, token);
         } catch (err) {
             if (isFetchNetworkError(err)) {
-                console.warn('API 掛了:', base);
+                console.warn('API 掛了:', workingBase);
                 workingBase = null;
                 localStorage.removeItem('workingBase');
             }
@@ -77,6 +77,26 @@ async function testLogin() {
 
 moveFocus('form');
 
+function show_products(log = {}) {
+    const {
+        code = undefined,
+        status = undefined,
+        message = undefined,
+        error = undefined,
+        path = undefined,
+        timestamp = undefined,
+    } = log;
+    const messageLog = {
+        code,
+        status,
+        message,
+        error,
+        path,
+        timestamp,
+    }
+    document.getElementById('products_result').innerHTML = JSON.stringify(messageLog, null, 2);
+}
+
 function show(log = {}) {
     const {
         code = undefined,
@@ -95,6 +115,7 @@ function show(log = {}) {
         timestamp,
     }
     document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
+    document.getElementById("products_result").innerHTML = "";
 }
 
 // POST JSON helper
@@ -248,135 +269,110 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 新增訂單
-    document.getElementById('btnCreate').addEventListener('click', async () => {
-        let container = document.getElementById('inputContainer');
-        let cnt = container.getElementsByTagName('input').length;
-        let item = [];
-        for (let i = 1; i <= cnt; i++) {
-            item.push(document.getElementById('order' + i).value);
-        }
-        let order_item = [];
-        for (let index = 0; index < item.length; index++) {
-            let element = item[index];
-            if (element) {
-                order_item.push(element)
-            }
-        }
-        const data = {
-            username: document.getElementById('loginUser').value,
-            order_item: order_item
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('user/createOrderItem', data, token);
-            show(res);
-        } catch (err) {
-            show(err);
-        }
-    });
-
-    // 查詢訂單
-    document.getElementById('btnQuery').addEventListener('click', async () => {
+    // 查詢
+    document.getElementById('productsCarSelect').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/queryOrderItem', data, token);
-            show(res);
+            const res = await api.post('user/productsCarSelect', data, token);
+            show_products(res);
         } catch (err) {
-            show(err);
+            show_products(err);
         }
     });
 
-    // 更改訂單
-    document.getElementById('btnUpdate').addEventListener('click', async () => {
-        let container = document.getElementById('inputContainer');
-        let cnt = container.getElementsByTagName('input').length;
-        let item = [];
-        for (let i = 1; i <= cnt; i++) {
-            item.push(document.getElementById('order' + i).value);
-        }
-        let order_item = [];
-        for (let index = 0; index < item.length; index++) {
-            let element = item[index];
-            if (element) {
-                order_item.push(element)
-            }
-        }
+    // 新增購物車
+    document.getElementById('btnCar').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('UserUpdater').value,
-            order_item: order_item
+            product_id: document.getElementById('product_id').value
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/updateOrderItem', data, token);
+            const res = await api.post('user/createCarItem', data, token);
             show(res);
         } catch (err) {
             show(err);
         }
     });
 
-    // 刪除訂單
-    document.getElementById('btnDelete').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('UserDelete').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('user/deleteOrderItem', data, token);
-            show(res);
-        } catch (err) {
-            show(err);
-        }
-    });
+    // // 查詢訂單
+    // document.getElementById('btnQuery').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('user/queryOrderItem', data, token);
+    //         show(res);
+    //     } catch (err) {
+    //         show(err);
+    //     }
+    // });
 
-    // 歷史訂單
-    document.getElementById('btnHistory').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('user/historyOrderItem', data, token);
-            show(res);
-        } catch (err) {
-            show(err);
-        }
-    });
+    // // 更改訂單
+    // document.getElementById('btnUpdate').addEventListener('click', async () => {
+    //     let container = document.getElementById('inputContainer');
+    //     let cnt = container.getElementsByTagName('input').length;
+    //     let item = [];
+    //     for (let i = 1; i <= cnt; i++) {
+    //         item.push(document.getElementById('order' + i).value);
+    //     }
+    //     let order_item = [];
+    //     for (let index = 0; index < item.length; index++) {
+    //         let element = item[index];
+    //         if (element) {
+    //             order_item.push(element)
+    //         }
+    //     }
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('UserUpdater').value,
+    //         order_item: order_item
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('user/updateOrderItem', data, token);
+    //         show(res);
+    //     } catch (err) {
+    //         show(err);
+    //     }
+    // });
 
-    const container = document.getElementById('inputContainer');
-    const cntInput = document.getElementById('cnt');
-    function renderInputs(count = 1) {
-        container.innerHTML = '';
-        for (let i = 1; i <= count; i++) {
-            const input = document.createElement('input');
-            input.id = 'order' + i;
-            input.placeholder = '資料' + i;
-            input.style.width = '300px';
-            container.appendChild(input);
-        }
-    }
-    renderInputs(1);
-    document.getElementById('cnt').addEventListener('input', async () => {
-        let cnt = cntInput.value;
+    // // 刪除訂單
+    // document.getElementById('btnDelete').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('UserDelete').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('user/deleteOrderItem', data, token);
+    //         show(res);
+    //     } catch (err) {
+    //         show(err);
+    //     }
+    // });
 
-        if (/^[1-9]\d*$/.test(cnt)) {
-            cnt = Math.min(parseInt(cnt), 10);
-            renderInputs(cnt);
-        } else {
-            cntInput.value = '';
-            renderInputs(1);
-        }
+    // // 歷史訂單
+    // document.getElementById('btnHistory').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('user/historyOrderItem', data, token);
+    //         show(res);
+    //     } catch (err) {
+    //         show(err);
+    //     }
+    // });
 
-    });
-
-    document.getElementById('token').addEventListener('input', async () => {
-        let token = document.getElementById('token').value;
-        setInputValue('token', [token]);
-    });
+    // document.getElementById('token').addEventListener('input', async () => {
+    //     let token = document.getElementById('token').value;
+    //     setInputValue('token', [token]);
+    // });
 
 });

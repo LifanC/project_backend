@@ -192,8 +192,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢
     document.getElementById('select').addEventListener('click', async () => {
+        const data = {
+            product_id: document.getElementById('product_id_select').value
+        };
         try {
-            const res = await api.get('products/select', null);
+            const res = await api.post('products/select', data);
             show(res);
         } catch (err) {
             show(err);
@@ -217,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 更改
+    // 刪除
     document.getElementById('delete').addEventListener('click', async () => {
         const data = {
             product_id: document.getElementById('product_id').value

@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.roles (
 );
 
 -- 初始化資料
-
+ALTER SEQUENCE interviewworks_schema.roles_id_seq RESTART WITH 1;
 INSERT INTO interviewworks_schema.roles (name, description)
 VALUES ('GUEST', '客人'),
        ('USER', '一般使用者'),
@@ -137,14 +137,14 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.permissions (
 );
 
 -- 初始化資料
-
+ALTER SEQUENCE interviewworks_schema.permissions_id_seq RESTART WITH 1;
 INSERT INTO interviewworks_schema.permissions (code, description)
 VALUES ('user:item:query', 'ADMIN、MANAGER'),
-       ('order:item:query', 'GUEST、USER、ADMIN、MANAGER'),
-       ('order:item:create', 'GUEST、USER'),
-       ('order:item:update', 'USER、ADMIN'),
-       ('order:item:delete', 'GUEST、USER、ADMIN、MANAGER'),
-       ('order:item:history', 'ADMIN、MANAGER');
+       ('car:item:create', 'GUEST'),
+       ('car:item:query', 'GUEST'),
+       ('car:item:update', 'GUEST'),
+       ('car:item:delete', 'GUEST'),
+       ('car:item:history', 'GUEST');
 
 -- interviewworks.user_role definition
 
@@ -175,20 +175,11 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.role_permission (
 INSERT INTO interviewworks_schema.role_permission (role_id, permission_id)
 VALUES (1, 2),
        (1, 3),
+       (1, 4),
        (1, 5),
-       (2, 2),
-       (2, 3),
-       (2, 4),
-       (2, 5),
+       (1, 6),
        (3, 1),
-       (3, 2),
-       (3, 4),
-       (3, 5),
-       (3, 6),
-       (4, 1),
-       (4, 2),
-       (4, 5),
-       (4, 6);
+       (4, 1);
 
 -- interviewworks_schema.products definition
 

@@ -1,6 +1,6 @@
 package com.example.demo.Dto.User;
 
-public class QueryOrderItemRequest implements OrderRequest {
+public class QueryCarItemRequest implements OrderRequest {
 
     private String username;
 

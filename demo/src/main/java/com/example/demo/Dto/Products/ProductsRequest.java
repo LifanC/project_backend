@@ -10,8 +10,8 @@ public class ProductsRequest {
 
     @NotBlank(message = "價格不可為空")
     @Pattern(
-            regexp = "^-?\\d+(\\.\\d+)?$",
-            message = "價格不可包含英文與中文"
+            regexp = "^\\d+$",
+            message = "價格不可包含英文、中文與小數"
     )
     private String price;
 

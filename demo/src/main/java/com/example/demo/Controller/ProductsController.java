@@ -1,10 +1,12 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Dto.Products.ProductsRequest;
+import com.example.demo.Dto.Products.QueryProductsRequest;
 import com.example.demo.Dto.Products.UpdateProductsRequest;
 import com.example.demo.Service.ProductsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,9 +36,12 @@ public class ProductsController {
         return productsService.insert(request);
     }
 
-    @GetMapping("/select")
-    public ResponseEntity<?> select() {
-        return productsService.select();
+    @PostMapping("/select")
+    public ResponseEntity<?> select(
+            @Valid
+            @RequestBody
+            QueryProductsRequest request) {
+        return productsService.select(request);
     }
 
     @PutMapping("/update")
@@ -51,6 +56,10 @@ public class ProductsController {
     public ResponseEntity<?> delete(
             @RequestParam
             @NotBlank(message = "商品編號不能為空")
+            @Pattern(
+                    regexp = "^\\d+$",
+                    message = "商品編號不可包含英文、中文與小數"
+            )
             String product_id) {
         return productsService.delete(product_id);
     }

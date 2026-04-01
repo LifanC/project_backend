@@ -3,12 +3,14 @@ package com.example.demo.Service;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.Products.ProductsRequest;
+import com.example.demo.Dto.Products.QueryProductsRequest;
 import com.example.demo.Dto.Products.UpdateProductsRequest;
 import com.example.demo.Exception.DBException;
 import com.example.demo.Exception.IsViolationException;
 import com.example.demo.Exception.ResourceAlreadyExistsException;
 import com.example.demo.Exception.ResourceNotFoundException;
 import com.example.demo.Mapper.ProductMapper;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -19,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -66,10 +67,10 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     @Transactional
     public ResponseEntity<?> insert(ProductsRequest request) {
-        final String products_name = request.getProducts_name();
-        final BigDecimal price = new BigDecimal(request.getPrice());
-        final BigDecimal stock = new BigDecimal(request.getStock());
-        final String description = request.getDescription();
+        final String products_name = request.getProducts_name().trim();
+        final BigDecimal price = new BigDecimal(request.getPrice().trim());
+        final BigDecimal stock = new BigDecimal(request.getStock().trim());
+        final String description = request.getDescription().trim();
         Product product = new Product(products_name, price, stock, description);
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
@@ -77,8 +78,6 @@ public class ProductsServiceImpl implements ProductsService {
                 logger.info("Products insert 拿鎖");
                 try {
                     try {
-                        String maxProductIdAddOne = productMapper.selectMaxProductId();
-                        product.setProduct_id(maxProductIdAddOne);
                         productMapper.create(product);
                         List<Map<String, Object>> productsSelect = getProduct(product);
                         List<Object> messageList = new ArrayList<>();
@@ -140,8 +139,12 @@ public class ProductsServiceImpl implements ProductsService {
     }
 
     @Override
-    public ResponseEntity<?> select() {
+    public ResponseEntity<?> select(QueryProductsRequest request) {
         Product product = new Product();
+        final String productId = request.getProduct_id().trim();
+        if (StringUtils.hasText(productId)) {
+            product.setProduct_id(new BigDecimal(productId));
+        }
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -155,7 +158,6 @@ public class ProductsServiceImpl implements ProductsService {
                     List<Object> messageList = new ArrayList<>();
                     for (Map<String, Object> map : productsSelect) {
                         String products_name = map.get("products_name").toString();
-                        String productId = map.get("product_id").toString();
                         BigDecimal price = new BigDecimal(map.get("price").toString());
                         BigDecimal stock = new BigDecimal(map.get("stock").toString());
                         String description = map.get("description").toString();
@@ -209,24 +211,24 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public ResponseEntity<?> update(UpdateProductsRequest request) {
         if (Stream.of(
-                request.getProducts_name(),
-                request.getPrice(),
-                request.getStock(),
-                request.getDescription()
+                request.getProducts_name().trim(),
+                request.getPrice().trim(),
+                request.getStock().trim(),
+                request.getDescription().trim()
         ).noneMatch(StringUtils::hasText)) {
             throw new ResourceNotFoundException("更改商品欄位至少輸入一項");
         }
-        final String products_name = request.getProducts_name();
-        final String description = request.getDescription();
+        final String products_name = request.getProducts_name().trim();
+        final String description = request.getDescription().trim();
         final BigDecimal price = StringUtils.hasText(request.getPrice())
-                ? new BigDecimal(request.getPrice())
+                ? new BigDecimal(request.getPrice().trim())
                 : null;
         final BigDecimal stock = StringUtils.hasText(request.getStock())
-                ? new BigDecimal(request.getStock())
+                ? new BigDecimal(request.getStock().trim())
                 : null;
-        final String productId = request.getProduct_id();
+        final String productId = request.getProduct_id().trim();
         Product product = new Product(products_name, price, stock, description);
-        product.setProduct_id(productId);
+        product.setProduct_id(new BigDecimal(productId));
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -234,7 +236,7 @@ public class ProductsServiceImpl implements ProductsService {
                 try {
                     int cnt = productMapper.update(product);
                     if (cnt == 0) {
-                        throw new ResourceNotFoundException("更改商品不存在");
+                        throw new ResourceNotFoundException(productId + " - 更改商品不存在");
                     }
                     logger.info("Products 商品更改成功");
                     List<Map<String, Object>> productsSelect = getProduct(product);
@@ -287,7 +289,7 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public ResponseEntity<?> delete(String productId) {
         Product product = new Product();
-        product.setProduct_id(productId);
+        product.setProduct_id(new BigDecimal(productId.trim()));
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -295,7 +297,7 @@ public class ProductsServiceImpl implements ProductsService {
                 try {
                     int cnt = productMapper.delete(product);
                     if (cnt == 0) {
-                        throw new ResourceNotFoundException("刪除商品不存在");
+                        throw new ResourceNotFoundException(productId + " - 刪除商品不存在");
                     }
                     List<Object> messageList = List.of(
                             "---------------------------------------",

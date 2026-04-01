@@ -38,7 +38,7 @@ async function resolveRequest(method, path, data) {
             return await fn(workingBase + path, data);
         } catch (err) {
             if (isFetchNetworkError(err)) {
-                console.warn('API 掛了:', base);
+                console.warn('API 掛了:', workingBase);
                 workingBase = null;
                 localStorage.removeItem('workingBase');
             }

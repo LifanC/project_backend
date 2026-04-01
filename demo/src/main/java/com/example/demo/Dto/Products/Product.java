@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public class Product {
 
-    private String product_id;
+    private BigDecimal product_id;
     private String products_name;
     private BigDecimal price;
     private BigDecimal stock;
@@ -20,11 +20,11 @@ public class Product {
         this.description = description;
     }
 
-    public String getProduct_id() {
+    public BigDecimal getProduct_id() {
         return product_id;
     }
 
-    public void setProduct_id(String product_id) {
+    public void setProduct_id(BigDecimal product_id) {
         this.product_id = product_id;
     }
 

@@ -9,8 +9,6 @@ import java.util.Map;
 @Mapper
 public interface ProductMapper {
 
-    String selectMaxProductId();
-
     void create(Product product);
 
     List<Map<String, Object>> select(Product product);

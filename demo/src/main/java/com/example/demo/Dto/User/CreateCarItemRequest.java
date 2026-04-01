@@ -1,26 +1,23 @@
 package com.example.demo.Dto.User;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 
-import java.util.List;
-
-public class CreateOrderItemRequest implements OrderRequest {
+public class CreateCarItemRequest implements OrderRequest {
 
     private String username;
 
-    @NotEmpty(message = "訂單不可為空")
-    private List<@NotBlank(message = "訂單內容不可為空") String> order_item;
-
     private String token;
+
+    @NotBlank(message = "商品編號不可為空")
+    private String product_id;
 
     @Override
     public String getUsername() {
         return username;
     }
 
-    public List<String> getOrder_item() {
-        return order_item;
+    public String getProduct_id() {
+        return product_id;
     }
 
     public String getToken() {

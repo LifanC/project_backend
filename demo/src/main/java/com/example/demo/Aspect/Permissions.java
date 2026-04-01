@@ -2,11 +2,11 @@ package com.example.demo.Aspect;
 
 public enum Permissions {
     USER_ITEM_QUERY("user:item:query"),
-    ORDER_ITEM_QUERY("order:item:query"),
-    ORDER_ITEM_CREATE("order:item:create"),
-    ORDER_ITEM_UPDATE("order:item:update"),
-    ORDER_ITEM_DELETE("order:item:delete"),
-    ORDER_ITEM_HISTORY("order:item:history");
+    CAR_ITEM_QUERY("car:item:query"),
+    CAR_ITEM_CREATE("car:item:create"),
+    CAR_ITEM_UPDATE("car:item:update"),
+    CAR_ITEM_DELETE("car:item:delete"),
+    CAR_ITEM_HISTORY("car:item:history");
 
     private final String permission;
 

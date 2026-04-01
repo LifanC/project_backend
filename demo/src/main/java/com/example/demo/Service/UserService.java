@@ -16,13 +16,15 @@ public interface UserService {
 
     ResponseEntity<?> queryUser(@Valid QueryUserRequest request);
 
-    ResponseEntity<?> createOrderItem(@Valid CreateOrderItemRequest request);
+    ResponseEntity<?> productsCarSelect(@Valid QueryCarItemRequest request);
 
-    ResponseEntity<?> queryOrderItem(@Valid QueryOrderItemRequest request);
+    ResponseEntity<?> createCarItem(@Valid CreateCarItemRequest request);
 
-    ResponseEntity<?> updateOrderItem(@Valid UpdateOrderItemRequest request);
-
-    ResponseEntity<?> deleteOrderItem(@Valid DeleteOrderItemRequest request);
-
-    ResponseEntity<?> historyOrderItem(@Valid QueryOrderItemRequest request);
+//    ResponseEntity<?> queryOrderItem(@Valid QueryOrderItemRequest request);
+//
+//    ResponseEntity<?> updateOrderItem(@Valid UpdateOrderItemRequest request);
+//
+//    ResponseEntity<?> deleteOrderItem(@Valid DeleteOrderItemRequest request);
+//
+//    ResponseEntity<?> historyOrderItem(@Valid QueryOrderItemRequest request);
 }

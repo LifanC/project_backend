@@ -1,10 +1,15 @@
 package com.example.demo.Dto.Products;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public class UpdateProductsRequest {
 
     @NotBlank(message = "商品編號不可為空")
+    @Pattern(
+            regexp = "^\\d+$",
+            message = "價格不可包含英文、中文與小數"
+    )
     private String product_id;
 
     private String products_name;
