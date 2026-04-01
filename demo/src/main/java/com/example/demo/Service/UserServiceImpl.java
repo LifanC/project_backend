@@ -787,24 +787,24 @@ public class UserServiceImpl implements UserService {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (新增訂單) Token 不存在或已過期", username);
+                            logger.error("{} : (新增購物車) Token 不存在或已過期", username);
                             throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
-                            logger.error("(新增訂單)使用者錯誤");
-                            throw new RuntimeException(username + " - (新增訂單)使用者錯誤");
+                            logger.error("(新增購物車)使用者錯誤");
+                            throw new RuntimeException(username + " - (新增購物車)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
-                        logger.info("{}(權限{}) : (新增訂單)有效的 JWT token {}",
+                        logger.info("{}(權限{}) : (新增購物車)有效的 JWT token {}",
                                 usernameAccessJwt, accessRole, accessJti);
                         String method = Context.get().get("method").toString();
                         String permissionsContext = Context.get().get("permissions").toString();
                         String descriptionContext = Context.get().get("description").toString();
                         String roles = Context.get().get("roles").toString();
-                        logger.info("(新增訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                        logger.info("(新增購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
                         String accessRedisKey = redisKey.get("access")
@@ -812,7 +812,7 @@ public class UserServiceImpl implements UserService {
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
-                            logger.error("{} : (新增訂單) Token 已過期", usernameAccessJwt);
+                            logger.error("{} : (新增購物車) Token 已過期", usernameAccessJwt);
                             throw new BadRequestException(username + " - Token 已過期");
                         }
 
@@ -820,7 +820,7 @@ public class UserServiceImpl implements UserService {
                         UserdataDetails userdataDetails = new UserdataDetails(username);
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
-                            logger.error("{} : (新增訂單) 使用者不存在", username);
+                            logger.error("{} : (新增購物車) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         try {
@@ -907,15 +907,15 @@ public class UserServiceImpl implements UserService {
                                             message
                                     ));
                         } catch (DataIntegrityViolationException e) {
-                            logger.warn("新增商品資料不合法，username={}", usernameAccessJwt);
-                            throw new IsViolationException(username + " - 新增商品資料不合法", e);
+                            logger.warn("新增購物車資料不合法，username={}", usernameAccessJwt);
+                            throw new IsViolationException(username + " - 新增購物車資料不合法", e);
                         } catch (DataAccessException e) {
                             logger.error("新增資料庫錯誤，username={}", usernameAccessJwt);
                             throw new DBException(username + " - 系統錯誤，請稍後再試", e);
                         }
                     } catch (JwtException e) {
                         // JWT 不合法
-                        logger.error("{} : (新增商品)無效的 JWT token", username);
+                        logger.error("{} : (新增購物車)無效的 JWT token", username);
                         throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
@@ -927,7 +927,7 @@ public class UserServiceImpl implements UserService {
                 logger.error("{} : createCarItem 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
                         "帳號-" + username,
-                        username + " - 新增訂單，資源忙碌，請重試"
+                        username + " - 新增購物車，資源忙碌，請重試"
                 );
                 Map<String, List<Object>> message = Map.of("content", messageList);
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
@@ -947,287 +947,223 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-//    @Override
-//    @Transactional
-//    @CheckRole(Permissions.ORDER_ITEM_QUERY)
-//    public ResponseEntity<?> queryOrderItem(QueryOrderItemRequest request) {
-//        final String username = request.getUsername();
-//        final String token = request.getToken();
-//        UserData userData = new UserData(username);
-//        UserdataDetails userdataDetails = new UserdataDetails(username);
-//        try {
-//            // 嘗試拿鎖，確保同一時間只有一個線程回源。
-//            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
-//                logger.info("User queryOrderItem 拿鎖");
-//                try {
-//                    try {
-//                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
-//                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-//                        if (Boolean.FALSE.equals(exists)) {
-//                            logger.error("{} : (查詢訂單) Token 不存在或已過期", username);
-//                            throw new BadRequestException(username + " - Token 不存在或已過期");
-//                        }
-//                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
-//                        String usernameAccessJwt = accessClaims.getSubject();
-//                        if (!username.equals(usernameAccessJwt)) {
-//                            logger.error("(查詢訂單)使用者錯誤");
-//                            throw new RuntimeException(username + " - (查詢訂單)使用者錯誤");
-//                        }
-//                        String accessRole = accessClaims.get("roles", String.class);
-//                        String accessJti = accessClaims.getId();
-//                        logger.info("{}(權限{}) : (查詢訂單)有效的 JWT token {}",
-//                                usernameAccessJwt, accessRole, accessJti);
-//                        String method = Context.get().get("method").toString();
-//                        String permissionsContext = Context.get().get("permissions").toString();
-//                        String descriptionContext = Context.get().get("description").toString();
-//                        String roles = Context.get().get("roles").toString();
-//                        logger.info("(查詢訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
-//                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-//
-//                        String accessRedisKey = redisKey.get("access")
-//                                .replace("{1}", accessJti)
-//                                .replace("{2}", usernameAccessJwt);
-//                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
-//                        if (Boolean.FALSE.equals(accessExists)) {
-//                            logger.error("{} : (查詢訂單) Token 已過期", usernameAccessJwt);
-//                            throw new BadRequestException(username + " - Token 已過期");
-//                        }
-//                        String accessTokenInRedis = stringRedisTemplate.opsForValue().get(accessRedisKey);
-//                        userdataDetails.setToken(accessTokenInRedis);
-//
-//                        Map<String, Object> userSelect = getUserData(userData);
-//                        if (userSelect == null) {
-//                            logger.error("{} : (查詢訂單) 使用者不存在", username);
-//                            throw new ResourceNotFoundException(username + " - 使用者不存在");
-//                        }
-//                        String permissions = userSelect.get("permissions").toString();
-//                        List<Object> messageList = new ArrayList<>();
-//                        messageList.add("帳號 - " + username);
-//                        messageList.add("權限 - " + permissions);
-//                        if (Stream.of("ADMIN", "MANAGER").anyMatch(permissions::contains)) {
-//                            List<String> isUser = userMapper.queryUserSelect();
-//                            if (isUser.isEmpty()) {
-//                                logger.error("{} : {} (查詢訂單) 訂單不存在", username, permissions);
-//                                Map<String, List<Object>> message = new TreeMap<>();
-//                                messageList.add("使用者 - 訂單不存在");
-//                                message.put("content", messageList);
-//                                HttpStatus status = HttpStatus.NOT_FOUND;
-//                                return ResponseEntity
-//                                        .status(status)
-//                                        .body(ApiResponse.api(
-//                                                status,
-//                                                message
-//                                        ));
-//                            }
-//                            messageList.add(username + " - 查詢訂單成功");
-//                            List<String> isUserNew = new ArrayList<>();
-//                            for (int i = 0; i < isUser.size(); i++) {
-//                                String data = isUser.get(i);
-//                                logger.info("{} : (查詢訂單) {}", username, data);
-//                                String[] split = data.split("\\*\\|");
-//                                isUserNew.add((i + 1) + "." + split[0]);
-//                                String[] strArray = split[1]
-//                                        .replaceAll("[\\[\\] ]", "")
-//                                        .split(",");
-//                                isUserNew.addAll(Arrays.asList(strArray));
-//                                isUserNew.add("--------------------");
-//                            }
-//                            messageList.add(isUserNew);
-//                            messageList.add(LocalDateTime.now());
-//                        } else {
-//                            Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
-//                            if (userdataDetailsSelect == null) {
-//                                logger.error("{} : (查詢訂單) 訂單不存在", username);
-//                                throw new ResourceNotFoundException(username + " - 訂單不存在");
-//                            }
-//                            messageList.add(username + " - 查詢訂單成功");
-//                            if (userdataDetailsSelect.get("order_item") != null) {
-//                                String[] strArray = userdataDetailsSelect.get("order_item")
-//                                        .toString()
-//                                        .replaceAll("[\\[\\] ]", "")
-//                                        .split(",");
-//                                messageList.add(Arrays.asList(strArray));
-//                            } else {
-//                                messageList.add(List.of(new ArrayList<>()));
-//                            }
-//                            messageList.add("新增日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
-//                            messageList.add("更改日期" + ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
-//                        }
-//                        logger.info("dataDetails 查詢訂單成功");
-//                        Map<String, List<Object>> message = new TreeMap<>();
-//                        message.put("content", messageList);
-//                        HttpStatus status = HttpStatus.OK;
-//                        return ResponseEntity
-//                                .status(status)
-//                                .body(ApiResponse.api(
-//                                        status,
-//                                        message
-//                                ));
-//                    } catch (JwtException e) {
-//                        // JWT 不合法
-//                        logger.error("{} : (查詢訂單)無效的 JWT token", username);
-//                        throw new BadRequestException(username + " - 無效的 JWT token", e);
-//                    }
-//                } finally {
-//                    lock.unlock();
-//                }
-//            } else {
-//                // 沒拿到鎖的線程稍等一下再從快取讀
-//                Thread.sleep(20);
-//                logger.error("{} : queryOrderItem 資源忙碌，請重試", username);
-//                List<Object> messageList = List.of(
-//                        "帳號-" + username,
-//                        username + " - 查詢訂單，資源忙碌，請重試"
-//                );
-//                Map<String, List<Object>> message = Map.of("content", messageList);
-//                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
-//                return ResponseEntity
-//                        .status(status)
-//                        .body(ApiResponse.api(
-//                                status,
-//                                message
-//                        ));
-//            }
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e.getMessage(), e);
-//        } finally {
-//            if (lock.isHeldByCurrentThread()) {
-//                lock.unlock();
-//            }
-//        }
-//    }
-//
-//    @Override
-//    @Transactional
-//    @CheckRole(Permissions.ORDER_ITEM_UPDATE)
-//    public ResponseEntity<?> updateOrderItem(UpdateOrderItemRequest request) {
-//        final String username = request.getUsername();
-//        List<String> order_item = request.getOrder_item();
-//        final String token = request.getToken();
-//        final String useruser = request.getUseruser();
-//        UserData userData = new UserData(username);
-//        UserdataDetails userdataDetails = new UserdataDetails(username);
-//        try {
-//            // 嘗試拿鎖，確保同一時間只有一個線程回源。
-//            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
-//                logger.info("User updateOrderItem 拿鎖");
-//                try {
-//                    try {
-//                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
-//                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-//                        if (Boolean.FALSE.equals(exists)) {
-//                            logger.error("{} : (更改訂單) Token 不存在或已過期", username);
-//                            throw new BadRequestException(username + " - Token 不存在或已過期");
-//                        }
-//                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
-//                        String usernameAccessJwt = accessClaims.getSubject();
-//                        if (!username.equals(usernameAccessJwt)) {
-//                            logger.error("(更改訂單)使用者錯誤");
-//                            throw new RuntimeException(username + " - (更改訂單)使用者錯誤");
-//                        }
-//                        String accessRole = accessClaims.get("roles", String.class);
-//                        String accessJti = accessClaims.getId();
-//                        logger.info("{}(權限{}) : (更改訂單)有效的 JWT token {}",
-//                                usernameAccessJwt, accessRole, accessJti);
-//                        String method = Context.get().get("method").toString();
-//                        String permissionsContext = Context.get().get("permissions").toString();
-//                        String descriptionContext = Context.get().get("description").toString();
-//                        String roles = Context.get().get("roles").toString();
-//                        logger.info("(更改訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
-//                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-//
-//                        String accessRedisKey = redisKey.get("access")
-//                                .replace("{1}", accessJti)
-//                                .replace("{2}", usernameAccessJwt);
-//                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
-//                        if (Boolean.FALSE.equals(accessExists)) {
-//                            logger.error("{} : (更改訂單) Token 已過期", usernameAccessJwt);
-//                            throw new BadRequestException(username + " - Token 已過期");
-//                        }
-//                        try {
-//                            Map<String, Object> userSelect = getUserData(userData);
-//                            if (userSelect == null) {
-//                                logger.error("{} : (更改訂單) 使用者不存在", username);
-//                                throw new ResourceNotFoundException(username + " - 使用者不存在");
-//                            }
-//                            String permissions = userSelect.get("permissions").toString();
-//                            if (Stream.of("ADMIN", "MANAGER").anyMatch(permissions::contains)) {
-//                                logger.info("{}(更改訂單) : ADMIN、MANAGER", useruser);
-//                                userdataDetails.setUsername(useruser);
-//                            }
-//                            Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
-//                            if (userdataDetailsSelect == null) {
-//                                logger.error("{} : (更改訂單) 訂單不存在", username);
-//                                throw new ResourceNotFoundException(username + " - 訂單不存在");
-//                            }
-//
-//                            userdataDetails.setPermissions(userdataDetailsSelect.get("permissions").toString());
-//                            userdataDetails.setOrder_item(order_item);
-//                            userdataDetails.setOrder_item_str(order_item.toString());
-//                            userMapper.updateUserdataDetail(userdataDetails);
-//                            logger.info("dataDetails 更改訂單成功");
-//                            userdataDetailsSelect = getUserDataDetail(userdataDetails);
-//                            userdataDetails.setAction_type(ActionType.UPDATE.getActionType());
-//                            userMapper.createUserdataDetailU(userdataDetails);
-//                            List<Object> messageList = List.of(
-//                                    "帳號 - " + username,
-//                                    "權限 - " + permissions,
-//                                    username + " - 更改訂單成功",
-//                                    "更改訂單的帳號 - " + useruser,
-//                                    order_item,
-//                                    "新增日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime(),
-//                                    "更改日期" + ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime()
-//                            );
-//                            Map<String, List<Object>> message = new TreeMap<>();
-//                            message.put("content", messageList);
-//                            HttpStatus status = HttpStatus.OK;
-//                            return ResponseEntity
-//                                    .status(status)
-//                                    .body(ApiResponse.api(
-//                                            status,
-//                                            message
-//                                    ));
-//                        } catch (DataIntegrityViolationException e) {
-//                            logger.warn("更改訂單資料不合法，username={}", usernameAccessJwt);
-//                            throw new IsViolationException(username + " - 更改訂單資料不合法", e);
-//                        } catch (DataAccessException e) {
-//                            logger.error("更改資料庫錯誤，username={}", usernameAccessJwt);
-//                            throw new DBException(username + " - 系統錯誤，請稍後再試", e);
-//                        }
-//                    } catch (JwtException e) {
-//                        // JWT 不合法
-//                        logger.error("{} : (更改訂單)無效的 JWT token", username);
-//                        throw new BadRequestException(username + " - 無效的 JWT token", e);
-//                    }
-//                } finally {
-//                    lock.unlock();
-//                }
-//            } else {
-//                // 沒拿到鎖的線程稍等一下再從快取讀
-//                Thread.sleep(20);
-//                logger.error("{} : updateOrderItem 資源忙碌，請重試", username);
-//                List<Object> messageList = List.of(
-//                        "帳號-" + username,
-//                        username + " - 更改訂單，資源忙碌，請重試"
-//                );
-//                Map<String, List<Object>> message = Map.of("content", messageList);
-//                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
-//                return ResponseEntity
-//                        .status(status)
-//                        .body(ApiResponse.api(
-//                                status,
-//                                message
-//                        ));
-//            }
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e.getMessage(), e);
-//        } finally {
-//            if (lock.isHeldByCurrentThread()) {
-//                lock.unlock();
-//            }
-//        }
-//    }
-//
+    @Override
+    @Transactional
+    @CheckRole(Permissions.CAR_ITEM_QUERY)
+    public ResponseEntity<?> queryCarItem(QueryCarItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("User queryCarItem 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (查詢購物車) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(查詢購物車)使用者錯誤");
+                            throw new RuntimeException(username + " - (查詢購物車)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (查詢購物車)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(查詢購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (查詢購物車) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (查詢購物車) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        String permissions = userSelect.get("permissions").toString();
+                        List<Object> messageList = new ArrayList<>();
+                        messageList.add("帳號 - " + username);
+                        messageList.add("權限 - " + permissions);
+                        UserdataDetails userdataDetails = new UserdataDetails(username);
+                        Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
+                        if (userdataDetailsSelect == null) {
+                            logger.error("{} : (查詢購物車) 訂單不存在", username);
+                            throw new ResourceNotFoundException(username + " - 訂單不存在");
+                        }
+                        Product product = new Product();
+                        String orderItem = userdataDetailsSelect.get("order_item").toString();
+                        String[] list = orderItem.split(",");
+                        List<String> productsList = new ArrayList<>();
+                        for (int i = 0; i < list.length; i++) {
+                            final int num = i + 1;
+                            String[] arr = list[i].split(":");
+                            product.setProduct_id(new BigDecimal(arr[0]));
+                            List<Map<String, Object>> productsSelect = getProduct(product);
+                            productsList.add("第" + num + "筆");
+                            productsList.add("---------------------------------------");
+                            productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
+                            productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
+                            productsList.add("價格 - " + new BigDecimal(productsSelect.getFirst().get("price").toString()));
+                            productsList.add("---------------------------------------");
+                        }
+                        messageList.add(username + " - 查詢購物車成功");
+                        messageList.add(productsList);
+                        messageList.add("新增日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
+                        messageList.add("更改日期" + ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
+                        logger.info("queryCarItem 查詢購物車成功");
+                        Map<String, List<Object>> message = new TreeMap<>();
+                        message.put("content", messageList);
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (查詢購物車)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : queryCarItem 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 查詢購物車，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.CAR_ITEM_UPDATE)
+    public ResponseEntity<?> updateCarItem(UpdateCarItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String product_id = request.getProduct_id().trim();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("User updateOrderItem 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (更改購物車) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(更改購物車)使用者錯誤");
+                            throw new RuntimeException(username + " - (更改購物車)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (更改購物車)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(更改購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (更改購物車) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (更改購物車) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        try {
+
+                            return null;
+                        } catch (DataIntegrityViolationException e) {
+                            logger.warn("更改購物車資料不合法，username={}", usernameAccessJwt);
+                            throw new IsViolationException(username + " - 更改購物車資料不合法", e);
+                        } catch (DataAccessException e) {
+                            logger.error("更改購物車資料庫錯誤，username={}", usernameAccessJwt);
+                            throw new DBException(username + " - 系統錯誤，請稍後再試", e);
+                        }
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (更改購物車)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : updateOrderItem 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 更改購物車，資源忙碌，請重試"
+                );
+                Map<String, List<Object>> message = Map.of("content", messageList);
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
 //    @Override
 //    @Transactional
 //    @CheckRole(Permissions.ORDER_ITEM_DELETE)

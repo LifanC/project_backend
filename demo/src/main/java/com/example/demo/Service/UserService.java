@@ -20,10 +20,10 @@ public interface UserService {
 
     ResponseEntity<?> createCarItem(@Valid CreateCarItemRequest request);
 
-//    ResponseEntity<?> queryOrderItem(@Valid QueryOrderItemRequest request);
-//
-//    ResponseEntity<?> updateOrderItem(@Valid UpdateOrderItemRequest request);
-//
+    ResponseEntity<?> queryCarItem(@Valid QueryCarItemRequest request);
+
+    ResponseEntity<?> updateCarItem(@Valid UpdateCarItemRequest request);
+
 //    ResponseEntity<?> deleteOrderItem(@Valid DeleteOrderItemRequest request);
 //
 //    ResponseEntity<?> historyOrderItem(@Valid QueryOrderItemRequest request);

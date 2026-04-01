@@ -284,10 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 新增購物車
-    document.getElementById('btnCar').addEventListener('click', async () => {
+    document.getElementById('btnCreateCar').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('product_id').value
+            product_id: document.getElementById('product_id_CreateCar').value
         };
         try {
             let token = document.getElementById('token').value
@@ -298,48 +298,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // // 查詢訂單
-    // document.getElementById('btnQuery').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/queryOrderItem', data, token);
-    //         show(res);
-    //     } catch (err) {
-    //         show(err);
-    //     }
-    // });
+    // 查詢購物車
+    document.getElementById('btnQueryCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/queryCarItem', data, token);
+            show(res);
+        } catch (err) {
+            show(err);
+        }
+    });
 
-    // // 更改訂單
-    // document.getElementById('btnUpdate').addEventListener('click', async () => {
-    //     let container = document.getElementById('inputContainer');
-    //     let cnt = container.getElementsByTagName('input').length;
-    //     let item = [];
-    //     for (let i = 1; i <= cnt; i++) {
-    //         item.push(document.getElementById('order' + i).value);
-    //     }
-    //     let order_item = [];
-    //     for (let index = 0; index < item.length; index++) {
-    //         let element = item[index];
-    //         if (element) {
-    //             order_item.push(element)
-    //         }
-    //     }
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('UserUpdater').value,
-    //         order_item: order_item
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/updateOrderItem', data, token);
-    //         show(res);
-    //     } catch (err) {
-    //         show(err);
-    //     }
-    // });
+    // 更改購物車
+    document.getElementById('btnUpdateCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_UpdateCar').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/updateCarItem', data, token);
+            show(res);
+        } catch (err) {
+            show(err);
+        }
+    });
 
     // // 刪除訂單
     // document.getElementById('btnDelete').addEventListener('click', async () => {
