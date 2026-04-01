@@ -32,8 +32,6 @@ public interface UserMapper {
 
     List<String> selectUserdataDetailU(UserdataDetails userdataDetail);
 
-    List<String> queryUserSelect();
-
     List<String> selectUserdataDetailUUsernameItem();
 
     List<String> queryUserName();

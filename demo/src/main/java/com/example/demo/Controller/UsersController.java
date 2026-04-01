@@ -100,24 +100,24 @@ public class UsersController {
         return userService.updateCarItem(request);
     }
 
-//    @PostMapping("/deleteOrderItem")
-//    public ResponseEntity<?> deleteOrderItem(
-//            @Valid
-//            @RequestBody
-//            DeleteOrderItemRequest request,
-//            @RequestHeader("Authorization") String authHeader) {
-//        request.setAuthHeader(authHeader);
-//        return userService.deleteOrderItem(request);
-//    }
-//
-//    @PostMapping("/historyOrderItem")
-//    public ResponseEntity<?> historyOrderItem(
-//            @Valid
-//            @RequestBody
-//            QueryOrderItemRequest request,
-//            @RequestHeader("Authorization") String authHeader) {
-//        request.setAuthHeader(authHeader);
-//        return userService.historyOrderItem(request);
-//    }
+    @PostMapping("/deleteCarItem")
+    public ResponseEntity<?> deleteCarItem(
+            @Valid
+            @RequestBody
+            DeleteCarItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.deleteCarItem(request);
+    }
+
+    @PostMapping("/historyCarItem")
+    public ResponseEntity<?> historyCarItem(
+            @Valid
+            @RequestBody
+            QueryCarItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.historyCarItem(request);
+    }
 
 }

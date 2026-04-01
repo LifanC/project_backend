@@ -2,14 +2,14 @@ package com.example.demo.Dto.User;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class DeleteOrderItemRequest implements OrderRequest {
+public class DeleteCarItemRequest implements OrderRequest {
 
     private String username;
 
     private String token;
 
-    @NotBlank(message = "刪除帳號不可為空")
-    private String useruser;
+    @NotBlank(message = "商品編號不可為空")
+    private String product_id;
 
     @Override
     public String getUsername() {
@@ -20,10 +20,6 @@ public class DeleteOrderItemRequest implements OrderRequest {
         return token;
     }
 
-    public String getUseruser() {
-        return useruser;
-    }
-
     public void setAuthHeader(String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         if ("Bearer".equals(token.trim())) {
@@ -31,4 +27,9 @@ public class DeleteOrderItemRequest implements OrderRequest {
         }
         this.token = token;
     }
+
+    public String getProduct_id() {
+        return product_id;
+    }
+
 }

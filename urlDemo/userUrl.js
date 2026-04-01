@@ -287,7 +287,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnCreateCar').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('product_id_CreateCar').value
+            product_id: document.getElementById('product_id_CreateCar').value,
+            product_quantity: document.getElementById('product_quantity_CreateCar').value
         };
         try {
             let token = document.getElementById('token').value
@@ -316,7 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnUpdateCar').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('product_id_UpdateCar').value
+            product_id: document.getElementById('product_id_UpdateCar').value,
+            product_quantity: document.getElementById('product_quantity_UpdateCar').value
         };
         try {
             let token = document.getElementById('token').value
@@ -327,38 +329,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // // 刪除訂單
-    // document.getElementById('btnDelete').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('UserDelete').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/deleteOrderItem', data, token);
-    //         show(res);
-    //     } catch (err) {
-    //         show(err);
-    //     }
-    // });
+    // 刪除購物車
+    document.getElementById('btnDeleteCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_DeleteCar').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/deleteCarItem', data, token);
+            show(res);
+        } catch (err) {
+            show(err);
+        }
+    });
 
-    // // 歷史訂單
-    // document.getElementById('btnHistory').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/historyOrderItem', data, token);
-    //         show(res);
-    //     } catch (err) {
-    //         show(err);
-    //     }
-    // });
+    // 歷史訂單
+    document.getElementById('btnHistoryCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_DeleteCar').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/historyCarItem', data, token);
+            show(res);
+        } catch (err) {
+            show(err);
+        }
+    });
 
-    // document.getElementById('token').addEventListener('input', async () => {
-    //     let token = document.getElementById('token').value;
-    //     setInputValue('token', [token]);
-    // });
+    document.getElementById('token').addEventListener('input', async () => {
+        let token = document.getElementById('token').value;
+        setInputValue('token', [token]);
+    });
 
 });

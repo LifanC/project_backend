@@ -82,8 +82,17 @@
                         <td>
                             <input id="product_id_CreateCar" placeholder="輸入商品編號">
                         </td>
-                        <td>5</td>
+                        <td rowspan="2">5</td>
+                        <td>輸入商品編號</td>
+                    </tr>
+                    <tr>
                         <td>
+                            <input id="product_quantity_CreateCar" placeholder="輸入商品數量">
+                        </td>
+                        <td>商品數量(同樣商品則增加)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
                             <button id="btnCreateCar">新增購物車</button>
                         </td>
                     </tr>
@@ -98,27 +107,36 @@
                         <td>
                             <input id="product_id_UpdateCar" placeholder="輸入商品編號">
                         </td>
-                        <td>7</td>
+                        <td rowspan="2">7</td>
+                        <td>輸入商品編號</td>
+                    </tr>
+                    <tr>
                         <td>
+                            <input id="product_quantity_UpdateCar" placeholder="輸入商品數量">
+                        </td>
+                        <td>商品數量(同樣商品則減少)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
                             <button id="btnUpdateCar">更改購物車</button>
                         </td>
                     </tr>
-                    <!-- <tr>
+                    <tr>
                         <td>
-                            <input id="UserDelete" placeholder="要刪除訂單的帳號">
+                            <input id="product_id_DeleteCar" placeholder="輸入商品編號">
                         </td>
                         <td>8</td>
                         <td>
-                            <button id="btnDelete">刪除訂單</button>
+                            <button id="btnDeleteCar">刪除購物車</button>
                         </td>
-                    </tr> -->
-                    <!-- <tr>
-                        <td>直接歷史訂單</td>
+                    </tr>
+                    <tr>
+                        <td>歷史紀錄</td>
                         <td>9</td>
                         <td>
-                            <button id="btnHistory">歷史訂單</button>
+                            <button id="btnHistoryCar">歷史訂單</button>
                         </td>
-                    </tr> -->
+                    </tr>
                 </table>
             </div>
         </div>
@@ -158,38 +176,37 @@
                 </li>
                 <li>
                     <dl>
-                        <dt>新增訂單</dt>
-                        <dd>用於建立新訂單資料。</dd>
+                        <dt>新增購物車</dt>
+                        <dd>用於建立新購物車資料。</dd>
                         <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
-                        <dt>查詢訂單</dt>
-                        <dd>可依條件查詢既有訂單資料。</dd>
-                        <dd>操作權限限制：GUEST、USER、ADMIN、MANAGER 皆可執行。</dd>
+                        <dt>查詢購物車</dt>
+                        <dd>可依條件查詢既有購物車資料。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
-                        <dt>更改訂單</dt>
-                        <dd>用於修改既有訂單內容。</dd>
-                        <dd>操作權限限制：僅限具有 USER、ADMIN 權限的使用者可執行。</dd>
+                        <dt>更改購物車</dt>
+                        <dd>用於修改既有購物車內容。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
-                        <dt>刪除訂單</dt>
-                        <dd>用於刪除既有訂單，請謹慎操作，避免誤刪。</dd>
-                        <dd>操作權限限制：GUEST、USER、ADMIN、MANAGER 皆可執行。</dd>
+                        <dt>刪除購物車</dt>
+                        <dd>用於刪除既有購物車，請謹慎操作，避免誤刪。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
-                        <dt>歷史訂單</dt>
-                        <dd>可查詢已完成或封存的歷史訂單紀錄。</dd>
-                        <dd>操作權限限制：僅限具有 ADMIN、MANAGER 權限的使用者可執行。</dd>
-                        <dd>(可查詢之對象資料：GUEST、USER。)</dd>
+                        <dt>歷史紀錄</dt>
+                        <dd>可查詢已完成或封存的歷史紀錄。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
                     </dl>
                 </li>
             </ol>
