@@ -50,16 +50,6 @@ public class UsersController {
         return userService.logout(request);
     }
 
-    @PostMapping("/queryUser")
-    public ResponseEntity<?> queryUser(
-            @Valid
-            @RequestBody
-            QueryUserRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.queryUser(request);
-    }
-
     @PostMapping("/productsCarSelect")
     public ResponseEntity<?> productsCarSelect(
             @Valid

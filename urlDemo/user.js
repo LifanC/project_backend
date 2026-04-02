@@ -1,5 +1,5 @@
-// http://127.0.0.1:5500/userUrl.html
-// https://project-frontend-exjf.onrender.com/userUrl.html
+// http://127.0.0.1:5500/user.html
+// https://project-frontend-exjf.onrender.com/user.html
 // http://localhost:8080/api/v1/
 // https://project-backend-2olo.onrender.com/api/v1/
 const BASES = [
@@ -276,19 +276,19 @@ document.addEventListener('DOMContentLoaded', () => {
         setInputValue('token', "");
     });
 
-    // 查使用者
-    document.getElementById('btnQueryUser').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('user/queryUser', data, token);
-            show_user(res);
-        } catch (err) {
-            show_user(err);
-        }
-    });
+    // // 查使用者
+    // document.getElementById('btnQueryUser').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('user/queryUser', data, token);
+    //         show_user(res);
+    //     } catch (err) {
+    //         show_user(err);
+    //     }
+    // });
 
     // 查詢
     document.getElementById('productsCarSelect').addEventListener('click', async () => {
@@ -368,8 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 歷史訂單
     document.getElementById('btnHistoryCar').addEventListener('click', async () => {
         const data = {
-            username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('product_id_DeleteCar').value
+            username: document.getElementById('loginUser').value
         };
         try {
             let token = document.getElementById('token').value

@@ -72,10 +72,10 @@ public class CommonAspect {
                     String permissions = userSelect.get("permissions").toString();
                     if (!hasRole) {
                         // 所需角色訪問被拒絕！
-                        logger.error("所需角色權限({})訪問({})被拒絕，需要 : {}({})"
+                        logger.error("角色權限({})訪問({})被拒絕，需要 : {}({})"
                                 , permissions, allowedRoles, description, selectRoles);
                         throw new RuntimeException(
-                                "所需角色權限(" + permissions + ")訪問(" + allowedRoles + ")被拒絕，" +
+                                "角色權限(" + permissions + ")訪問(" + allowedRoles + ")被拒絕，" +
                                         "需要 : " + description + "(" + selectRoles + ")");
                     }
 

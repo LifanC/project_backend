@@ -122,6 +122,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.USER_ITEM_TOKEN)
     public ResponseEntity<?> takeToken(UserRequest request) {
         final String username = request.getUsername();
         final String password = request.getPassword();
@@ -245,6 +246,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.USER_ITEM_TOKEN)
     public ResponseEntity<?> validate(UserTokenValidateRequest request) {
         final String username = request.getUsername();
         UserData userData = new UserData(username);
@@ -397,6 +399,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CheckRole(Permissions.USER_ITEM_TOKEN)
     public ResponseEntity<?> logout(QueryUserRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
@@ -568,111 +571,6 @@ public class UserServiceImpl implements UserService {
                 .getBody();
     }
 
-    @Override
-    @Transactional
-    @CheckRole(Permissions.USER_ITEM_QUERY)
-    public ResponseEntity<?> queryUser(QueryUserRequest request) {
-        final String username = request.getUsername();
-        final String token = request.getToken();
-        UserData userData = new UserData(username);
-        try {
-            // 嘗試拿鎖，確保同一時間只有一個線程回源。
-            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
-                logger.info("User queryUser 拿鎖");
-                try {
-                    try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (查詢使用者名單) Token 不存在或已過期", username);
-                            throw new BadRequestException(username + " - Token 不存在或已過期");
-                        }
-                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
-                        String usernameAccessJwt = accessClaims.getSubject();
-                        if (!username.equals(usernameAccessJwt)) {
-                            logger.error("(查詢使用者名單)使用者錯誤");
-                            throw new RuntimeException(username + " - (查詢使用者名單)使用者錯誤");
-                        }
-                        String accessRole = accessClaims.get("roles", String.class);
-                        String accessJti = accessClaims.getId();
-                        logger.info("{}(權限{}) : (查詢使用者名單)有效的 JWT token {}",
-                                usernameAccessJwt, accessRole, accessJti);
-                        String method = Context.get().get("method").toString();
-                        String permissionsContext = Context.get().get("permissions").toString();
-                        String descriptionContext = Context.get().get("description").toString();
-                        String roles = Context.get().get("roles").toString();
-                        logger.info("(查詢使用者名單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
-                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        String accessRedisKey = redisKey.get("access")
-                                .replace("{1}", accessJti)
-                                .replace("{2}", usernameAccessJwt);
-                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
-                        if (Boolean.FALSE.equals(accessExists)) {
-                            logger.error("{} : (查詢使用者名單) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException(username + " - Token 已過期");
-                        }
-                        Map<String, Object> userSelect = getUserData(userData);
-                        if (userSelect == null) {
-                            logger.error("{} : 查使用者帳號不存在", username);
-                            throw new ResourceNotFoundException(username + " - 查使用者帳號不存在");
-                        }
-                        String permissions = userSelect.get("permissions").toString();
-                        List<String> isUserName = userMapper.queryUserName();
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + permissions,
-                                username + " - 查詢使用者名單",
-                                isUserName,
-                                "新增日期" + ((Timestamp) userSelect.get("created_date")).toLocalDateTime(),
-                                "更改日期" + ((Timestamp) userSelect.get("updated_date")).toLocalDateTime()
-                        );
-                        Map<String, Map<Integer, Object>> message = Map.of(
-                                "content", ConvertFormat.convert(messageList)
-                        );
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        message
-                                ));
-                    } catch (JwtException e) {
-                        // JWT 不合法
-                        logger.error("{} : (查詢使用者名單)無效的 JWT token", username);
-                        throw new BadRequestException(username + " - 無效的 JWT token", e);
-                    }
-                } finally {
-                    lock.unlock();
-                }
-            } else {
-                // 沒拿到鎖的線程稍等一下再從快取讀
-                Thread.sleep(20);
-                logger.error("{} : queryUser 資源忙碌，請重試", username);
-                List<Object> messageList = List.of(
-                        "帳號-" + username,
-                        username + " - 查詢使用者名單，資源忙碌，請重試"
-                );
-                Map<String, Map<Integer, Object>> message = Map.of(
-                        "content", ConvertFormat.convert(messageList)
-                );
-                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
-                return ResponseEntity
-                        .status(status)
-                        .body(ApiResponse.api(
-                                status,
-                                message
-                        ));
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-    }
-
     private List<Map<String, Object>> getProduct(Product product) {
         return productMapper.select(product);
     }
@@ -842,7 +740,7 @@ public class UserServiceImpl implements UserService {
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             String msg;
                             List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(product_id)));
-                            List<String> productsList = new ArrayList<>();
+                            List<Object> productsList = new ArrayList<>();
                             if (userdataDetailsSelect == null) {
                                 if (productsSelect.isEmpty()) {
                                     msg = username + " - " + product_id + " - 商品不存在";
@@ -1021,7 +919,7 @@ public class UserServiceImpl implements UserService {
                         String orderItem = userdataDetailsSelect.get("order_item").toString();
                         logger.info("(查詢購物車){}", orderItem);
                         String[] list = orderItem.split(",");
-                        List<String> productsList = new ArrayList<>();
+                        List<Object> productsList = new ArrayList<>();
                         for (int i = 0; i < list.length; i++) {
                             final int num = i + 1;
                             String[] arr = list[i].split(":");
@@ -1156,7 +1054,7 @@ public class UserServiceImpl implements UserService {
                                     .map(e -> e.getKey() + ":" + e.getValue())
                                     .toList();
 
-                            List<String> productsList = new ArrayList<>();
+                            List<Object> productsList = new ArrayList<>();
                             for (String item : list) {
                                 String[] arr = item.split(":");
                                 List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
@@ -1406,8 +1304,8 @@ public class UserServiceImpl implements UserService {
                         }
                         String permissions = userSelect.get("permissions").toString();
                         List<String> item = userMapper.selectUserdataDetailUUsernameItem();
-                        List<String> productsList = new ArrayList<>();
-                        for(String itemName : item) {
+                        List<Object> productsList = new ArrayList<>();
+                        for (String itemName : item) {
                             userdataDetails.setUsername(itemName);
                             List<String> list = userMapper.selectUserdataDetailU(userdataDetails);
                             for (int i = 0; i < list.size(); i++) {

@@ -14,8 +14,6 @@ public interface UserService {
 
     ResponseEntity<?> logout(@Valid QueryUserRequest request);
 
-    ResponseEntity<?> queryUser(@Valid QueryUserRequest request);
-
     ResponseEntity<?> productsCarSelect(@Valid QueryCarItemRequest request);
 
     ResponseEntity<?> createCarItem(@Valid CreateCarItemRequest request);
@@ -27,4 +25,5 @@ public interface UserService {
     ResponseEntity<?> deleteCarItem(@Valid DeleteCarItemRequest request);
 
     ResponseEntity<?> historyCarItem(@Valid QueryCarItemRequest request);
+
 }

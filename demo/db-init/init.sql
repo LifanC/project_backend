@@ -139,12 +139,14 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.permissions (
 -- 初始化資料
 ALTER SEQUENCE interviewworks_schema.permissions_id_seq RESTART WITH 1;
 INSERT INTO interviewworks_schema.permissions (code, description)
-VALUES ('user:item:query', 'ADMIN、MANAGER'),
+VALUES ('user:item:query', 'ADMIN'),
        ('car:item:create', 'GUEST'),
        ('car:item:query', 'GUEST'),
        ('car:item:update', 'GUEST'),
        ('car:item:delete', 'GUEST'),
-       ('car:item:history', 'GUEST');
+       ('car:item:history', 'GUEST'),
+       ('user:item:token', 'GUEST'),
+       ('orderbackend:item:token', 'ADMIN');
 
 -- interviewworks.user_role definition
 
@@ -179,7 +181,8 @@ VALUES (1, 2),
        (1, 5),
        (1, 6),
        (3, 1),
-       (4, 1);
+       (1, 7),
+       (3, 8);
 
 -- interviewworks_schema.products definition
 

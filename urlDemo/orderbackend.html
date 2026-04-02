@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單</title>
+</head>
+<link rel="stylesheet" href="/url.css">
+<script src="/jquery.min.js"></script>
+<script src="/moveFocus.js"></script>
+<script src="/orderbackend.js"></script>
+
+<body>
+    <div class="container">
+
+        <!-- 左邊功能區 -->
+        <div class="left-panel">
+            <div id="form" class="form">
+                <table class="url-table">
+                    <tr>
+                        <th>
+                            <h2>登入</h2>
+                        </th>
+                        <th colspan="2">
+                            <h2>功能</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">
+                            <input id="loginUser" placeholder="帳號" maxlength="10">
+                            <input id="loginPass" placeholder="密碼" maxlength="100">
+                        </td>
+                        <td>1</td>
+                        <td>
+                            <button id="btnTakeToken">取得 Token</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>
+                            <button id="btnValidate">驗證 Token</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="token" placeholder="Token">
+                        </td>
+                        <td>3</td>
+                        <td>
+                            <button id="btnLogout">登出</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <td>4</td>
+                        <td>
+                            <button id="btnQueryUser">查詢用戶名單</button>
+                        </td>
+                    </tr>
+                </table>
+                <section>
+                    <pre id="user_result" class="user_products_pre"></pre>
+                </section>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="3">
+                            <h2>報價（quotations）</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="product_id_QueryQuotations" placeholder="輸入商品編號">
+                        </td>
+                        <td>5</td>
+                        <td>
+                            <button id="btnQueryQuotations">查詢原商品報價</button>
+                        </td>
+                    </tr>
+                </table>
+                <section>
+                    <pre id="quotations_result" class="quotations_pre"></pre>
+                </section>
+            </div>
+        </div>
+
+        <!-- 右邊說明文字 -->
+        <div class="right-panel">
+            <h3>操作說明</h3>
+            <ol>
+                <li>
+                    <dl>
+                        <dt>使用者需輸入帳號與密碼進行登入，最多可連續失敗 5 次。</dt>
+                        <dd>若連續登入失敗超過 5 次，系統將鎖定帳號 60 秒，期間無法再次登入。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>步驟一：取得Token</dt>
+                        <dd>使用者登入成功後，系統會核發一組 Token 作為後續操作的身份識別憑證。</dd>
+                    </dl>
+                    <dl>
+                        <dt>步驟二：驗證Token</dt>
+                        <dd>系統會先驗證原始 Token 的有效性，驗證通過後，再簽發一組暫時 Token 供特定作業使用。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>登出</dt>
+                        <dd>使用者登出時，系統會同時刪除該帳號的 Token 以及暫時 Token，以確保帳號安全。</dd>
+                    </dl>
+                </li>
+            </ol>
+        </div>
+    </div>
+</body>
+
+</html>

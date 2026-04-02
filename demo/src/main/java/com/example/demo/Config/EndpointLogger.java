@@ -23,22 +23,23 @@ public class EndpointLogger implements CommandLineRunner {
 
         // 指定 Controller 名稱
         List<String> targetControllers = List.of(
-            "PermissionsController",
-            "ProductsController",
-            "UsersController"
+                "PermissionsController",
+                "ProductsController",
+                "UsersController",
+                "OrderbackendController"
         );
         // 指定方法名稱（可為 null 表示全部方法）
         List<String> targetMethods = List.of(
-            "testLogin"
+                "testLogin"
         );
 
         String port = "8080";
         String contextPath = "/api";
 
         logger.info("""
-            
-            \t=== All Endpoints ===
-            ----------------------------------------------------------"""
+                
+                \t=== All Endpoints ===
+                ----------------------------------------------------------"""
         );
         handlerMapping.getHandlerMethods().forEach((mappingInfo, handlerMethod) -> {
 
@@ -62,27 +63,27 @@ public class EndpointLogger implements CommandLineRunner {
             }
 
             logger.info("""
-                    
-                    ----------------------------------------------------------
-                    \t{} {} : {}#{}""",
-                methods,
-                patterns,
-                controllerName,
-                methodName
+                            
+                            ----------------------------------------------------------
+                            \t{} {} : {}#{}""",
+                    methods,
+                    patterns,
+                    controllerName,
+                    methodName
             );
             String methodsFormat =
-                methods.substring(methods.indexOf("[") + 1, methods.indexOf("]"))
-                    .toLowerCase();
+                    methods.substring(methods.indexOf("[") + 1, methods.indexOf("]"))
+                            .toLowerCase();
             if ("get".equals(methodsFormat)) {
                 logger.info("""
-                        
-                        \tLocal:      http://localhost:{}{}
-                        ----------------------------------------------------------""",
-                    port,
-                    contextPath +
-                        patterns.substring(
-                            patterns.indexOf("[") + 1, patterns.indexOf("]")
-                        )
+                                
+                                \tLocal:      http://localhost:{}{}
+                                ----------------------------------------------------------""",
+                        port,
+                        contextPath +
+                                patterns.substring(
+                                        patterns.indexOf("[") + 1, patterns.indexOf("]")
+                                )
                 );
             }
         });

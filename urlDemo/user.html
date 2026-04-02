@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="/url.css">
 <script src="/jquery.min.js"></script>
 <script src="/moveFocus.js"></script>
-<script src="/userUrl.js"></script>
+<script src="/user.js"></script>
 
 <body>
     <div class="container">
@@ -51,13 +51,6 @@
                             <button id="btnLogout">登出</button>
                         </td>
                     </tr>
-                    <tr>
-                        <th></th>
-                        <td>4</td>
-                        <td>
-                            <button id="btnQueryUser">查詢使用者名單</button>
-                        </td>
-                    </tr>
                 </table>
                 <section>
                     <pre id="user_result" class="user_products_pre"></pre>
@@ -90,7 +83,7 @@
                         <td>
                             <input id="product_id_CreateCar" placeholder="輸入商品編號">
                         </td>
-                        <td rowspan="2">5</td>
+                        <td rowspan="2">4</td>
                         <td>輸入商品編號</td>
                     </tr>
                     <tr>
@@ -106,7 +99,7 @@
                     </tr>
                     <tr>
                         <td>直接查詢購物車</td>
-                        <td>6</td>
+                        <td>5</td>
                         <td>
                             <button id="btnQueryCar">查詢購物車</button>
                         </td>
@@ -115,7 +108,7 @@
                         <td>
                             <input id="product_id_UpdateCar" placeholder="輸入商品編號">
                         </td>
-                        <td rowspan="2">7</td>
+                        <td rowspan="2">6</td>
                         <td>輸入商品編號</td>
                     </tr>
                     <tr>
@@ -133,33 +126,22 @@
                         <td>
                             <input id="product_id_DeleteCar" placeholder="輸入商品編號">
                         </td>
-                        <td>8</td>
+                        <td>7</td>
                         <td>
                             <button id="btnDeleteCar">刪除購物車</button>
                         </td>
                     </tr>
                     <tr>
-                        <td>歷史紀錄</td>
-                        <td>9</td>
+                        <td>查詢歷史紀錄</td>
+                        <td>8</td>
                         <td>
-                            <button id="btnHistoryCar">歷史訂單</button>
+                            <button id="btnHistoryCar">歷史紀錄</button>
                         </td>
                     </tr>
                 </table>
                 <section>
                     <h3>API Result</h3>
                     <pre id="car_result" class="car_pre"></pre>
-                </section>
-                <br>
-                <table class="url-table">
-                    <tr>
-                        <th colspan="3">
-                            <h2>報價（quotations）</h2>
-                        </th>
-                    </tr>
-                </table>
-                <section>
-                    <pre id="quotations_result" class="quotations_pre"></pre>
                 </section>
             </div>
         </div>
@@ -192,44 +174,37 @@
                 </li>
                 <li>
                     <dl>
-                        <dt>查詢使用者名單</dt>
-                        <dd>可查詢「客人」與「一般使用者」名單。</dd>
-                        <dd>操作權限限制：僅限具有 ADMIN、MANAGER 權限的使用者可執行。</dd>
-                    </dl>
-                </li>
-                <li>
-                    <dl>
                         <dt>新增購物車</dt>
                         <dd>用於建立新購物車資料。</dd>
-                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
                         <dt>查詢購物車</dt>
                         <dd>可依條件查詢既有購物車資料。</dd>
-                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
                         <dt>更改購物車</dt>
                         <dd>用於修改既有購物車內容。</dd>
-                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
                         <dt>刪除購物車</dt>
                         <dd>用於刪除既有購物車，請謹慎操作，避免誤刪。</dd>
-                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
                     </dl>
                 </li>
                 <li>
                     <dl>
                         <dt>歷史紀錄</dt>
                         <dd>可查詢已完成或封存的歷史紀錄。</dd>
-                        <dd>操作權限限制：僅限具有 GUEST、USER 權限的使用者可執行。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
                     </dl>
                 </li>
             </ol>
