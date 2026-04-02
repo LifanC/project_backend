@@ -731,12 +731,13 @@ public class UserServiceImpl implements UserService {
                         logger.info("User 商品查詢成功");
                         List<Object> messageList = new ArrayList<>();
                         for (Map<String, Object> map : productsCarSelect) {
-                            messageList.add("---------------------------------------");
-                            messageList.add("商品編號 - " + map.get("product_id").toString());
-                            messageList.add("商品名稱 - " + map.get("products_name").toString());
-                            messageList.add("價格 - " + new BigDecimal(map.get("price").toString()));
-                            messageList.add("描述 - " + map.get("description").toString());
-                            messageList.add("---------------------------------------");
+                            List<Object> messageGroup = new ArrayList<>();
+                            messageGroup.add("---------------------------------------");
+                            messageGroup.add("商品編號 - " + map.get("product_id").toString());
+                            messageGroup.add("商品名稱 - " + map.get("products_name").toString());
+                            messageGroup.add("描述 - " + map.get("description").toString());
+                            messageGroup.add("---------------------------------------");
+                            messageList.add(messageGroup);
                         }
                         Map<String, Map<Integer, Object>> message = Map.of(
                                 "content", ConvertFormat.convert(messageList)
@@ -846,16 +847,11 @@ public class UserServiceImpl implements UserService {
                                 if (productsSelect.isEmpty()) {
                                     msg = username + " - " + product_id + " - 商品不存在";
                                 } else {
-                                    BigDecimal A = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                                    BigDecimal B = new BigDecimal(product_quantity);
-                                    BigDecimal C = A.multiply(B);
                                     productsList = List.of(
                                             "---------------------------------------",
                                             "商品編號 - " + productsSelect.getFirst().get("product_id").toString(),
                                             "商品名稱 - " + productsSelect.getFirst().get("products_name").toString(),
-                                            "價格 - " + A,
-                                            "數量 - " + B,
-                                            "總價 - " + C,
+                                            "數量(增加) - " + new BigDecimal(product_quantity),
                                             "描述 - " + productsSelect.getFirst().get("description").toString(),
                                             "---------------------------------------"
                                     );
@@ -884,14 +880,10 @@ public class UserServiceImpl implements UserService {
                                     for (String item : list) {
                                         String[] arr = item.split(":");
                                         productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                                        BigDecimal A = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                                        BigDecimal B = new BigDecimal(arr[1]);
                                         productsList.add("---------------------------------------");
                                         productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
                                         productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                        productsList.add("價格 - " + A);
-                                        productsList.add("數量(增加) - " + B);
-                                        productsList.add("總價 - " + A.multiply(B));
+                                        productsList.add("數量(增加) - " + new BigDecimal(arr[1]));
                                         productsList.add("描述 - " + productsSelect.getFirst().get("description").toString());
                                         productsList.add("---------------------------------------");
                                     }
@@ -1034,15 +1026,11 @@ public class UserServiceImpl implements UserService {
                             final int num = i + 1;
                             String[] arr = list[i].split(":");
                             List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                            BigDecimal A = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                            BigDecimal B = new BigDecimal(arr[1]);
                             productsList.add("---------------------------------------");
                             productsList.add("第" + num + "筆");
                             productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
                             productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                            productsList.add("價格 - " + A);
-                            productsList.add("數量 - " + B);
-                            productsList.add("總價 - " + A.multiply(B));
+                            productsList.add("數量 - " + new BigDecimal(arr[1]));
                             productsList.add("---------------------------------------");
                         }
                         messageList.add(username + " - 查詢購物車成功");
@@ -1172,15 +1160,10 @@ public class UserServiceImpl implements UserService {
                             for (String item : list) {
                                 String[] arr = item.split(":");
                                 List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                                BigDecimal A = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                                BigDecimal B = new BigDecimal(arr[1]);
-                                BigDecimal C = A.multiply(B);
                                 productsList.add("---------------------------------------");
                                 productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
                                 productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                productsList.add("價格 - " + A);
-                                productsList.add("數量(減少) - " + B);
-                                productsList.add("總價 - " + C);
+                                productsList.add("數量(減少) - " + new BigDecimal(arr[1]));
                                 productsList.add("描述 - " + productsSelect.getFirst().get("description").toString());
                                 productsList.add("---------------------------------------");
                             }
@@ -1437,7 +1420,6 @@ public class UserServiceImpl implements UserService {
                                     List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
                                     productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
                                     productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                    productsList.add("價格 - " + productsSelect.getFirst().get("price").toString());
                                     productsList.add("數量 - " + arr[1]);
                                     productsList.add("描述 - " + productsSelect.getFirst().get("description").toString());
                                 }

@@ -72,10 +72,30 @@ function isFetchNetworkError(err) {
 testLogin()
 async function testLogin() {
     const res = await api.get('user/testLogin', null);
-    show(res);
+    show_user(res);
 }
 
 moveFocus('form');
+
+function show_user(log = {}) {
+    const {
+        code = undefined,
+        status = undefined,
+        message = undefined,
+        error = undefined,
+        path = undefined,
+        timestamp = undefined,
+    } = log;
+    const messageLog = {
+        code,
+        status,
+        message,
+        error,
+        path,
+        timestamp,
+    }
+    document.getElementById('user_result').innerHTML = JSON.stringify(messageLog, null, 2);
+}
 
 function show_products(log = {}) {
     const {
@@ -95,9 +115,10 @@ function show_products(log = {}) {
         timestamp,
     }
     document.getElementById('products_result').innerHTML = JSON.stringify(messageLog, null, 2);
+    document.getElementById("car_result").innerHTML = "";
 }
 
-function show(log = {}) {
+function show_car(log = {}) {
     const {
         code = undefined,
         status = undefined,
@@ -114,7 +135,7 @@ function show(log = {}) {
         path,
         timestamp,
     }
-    document.getElementById('result').innerHTML = JSON.stringify(messageLog, null, 2);
+    document.getElementById('car_result').innerHTML = JSON.stringify(messageLog, null, 2);
     document.getElementById("products_result").innerHTML = "";
 }
 
@@ -204,7 +225,7 @@ async function deleteJSON(url, params, token) {
 // 將值塞入 input 並自動調整寬度
 function setInputValue(inputId, value) {
     const input = document.getElementById(inputId);
-    input.value = value[0];
+    input.value = value;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -217,9 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             const res = await api.post('user/takeToken', data);
-            show(res);
+            show_user(res);
         } catch (err) {
-            show(err);
+            show_user(err);
         }
     });
 
@@ -230,13 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             const res = await api.post('user/validate', data);
-            show(res);
-            let token = res.message.token;
+            show_user(res);
+            let token = res.message.token["1"];
             if (token) {
                 setInputValue('token', token);
             }
         } catch (err) {
-            show(err);
+            show_user(err);
         }
     });
 
@@ -248,11 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/logout', data, token);
-            show(res);
+            show_user(res);
         } catch (err) {
-            show(err);
+            show_user(err);
         }
-        setInputValue('token', ['']);
+        setInputValue('token', "");
     });
 
     // 查使用者
@@ -263,9 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/queryUser', data, token);
-            show(res);
+            show_user(res);
         } catch (err) {
-            show(err);
+            show_user(err);
         }
     });
 
@@ -293,9 +314,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/createCarItem', data, token);
-            show(res);
+            show_car(res);
         } catch (err) {
-            show(err);
+            show_car(err);
         }
     });
 
@@ -307,9 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/queryCarItem', data, token);
-            show(res);
+            show_car(res);
         } catch (err) {
-            show(err);
+            show_car(err);
         }
     });
 
@@ -323,9 +344,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/updateCarItem', data, token);
-            show(res);
+            show_car(res);
         } catch (err) {
-            show(err);
+            show_car(err);
         }
     });
 
@@ -338,9 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/deleteCarItem', data, token);
-            show(res);
+            show_car(res);
         } catch (err) {
-            show(err);
+            show_car(err);
         }
     });
 
@@ -353,15 +374,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('user/historyCarItem', data, token);
-            show(res);
+            show_car(res);
         } catch (err) {
-            show(err);
+            show_car(err);
         }
-    });
-
-    document.getElementById('token').addEventListener('input', async () => {
-        let token = document.getElementById('token').value;
-        setInputValue('token', [token]);
     });
 
 });
