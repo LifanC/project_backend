@@ -1,5 +1,6 @@
 package com.example.demo.Exception;
 
+import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Dto.ApiResponse;
 import org.springframework.dao.*;
 import org.springframework.http.HttpStatus;
@@ -30,8 +31,8 @@ public class GlobalExceptionHandler {
                     );
                 });
 
-        Map<String, List<Object>> message = msg("參數驗證失敗");
-        message.put("error", List.of(fieldErrors));
+        Map<String, Map<Integer, Object>> message = msg("參數驗證失敗");
+        message.put("error", ConvertFormat.convert(List.of(fieldErrors)));
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return ResponseEntity
                 .status(status)
@@ -113,9 +114,9 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    private Map<String, List<Object>> msg(String ex) {
-        Map<String, List<Object>> message = new TreeMap<>();
-        message.put("content", List.of(ex));
+    private Map<String, Map<Integer, Object>> msg(String ex) {
+        Map<String, Map<Integer, Object>> message = new TreeMap<>();
+        message.put("content", ConvertFormat.convert(List.of(ex)));
         return message;
     }
 

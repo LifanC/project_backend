@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Permissions.PermissionRequest;
 import com.example.demo.Dto.Permissions.Permission;
@@ -68,7 +69,9 @@ public class PermissionServiceImpl implements PermissionService {
     public ResponseEntity<?> testLogin() {
         logger.info("permissions/testLogin: Permissions is working!");
         List<Object> messageList = List.of("Permissions is working!");
-        Map<String, List<Object>> message = Map.of("content", messageList);
+        Map<String, Map<Integer, Object>> message = Map.of(
+                "content", ConvertFormat.convert(messageList)
+        );
         HttpStatus status = HttpStatus.OK;
         return ResponseEntity
                 .status(status)
@@ -111,7 +114,9 @@ public class PermissionServiceImpl implements PermissionService {
                                 "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime(),
                                 "更改日期" + ((Timestamp) permissionsSelect.get("updated_date")).toLocalDateTime()
                         );
-                        Map<String, List<Object>> message = Map.of("content", messageList);
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
                         HttpStatus status = HttpStatus.CREATED;
                         return ResponseEntity
                                 .status(status)
@@ -141,7 +146,9 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 註冊，資源忙碌，請重試"
                 );
-                Map<String, List<Object>> message = Map.of("content", messageList);
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -176,7 +183,9 @@ public class PermissionServiceImpl implements PermissionService {
                             "帳號查詢成功",
                             permissionsSelect
                     );
-                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    Map<String, Map<Integer, Object>> message = Map.of(
+                            "content", ConvertFormat.convert(messageList)
+                    );
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -191,10 +200,8 @@ public class PermissionServiceImpl implements PermissionService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("query 資源忙碌，請重試");
-                Map<String, List<Object>> message = Map.of(
-                        "content", List.of(
-                                "查詢，資源忙碌，請重試"
-                        )
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(List.of("查詢，資源忙碌，請重試"))
                 );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
@@ -254,7 +261,9 @@ public class PermissionServiceImpl implements PermissionService {
                             "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime(),
                             "更改日期" + ((Timestamp) permissionsSelect.get("updated_date")).toLocalDateTime()
                     );
-                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    Map<String, Map<Integer, Object>> message = Map.of(
+                            "content", ConvertFormat.convert(messageList)
+                    );
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -274,7 +283,9 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 更改權限，資源忙碌，請重試"
                 );
-                Map<String, List<Object>> message = Map.of("content", messageList);
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -327,7 +338,9 @@ public class PermissionServiceImpl implements PermissionService {
                             "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime(),
                             "更改日期" + ((Timestamp) permissionsSelect.get("updated_date")).toLocalDateTime()
                     );
-                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    Map<String, Map<Integer, Object>> message = Map.of(
+                            "content", ConvertFormat.convert(messageList)
+                    );
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -346,7 +359,9 @@ public class PermissionServiceImpl implements PermissionService {
                         "帳號 -" + username,
                         username + " - 刪除權限，資源忙碌，請重試"
                 );
-                Map<String, List<Object>> message = Map.of("content", messageList);
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)

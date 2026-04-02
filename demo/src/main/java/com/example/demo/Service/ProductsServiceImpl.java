@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.Products.ProductsRequest;
@@ -10,7 +11,6 @@ import com.example.demo.Exception.IsViolationException;
 import com.example.demo.Exception.ResourceAlreadyExistsException;
 import com.example.demo.Exception.ResourceNotFoundException;
 import com.example.demo.Mapper.ProductMapper;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -54,7 +54,9 @@ public class ProductsServiceImpl implements ProductsService {
     public ResponseEntity<?> testLogin() {
         logger.info("products/testLogin: Products is working!");
         List<Object> messageList = List.of("Products is working!");
-        Map<String, List<Object>> message = Map.of("content", messageList);
+        Map<String, Map<Integer, Object>> message = Map.of(
+                "content", ConvertFormat.convert(messageList)
+        );
         HttpStatus status = HttpStatus.OK;
         return ResponseEntity
                 .status(status)
@@ -91,7 +93,9 @@ public class ProductsServiceImpl implements ProductsService {
                         messageList.add("新增日期" + ((Timestamp) productsSelect.getFirst().get("created_date")).toLocalDateTime());
                         messageList.add("更改日期" + ((Timestamp) productsSelect.getFirst().get("updated_date")).toLocalDateTime());
                         messageList.add("---------------------------------------");
-                        Map<String, List<Object>> message = Map.of("content", messageList);
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
                         HttpStatus status = HttpStatus.CREATED;
                         return ResponseEntity
                                 .status(status)
@@ -120,7 +124,9 @@ public class ProductsServiceImpl implements ProductsService {
                         "商品名稱 -" + products_name,
                         products_name + " - 新增，資源忙碌，請重試"
                 );
-                Map<String, List<Object>> message = Map.of("content", messageList);
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -171,7 +177,9 @@ public class ProductsServiceImpl implements ProductsService {
                         messageList.add("更改日期" + ((Timestamp) map.get("updated_date")).toLocalDateTime());
                         messageList.add("---------------------------------------");
                     }
-                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    Map<String, Map<Integer, Object>> message = Map.of(
+                            "content", ConvertFormat.convert(messageList)
+                    );
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -186,10 +194,8 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("select 資源忙碌，請重試");
-                Map<String, List<Object>> message = Map.of(
-                        "content", List.of(
-                                "查詢，資源忙碌，請重試"
-                        )
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(List.of("查詢，資源忙碌，請重試"))
                 );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
@@ -249,7 +255,9 @@ public class ProductsServiceImpl implements ProductsService {
                             "描述 - " + productsSelect.getFirst().get("description"),
                             "更改日期" + ((Timestamp) productsSelect.getFirst().get("updated_date")).toLocalDateTime(),
                             "---------------------------------------");
-                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    Map<String, Map<Integer, Object>> message = Map.of(
+                            "content", ConvertFormat.convert(messageList)
+                    );
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -264,10 +272,8 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("update 資源忙碌，請重試");
-                Map<String, List<Object>> message = Map.of(
-                        "content", List.of(
-                                "更改，資源忙碌，請重試"
-                        )
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(List.of("更改，資源忙碌，請重試"))
                 );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
@@ -305,7 +311,9 @@ public class ProductsServiceImpl implements ProductsService {
                             "刪除日期" + LocalDateTime.now(),
                             "---------------------------------------");
                     logger.info("Products 商品刪除成功");
-                    Map<String, List<Object>> message = Map.of("content", messageList);
+                    Map<String, Map<Integer, Object>> message = Map.of(
+                            "content", ConvertFormat.convert(messageList)
+                    );
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -320,10 +328,8 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("delete 資源忙碌，請重試");
-                Map<String, List<Object>> message = Map.of(
-                        "content", List.of(
-                                "刪除，資源忙碌，請重試"
-                        )
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(List.of("刪除，資源忙碌，請重試"))
                 );
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
