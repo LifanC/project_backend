@@ -1,4 +1,6 @@
-package com.example.demo.Dto.User;
+package com.example.demo.Dto.Orderbackend;
+
+import com.example.demo.Dto.User.OrderRequest;
 
 public class QueryQuotationsItemRequest implements OrderRequest {
 

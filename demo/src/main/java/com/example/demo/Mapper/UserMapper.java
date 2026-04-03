@@ -26,13 +26,7 @@ public interface UserMapper {
 
     void deleteUserdataDetail(UserdataDetails userdataDetails);
 
-    void deleteUserdataDetailU(UserdataDetails userdataDetails);
-
-    void createUserdataDetailU(UserdataDetails userdataDetail);
-
-    List<String> selectUserdataDetailU(UserdataDetails userdataDetail);
-
-    List<String> selectUserdataDetailUUsernameItem();
-
     List<String> queryUserName();
+
+    void updateUserdataDetailIsActive(String username);
 }

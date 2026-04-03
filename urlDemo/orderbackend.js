@@ -268,6 +268,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 查詢用戶下單商品
+    document.getElementById('btnQueryUserProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/queryUserProductItem', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
     // 查詢原商品報價
     document.getElementById('btnQueryQuotations').addEventListener('click', async () => {
         const data = {
@@ -277,6 +292,21 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('orderbackend/queryQuotationsItem', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
+    // 商品報價
+    document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/quotationsProductItem', data, token);
             show_quotations(res);
         } catch (err) {
             show_quotations(err);

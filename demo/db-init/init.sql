@@ -72,33 +72,12 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata_details (
                                                         created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                         updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                         order_item varchar(100) NULL DEFAULT NULL::character varying,
-                                                        CONSTRAINT userdata_details_pkey PRIMARY KEY (username)
+                                                        is_active bool NOT NULL DEFAULT false
 );
 
 -- 建立觸發器
 CREATE TRIGGER trigger_update_updated_date
     BEFORE UPDATE ON interviewworks_schema.userdata_details
-    FOR EACH ROW
-EXECUTE FUNCTION update_updated_date();
-
--- interviewworks.userdata_details_u definition
-
--- Drop table
-
--- DROP TABLE interviewworks_schema.userdata_details_u;
-
-CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata_details_u (
-                                                          username varchar(10) NOT NULL,
-                                                          created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                          updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                          order_item varchar(100) NULL DEFAULT NULL::character varying,
-                                                          action_type varchar(100) NULL DEFAULT NULL::character varying,
-                                                          CONSTRAINT userdata_details_u_action_type_check CHECK (((action_type)::text = ANY ((ARRAY['insert'::character varying, 'update'::character varying, 'delete'::character varying])::text[])))
-);
-
--- 建立觸發器
-CREATE TRIGGER trigger_update_updated_date
-    BEFORE UPDATE ON interviewworks_schema.userdata_details_u
     FOR EACH ROW
 EXECUTE FUNCTION update_updated_date();
 
@@ -146,7 +125,8 @@ VALUES ('user:item:query', 'ADMIN'),
        ('car:item:delete', 'GUEST'),
        ('car:item:history', 'GUEST'),
        ('user:item:token', 'GUEST'),
-       ('orderbackend:item:token', 'ADMIN');
+       ('orderbackend:item:token', 'ADMIN'),
+       ('user:item:confirm', 'GUEST');
 
 -- interviewworks.user_role definition
 
@@ -182,7 +162,8 @@ VALUES (1, 2),
        (1, 6),
        (3, 1),
        (1, 7),
-       (3, 8);
+       (3, 8),
+       (1, 9);
 
 -- interviewworks_schema.products definition
 

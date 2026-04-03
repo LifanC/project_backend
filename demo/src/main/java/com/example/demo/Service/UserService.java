@@ -24,6 +24,5 @@ public interface UserService {
 
     ResponseEntity<?> deleteCarItem(@Valid DeleteCarItemRequest request);
 
-    ResponseEntity<?> historyCarItem(@Valid QueryCarItemRequest request);
-
+    ResponseEntity<?> confirmItem(@Valid ConfirmItemRequest request);
 }

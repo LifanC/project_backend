@@ -8,7 +8,8 @@ public enum Permissions {
     CAR_ITEM_DELETE("car:item:delete"),
     CAR_ITEM_HISTORY("car:item:history"),
     USER_ITEM_TOKEN("user:item:token"),
-    ORDERBACKEND_ITEM_TOKEN("orderbackend:item:token");
+    ORDERBACKEND_ITEM_TOKEN("orderbackend:item:token"),
+    USER_ITEM_CONFIRM("user:item:confirm");
 
     private final String permission;
 

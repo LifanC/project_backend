@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.OrderbackendMapper">
+
+    <select id="selectUserUser" resultType="java.util.Map">
+        select userdata_details.username    as username,
+               userdata_details.order_item  as order_item
+        from "interviewworks_schema"."userdata_details" userdata_details
+                 inner join "interviewworks_schema"."userdata" userdata
+                            on
+                                userdata_details.username = userdata.username
+                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
+                            on
+                                userdata.username = permissionsdata.username
+        <where>
+            <if test="username != null and username != ''">
+                userdata_details.username = #{username}
+            </if>
+            and userdata_details.is_active = '1'
+        </where>
+        order by userdata_details.updated_date desc
+    </select>
+
+</mapper>

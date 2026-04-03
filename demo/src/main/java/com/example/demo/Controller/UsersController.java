@@ -100,14 +100,14 @@ public class UsersController {
         return userService.deleteCarItem(request);
     }
 
-    @PostMapping("/historyCarItem")
-    public ResponseEntity<?> historyCarItem(
+    @PostMapping("/confirmItem")
+    public ResponseEntity<?> confirmItem(
             @Valid
             @RequestBody
-            QueryCarItemRequest request,
+            ConfirmItemRequest request,
             @RequestHeader("Authorization") String authHeader) {
         request.setAuthHeader(authHeader);
-        return userService.historyCarItem(request);
+        return userService.confirmItem(request);
     }
 
 }

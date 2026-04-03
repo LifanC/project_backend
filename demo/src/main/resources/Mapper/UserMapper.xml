@@ -51,6 +51,7 @@
                             on
                                 userdata.username = permissionsdata.username
         where userdata_details.username = #{username}
+          and userdata_details.is_active = '0'
         order by userdata_details.updated_date desc
     </select>
 
@@ -65,56 +66,6 @@
         from "interviewworks_schema"."userdata_details"
         where username = #{username}
     </delete>
-
-    <delete id="deleteUserdataDetailU">
-        delete
-        from "interviewworks_schema"."userdata_details_u"
-        where username = #{username}
-    </delete>
-
-    <insert id="createUserdataDetailU">
-        insert
-        into "interviewworks_schema"."userdata_details_u" (username,
-                                                order_item,
-                                                action_type)
-        values (#{username},
-                #{order_item_str},
-                #{action_type})
-    </insert>
-
-    <select id="selectUserdataDetailU" resultType="java.lang.String">
-        select concat('(',
-                      permissionsdata.use_permissions,
-                      ')',
-                      userdata_details_u.username,
-                      '(',
-                      userdata_details_u.action_type,
-                      ')*|',
-                      userdata_details_u.order_item) as fixed
-        from "interviewworks_schema"."userdata_details_u" userdata_details_u
-                 inner join "interviewworks_schema"."userdata" userdata
-                            on
-                                userdata_details_u.username = userdata.username
-                 inner join "interviewworks_schema"."permissionsdata" permissionsdata
-                            on
-                                userdata_details_u.username = permissionsdata.username
-        where userdata_details_u.username = #{username}
-        order by permissionsdata.updated_date desc
-    </select>
-
-    <select id="selectUserdataDetailUUsernameItem" resultType="java.lang.String">
-        SELECT username
-        FROM (SELECT u.username,
-                     ROW_NUMBER() OVER (
-                         PARTITION BY u.username
-                         ) rn
-              FROM "interviewworks_schema".userdata_details_u u
-                       JOIN "interviewworks_schema".userdata ud
-                            ON u.username = ud.username
-                       JOIN "interviewworks_schema".permissionsdata p
-                            ON u.username = p.username) t
-        WHERE rn = 1
-    </select>
 
     <select id="queryUserName" resultType="java.lang.String">
         select concat('(',
@@ -133,5 +84,11 @@
                 end ,
             permissionsdata.updated_date desc
     </select>
+
+    <update id="updateUserdataDetailIsActive">
+        update "interviewworks_schema"."userdata_details"
+        set is_active  = '1'
+        where username = #{username}
+    </update>
 
 </mapper>

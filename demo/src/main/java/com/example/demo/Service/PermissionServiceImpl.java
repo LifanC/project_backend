@@ -327,7 +327,6 @@ public class PermissionServiceImpl implements PermissionService {
                     userMapper.delete(userData);
                     UserdataDetails userdataDetails = new UserdataDetails(username);
                     userMapper.deleteUserdataDetail(userdataDetails);
-                    userMapper.deleteUserdataDetailU(userdataDetails);
                     roleMapper.deleteUserRole(username);
                     logger.info("Permission 帳號已刪除");
                     String permissions = permissionsSelect.get("permissions").toString();

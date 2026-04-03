@@ -365,14 +365,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 歷史訂單
-    document.getElementById('btnHistoryCar').addEventListener('click', async () => {
+    // 確認訂單
+    document.getElementById('btnConfirm').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/historyCarItem', data, token);
+            const res = await api.post('user/confirmItem', data, token);
             show_car(res);
         } catch (err) {
             show_car(err);
