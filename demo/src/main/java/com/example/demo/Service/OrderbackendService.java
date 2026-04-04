@@ -1,7 +1,6 @@
 package com.example.demo.Service;
 
-import com.example.demo.Dto.Orderbackend.QueryQuotationsItemRequest;
-import com.example.demo.Dto.Orderbackend.QueryUserProductItemRequest;
+import com.example.demo.Dto.Orderbackend.QuotationsProductItemRequest;
 import com.example.demo.Dto.User.*;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +16,7 @@ public interface OrderbackendService {
 
     ResponseEntity<?> queryUser(@Valid QueryUserRequest request);
 
-    ResponseEntity<?> queryUserProductItem(@Valid QueryUserProductItemRequest request);
+    ResponseEntity<?> quotationsProductItem(@Valid QuotationsProductItemRequest request);
 
-    ResponseEntity<?> queryQuotationsItem(@Valid QueryQuotationsItemRequest request);
+    ResponseEntity<?> confirmQuotationsProductItem(@Valid QuotationsProductItemRequest request);
 }

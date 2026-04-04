@@ -4,8 +4,7 @@ import com.example.demo.Aspect.Permissions;
 import com.example.demo.Common.Context;
 import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Dto.ApiResponse;
-import com.example.demo.Dto.Orderbackend.QueryQuotationsItemRequest;
-import com.example.demo.Dto.Orderbackend.QueryUserProductItemRequest;
+import com.example.demo.Dto.Orderbackend.QuotationsProductItemRequest;
 import com.example.demo.Dto.Orderbackend.UserUser;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.*;
@@ -32,7 +31,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.math.BigDecimal;
@@ -720,37 +718,38 @@ public class OrderbackendServiceImpl implements OrderbackendService {
     @Override
     @Transactional
     @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
-    public ResponseEntity<?> queryUserProductItem(QueryUserProductItemRequest request) {
+    public ResponseEntity<?> quotationsProductItem(QuotationsProductItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
+        final String userPercent = request.getUserPercent();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
-                logger.info("orderbackend queryUserProductItem 拿鎖");
+                logger.info("orderbackend quotationsProductItem 拿鎖");
                 try {
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (查詢用戶下單商品) Token 不存在或已過期", username);
+                            logger.error("{} : (用戶商品報價) Token 不存在或已過期", username);
                             throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
-                            logger.error("(查詢用戶下單商品)使用者錯誤");
-                            throw new RuntimeException(username + " - (查詢用戶下單商品)使用者錯誤");
+                            logger.error("(用戶商品報價)使用者錯誤");
+                            throw new RuntimeException(username + " - (用戶商品報價)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
-                        logger.info("{}(權限{}) : (查詢用戶下單商品)有效的 JWT token {}",
+                        logger.info("{}(權限{}) : (用戶商品報價)有效的 JWT token {}",
                                 usernameAccessJwt, accessRole, accessJti);
                         String method = Context.get().get("method").toString();
                         String permissionsContext = Context.get().get("permissions").toString();
                         String descriptionContext = Context.get().get("description").toString();
                         String roles = Context.get().get("roles").toString();
-                        logger.info("(查詢用戶下單商品)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                        logger.info("(用戶商品報價)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
                         String accessRedisKey = redisKey.get("access")
@@ -758,13 +757,13 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
-                            logger.error("{} : (查詢用戶下單商品) Token 已過期", usernameAccessJwt);
+                            logger.error("{} : (用戶商品報價) Token 已過期", usernameAccessJwt);
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
-                            logger.error("{} : (查詢用戶下單商品) 使用者不存在", username);
+                            logger.error("{} : (用戶商品報價) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
@@ -775,23 +774,31 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             messageGroup.add("訂單明細 - 帳號 - " + user.get("username").toString());
                             String order_item = user.get("order_item").toString();
                             String[] order_items = order_item.split(",");
-                            List<String> list = new ArrayList<>();
                             for (String item : order_items) {
                                 String[] arr = item.split(":");
                                 List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                                list.add("---------------------------------------");
-                                list.add("商品編號 - " + arr[0]);
-                                list.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                list.add("訂購數量 - " + new BigDecimal(arr[1]));
-                                list.add("描述 - " + productsSelect.getFirst().get("description").toString());
-                                list.add("---------------------------------------");
-                                messageGroup.add(list);
+                                messageGroup.add("---------------------------------------");
+                                messageGroup.add("商品編號 - " + arr[0]);
+                                messageGroup.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
+                                messageGroup.add("訂購數量 - " + new BigDecimal(arr[1]));
+                                BigDecimal price = new BigDecimal(productsSelect.getFirst().get("price").toString());
+                                messageGroup.add("價格 - " + price);
+                                int num = Integer.parseInt(userPercent);
+                                Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
+                                messageGroup.add("---------- " + num + "% ----------");
+                                messageGroup.add("售價: " + queryQuotationsMap.get("sellingPrice").toString());
+                                messageGroup.add("利潤: " + queryQuotationsMap.get("profit").toString());
+                                messageGroup.add("利潤率: " + queryQuotationsMap.get("margin").toString() + "%");
+                                messageGroup.add("---------- " + num + "% ----------");
+                                messageGroup.add("描述 - " + productsSelect.getFirst().get("description").toString());
+                                messageGroup.add("---------------------------------------");
                             }
                             productsList.add(messageGroup);
                         }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
                                 "權限 - " + userSelect.get("permissions").toString(),
+                                "用戶商品報價",
                                 ConvertFormat.convert(productsList)
                         );
                         Map<String, Map<Integer, Object>> message = Map.of(
@@ -806,7 +813,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 ));
                     } catch (JwtException e) {
                         // JWT 不合法
-                        logger.error("{} : (查詢用戶下單商品)無效的 JWT token", username);
+                        logger.error("{} : (用戶商品報價)無效的 JWT token", username);
                         throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
@@ -815,10 +822,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
             } else {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
-                logger.error("{} : queryUserProductItem 資源忙碌，請重試", username);
+                logger.error("{} : quotationsProductItem 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
                         "帳號-" + username,
-                        username + " - 查詢用戶下單商品，資源忙碌，請重試"
+                        username + " - 用戶商品報價，資源忙碌，請重試"
                 );
                 Map<String, Map<Integer, Object>> message = Map.of(
                         "content", ConvertFormat.convert(messageList)
@@ -843,37 +850,38 @@ public class OrderbackendServiceImpl implements OrderbackendService {
     @Override
     @Transactional
     @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
-    public ResponseEntity<?> queryQuotationsItem(QueryQuotationsItemRequest request) {
+    public ResponseEntity<?> confirmQuotationsProductItem(QuotationsProductItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
-        final String product_id = request.getProduct_id().trim();
+        final String useruser = request.getUseruser();
+        final String userPercent = request.getUserPercent();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
-                logger.info("orderbackend queryQuotationsItem 拿鎖");
+                logger.info("orderbackend confirmQuotationsProductItem 拿鎖");
                 try {
                     try {
                         String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (查詢原商品報價) Token 不存在或已過期", username);
+                            logger.error("{} : (確認報價) Token 不存在或已過期", username);
                             throw new BadRequestException(username + " - Token 不存在或已過期");
                         }
                         Claims accessClaims = tokenInRedis(refreshRedisKey, token);
                         String usernameAccessJwt = accessClaims.getSubject();
                         if (!username.equals(usernameAccessJwt)) {
-                            logger.error("(查詢原商品報價)使用者錯誤");
-                            throw new RuntimeException(username + " - (查詢原商品報價)使用者錯誤");
+                            logger.error("(確認報價)使用者錯誤");
+                            throw new RuntimeException(username + " - (確認報價)使用者錯誤");
                         }
                         String accessRole = accessClaims.get("roles", String.class);
                         String accessJti = accessClaims.getId();
-                        logger.info("{}(權限{}) : (查詢原商品報價)有效的 JWT token {}",
+                        logger.info("{}(權限{}) : (確認報價)有效的 JWT token {}",
                                 usernameAccessJwt, accessRole, accessJti);
                         String method = Context.get().get("method").toString();
                         String permissionsContext = Context.get().get("permissions").toString();
                         String descriptionContext = Context.get().get("description").toString();
                         String roles = Context.get().get("roles").toString();
-                        logger.info("(查詢原商品報價)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                        logger.info("(確認報價)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
                         String accessRedisKey = redisKey.get("access")
@@ -881,47 +889,25 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
                         if (Boolean.FALSE.equals(accessExists)) {
-                            logger.error("{} : (查詢原商品報價) Token 已過期", usernameAccessJwt);
+                            logger.error("{} : (確認報價) Token 已過期", usernameAccessJwt);
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
                         Map<String, Object> userSelect = getUserData(userData);
                         if (userSelect == null) {
-                            logger.error("{} : (查詢原商品報價) 使用者不存在", username);
+                            logger.error("{} : (確認報價) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        Product product = new Product();
-                        if (StringUtils.hasText(product_id)) {
-                            product = new Product(new BigDecimal(product_id));
-                        }
-                        List<Map<String, Object>> productsCarSelect = getProduct(product);
                         List<Object> productsList = new ArrayList<>();
-                        for (Map<String, Object> map : productsCarSelect) {
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("---------------------------------------");
-                            messageGroup.add("商品編號 - " + map.get("product_id").toString());
-                            messageGroup.add("商品名稱 - " + map.get("products_name").toString());
-                            BigDecimal price = new BigDecimal(map.get("price").toString());
-                            messageGroup.add("價格 - " + price);
-                            List<String> list = new ArrayList<>();
-                            int[] marginPercent = {30, 50, 70};
-                            for (int num : marginPercent) {
-                                Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
-                                list.add("---------- " + num + "% ----------");
-                                list.add("售價: " + queryQuotationsMap.get("sellingPrice").toString());
-                                list.add("利潤: " + queryQuotationsMap.get("profit").toString());
-                                list.add("利潤率: " + queryQuotationsMap.get("margin").toString() + "%");
-                                list.add("---------- " + num + "% ----------");
-                            }
-                            messageGroup.add(list);
-                            messageGroup.add("庫存量 - " + map.get("stock").toString());
-                            messageGroup.add("描述 - " + map.get("description").toString());
-                            messageGroup.add("---------------------------------------");
-                            productsList.add(messageGroup);
-                        }
+
+
+
+
+
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
                                 "權限 - " + userSelect.get("permissions").toString(),
+                                "確認報價",
                                 ConvertFormat.convert(productsList)
                         );
                         Map<String, Map<Integer, Object>> message = Map.of(
@@ -936,7 +922,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 ));
                     } catch (JwtException e) {
                         // JWT 不合法
-                        logger.error("{} : (更改購物車)無效的 JWT token", username);
+                        logger.error("{} : (確認報價)無效的 JWT token", username);
                         throw new BadRequestException(username + " - 無效的 JWT token", e);
                     }
                 } finally {
@@ -945,10 +931,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
             } else {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
-                logger.error("{} : queryQuotationsItem 資源忙碌，請重試", username);
+                logger.error("{} : confirmQuotationsProductItem 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
                         "帳號-" + username,
-                        username + " - 查詢原商品報價，資源忙碌，請重試"
+                        username + " - 確認報價，資源忙碌，請重試"
                 );
                 Map<String, Map<Integer, Object>> message = Map.of(
                         "content", ConvertFormat.convert(messageList)

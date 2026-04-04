@@ -1,7 +1,6 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Dto.Orderbackend.QueryQuotationsItemRequest;
-import com.example.demo.Dto.Orderbackend.QueryUserProductItemRequest;
+import com.example.demo.Dto.Orderbackend.QuotationsProductItemRequest;
 import com.example.demo.Dto.User.*;
 import com.example.demo.Service.OrderbackendService;
 import jakarta.validation.Valid;
@@ -62,24 +61,15 @@ public class OrderbackendController {
         return orderbackendService.queryUser(request);
     }
 
-    @PostMapping("/queryUserProductItem")
-    public ResponseEntity<?> queryUserProductItem(
+    @PostMapping("/confirmQuotationsProductItem")
+    public ResponseEntity<?> confirmQuotationsProductItem(
             @Valid
             @RequestBody
-            QueryUserProductItemRequest request,
+            QuotationsProductItemRequest request,
             @RequestHeader("Authorization") String authHeader) {
         request.setAuthHeader(authHeader);
-        return orderbackendService.queryUserProductItem(request);
+        return orderbackendService.confirmQuotationsProductItem(request);
     }
 
-    @PostMapping("/queryQuotationsItem")
-    public ResponseEntity<?> queryQuotationsItem(
-            @Valid
-            @RequestBody
-            QueryQuotationsItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return orderbackendService.queryQuotationsItem(request);
-    }
 
 }
