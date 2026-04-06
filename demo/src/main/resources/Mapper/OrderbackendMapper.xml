@@ -21,4 +21,134 @@
         order by userdata_details.updated_date desc
     </select>
 
+    <select id="selectDetailsData" resultType="java.util.Map">
+        select
+            username,
+            order_item
+        from
+            interviewworks_schema.userdata_details
+        where
+            userdata_details.is_active = '1'
+          and userdata_details.username = #{username}
+    </select>
+
+    <select id="selectQuotationsMax" resultType="java.lang.Integer">
+        select coalesce(max(quotation_id), 0)
+        from "interviewworks_schema"."quotations"
+    </select>
+
+    <insert id="createQuotations">
+        insert
+        into "interviewworks_schema"."quotations" (
+            quotation_id,
+            username,
+            status,
+            total_price
+        )
+        values (#{quotation_id},
+                #{username},
+                #{status},
+                #{total_price})
+    </insert>
+
+    <insert id="createQuotationItems">
+        insert
+        into "interviewworks_schema"."quotation_items" (
+            quotation_id,
+            product_id,
+            quantity,
+            price,
+            unit_percent,
+            unit_price
+        )
+        values (#{quotation_id},
+                #{product_id},
+                #{quantity},
+                #{price},
+                #{unit_percent},
+                #{unit_price})
+    </insert>
+
+    <select id="selectQuotationsData" resultType="java.util.Map">
+        select
+            userdata_details.username,
+            quotations.quotation_id,
+            quotations.status
+        from
+            "interviewworks_schema"."userdata_details" userdata_details
+                inner join "interviewworks_schema"."quotations" quotations
+                           on
+                               userdata_details.username = quotations.username
+        where userdata_details.is_active = '1'
+          and userdata_details.username = #{username}
+    </select>
+
+    <delete id="delQuotationItems">
+        DELETE
+        FROM "interviewworks_schema"."quotation_items" qi
+        WHERE EXISTS (SELECT 1
+                      FROM "interviewworks_schema"."quotations" ud
+                      WHERE qi.quotation_id = ud.quotation_id
+                        and ud.quotation_id = #{quotation_id}
+                      )
+    </delete>
+
+    <delete id="delQuotations">
+        DELETE
+        FROM "interviewworks_schema"."quotations" q
+        WHERE EXISTS (SELECT 1
+                      FROM "interviewworks_schema"."userdata_details" ud
+                      WHERE q.username = ud.username
+                        and ud.username = #{username}
+                        and q.quotation_id = #{quotation_id}
+                      )
+    </delete>
+
+    <select id="quotationsItemsProductsData" resultType="java.util.Map">
+        select
+            quotations.quotation_id,
+            userdata_details.username,
+            quotations.status,
+            quotation_items.quantity,
+            quotation_items.price,
+            quotation_items.quantity * quotation_items.price as sum_price,
+            products.products_name,
+            products.description
+        from
+            "interviewworks_schema"."userdata_details" userdata_details
+                inner join "interviewworks_schema"."quotations" quotations
+                           on
+                               userdata_details.username = quotations.username
+                inner join "interviewworks_schema"."quotation_items" quotation_items
+                           on
+                               quotations.quotation_id = quotation_items.quotation_id
+                inner join "interviewworks_schema"."products" products
+                           on
+                               quotation_items.product_id = products.product_id
+        where userdata_details.is_active = '1'
+          and userdata_details.username = #{username}
+    </select>
+
+    <select id="selectQuotationsDataSend" resultType="java.util.Map">
+        select
+            userdata_details.username,
+            quotations.quotation_id,
+            quotations.status
+        from
+            "interviewworks_schema"."userdata_details" userdata_details
+                inner join "interviewworks_schema"."quotations" quotations
+                           on
+                               userdata_details.username = quotations.username
+        where userdata_details.is_active = '1'
+          and userdata_details.username = #{username}
+          and quotations.quotation_id = #{quotation_id}
+    </select>
+
+    <update id="updateQuotations">
+        update "interviewworks_schema"."quotations"
+        set status = #{status}
+        where username = #{username}
+          and quotation_id = #{quotation_id}
+    </update>
+
 </mapper>

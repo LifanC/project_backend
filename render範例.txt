@@ -1,10 +1,12 @@
 https://render.com/
 
 jdbc:postgresql://dpg-d6g97jrh46gs73akpsfg-a:5432/interviewworks_85ge?currentSchema=interviewworks_schema
-
 postgresql://postgresrender:UPisjpYLnVSKnj8dYHwZlpX7fwy9IOLE@dpg-d6g97jrh46gs73akpsfg-a/interviewworks_85ge
-
 postgresql://postgresrender:UPisjpYLnVSKnj8dYHwZlpX7fwy9IOLE@dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com/interviewworks_85ge
+
+URL:jdbc:postgresql://dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com:5432/interviewworks_85ge
+主機:dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com
+數據庫:interviewworks_85ge
 
 redis://red-d6ga30hr0fns73burdpg:6379
 

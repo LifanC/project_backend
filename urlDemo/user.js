@@ -252,9 +252,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('user/validate', data);
             show_user(res);
-            let token = res.message.token["1"];
-            if (token) {
-                setInputValue('token', token);
+            if (res.message.token) {
+                let token = res.message.token["1"];
+                if (token) {
+                    setInputValue('token', token);
+                }
             }
         } catch (err) {
             show_user(err);
@@ -275,20 +277,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         setInputValue('token', "");
     });
-
-    // // 查使用者
-    // document.getElementById('btnQueryUser').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/queryUser', data, token);
-    //         show_user(res);
-    //     } catch (err) {
-    //         show_user(err);
-    //     }
-    // });
 
     // 查詢
     document.getElementById('productsCarSelect').addEventListener('click', async () => {

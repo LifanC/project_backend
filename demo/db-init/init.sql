@@ -194,14 +194,14 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.quotations;
 
 CREATE TABLE interviewworks_schema.quotations (
-                                                  quotation_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                                  quotation_id int8 NULL,
                                                   username varchar(10) NOT NULL,
                                                   status varchar(100) NOT NULL DEFAULT NULL::character varying,
                                                   total_price int8 DEFAULT 0,
                                                   created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                   updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                   CONSTRAINT quotations_status_check CHECK (
-                                                    status IN ('draft', 'sent', 'accepted', 'rejected')
+                                                    status IN ('estimate', 'sent', 'accepted', 'rejected')
                                                   )
 );
 
@@ -218,13 +218,14 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.quotation_items;
 
 CREATE TABLE interviewworks_schema.quotation_items (
-                                                       quotation_id INT NULL,
-                                                       product_id INT NULL,
+                                                       quotation_id int4 NULL,
+                                                       product_id int4 NULL,
                                                        quantity int8 NULL DEFAULT 0,
                                                        price int8 NULL DEFAULT 0,
                                                        created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                        updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                                       CONSTRAINT quotation_items_fk FOREIGN KEY (product_id) REFERENCES interviewworks_schema.products(product_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+                                                       unit_percent int8 NULL DEFAULT 0,
+                                                       unit_price int8 NULL DEFAULT 0
 );
 
 -- 建立觸發器
@@ -247,8 +248,7 @@ CREATE TABLE interviewworks_schema.orders (
                                               updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                               CONSTRAINT orders_status_check CHECK (
                                                 status IN ('pending', 'confirmed', 'cancelled')
-                                              ),
-                                              CONSTRAINT orders_fk FOREIGN KEY (quotation_id) REFERENCES interviewworks_schema.quotations(quotation_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+                                              )
 );
 
 -- 建立觸發器

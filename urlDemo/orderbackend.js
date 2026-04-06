@@ -230,9 +230,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('orderbackend/validate', data);
             show_user(res);
-            let token = res.message.token["1"];
-            if (token) {
-                setInputValue('token', token);
+            if (res.message.token) {
+                let token = res.message.token["1"];
+                if (token) {
+                    setInputValue('token', token);
+                }
             }
         } catch (err) {
             show_user(err);
@@ -262,9 +264,9 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('orderbackend/queryUser', data, token);
-            show_user(res);
+            show_quotations(res);
         } catch (err) {
-            show_user(err);
+            show_quotations(err);
         }
     });
 
@@ -284,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // 確認報價
+    // 確認報價單
     document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
@@ -294,6 +296,52 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let token = document.getElementById('token').value
             const res = await api.post('orderbackend/confirmQuotationsProductItem', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+    
+    // 刪除報價單
+    document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/deleteQuotationsProduct', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
+    // 查詢報價單
+    document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/queryQuotationsProduct', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
+    // 送出報價單
+    document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotationsSend').value,
+            userUserQuotationsId: document.getElementById('userUserQuotationsId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/sendQuotationsProduct', data, token);
             show_quotations(res);
         } catch (err) {
             show_quotations(err);

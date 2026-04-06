@@ -1,6 +1,9 @@
 package com.example.demo.Controller;
 
+import com.example.demo.Dto.Orderbackend.DeleteQuotationsProductItemRequest;
+import com.example.demo.Dto.Orderbackend.QueryQuotationsProductItemRequest;
 import com.example.demo.Dto.Orderbackend.QuotationsProductItemRequest;
+import com.example.demo.Dto.Orderbackend.SendQuotationsProductItemRequest;
 import com.example.demo.Dto.User.*;
 import com.example.demo.Service.OrderbackendService;
 import jakarta.validation.Valid;
@@ -61,6 +64,16 @@ public class OrderbackendController {
         return orderbackendService.queryUser(request);
     }
 
+    @PostMapping("/quotationsProductItem")
+    public ResponseEntity<?> quotationsProductItem(
+            @Valid
+            @RequestBody
+            QuotationsProductItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.quotationsProductItem(request);
+    }
+
     @PostMapping("/confirmQuotationsProductItem")
     public ResponseEntity<?> confirmQuotationsProductItem(
             @Valid
@@ -71,5 +84,34 @@ public class OrderbackendController {
         return orderbackendService.confirmQuotationsProductItem(request);
     }
 
+    @PostMapping("/deleteQuotationsProduct")
+    public ResponseEntity<?> deleteQuotationsProduct(
+            @Valid
+            @RequestBody
+            DeleteQuotationsProductItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.deleteQuotationsProduct(request);
+    }
+
+    @PostMapping("/queryQuotationsProduct")
+    public ResponseEntity<?> queryQuotationsProduct(
+            @Valid
+            @RequestBody
+            QueryQuotationsProductItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.queryQuotationsProduct(request);
+    }
+
+    @PostMapping("/sendQuotationsProduct")
+    public ResponseEntity<?> sendQuotationsProduct(
+            @Valid
+            @RequestBody
+            SendQuotationsProductItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.sendQuotationsProduct(request);
+    }
 
 }

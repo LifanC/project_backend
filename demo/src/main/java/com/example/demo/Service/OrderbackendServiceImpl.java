@@ -1,15 +1,14 @@
 package com.example.demo.Service;
 
 import com.example.demo.Aspect.Permissions;
+import com.example.demo.Common.Backend;
 import com.example.demo.Common.Context;
 import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Dto.ApiResponse;
-import com.example.demo.Dto.Orderbackend.QuotationsProductItemRequest;
-import com.example.demo.Dto.Orderbackend.UserUser;
+import com.example.demo.Dto.Orderbackend.*;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.*;
-import com.example.demo.Exception.BadRequestException;
-import com.example.demo.Exception.ResourceNotFoundException;
+import com.example.demo.Exception.*;
 import com.example.demo.Mapper.OrderbackendMapper;
 import com.example.demo.Mapper.ProductMapper;
 import com.example.demo.Mapper.SecretMapper;
@@ -22,6 +21,8 @@ import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
@@ -87,6 +88,14 @@ public class OrderbackendServiceImpl implements OrderbackendService {
             "fail", "user:auth:fail:{1}"
     );
 
+    // *報價（quotations） *status -- estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
+    private final Map<String, String> quotationsKey = Map.of(
+            "estimate", "預估",
+            "sent", "已送出",
+            "accepted", "客戶接受",
+            "rejected", "拒絕"
+    );
+
     /*
      * 防 Cache Stampede（雪崩）
      * 問題：* 大量 key 同時過期 → DB 被打爆
@@ -107,6 +116,18 @@ public class OrderbackendServiceImpl implements OrderbackendService {
 
     private Map<String, Object> getUserData(UserData userData) {
         return userMapper.select(userData).get(userData.getUsername());
+    }
+
+    private Map<String, Object> getDetailsData(UserData userData) {
+        return orderbackendMapper.selectDetailsData(userData).get(userData.getUsername());
+    }
+
+    private List<Map<String, Object>> getQuotationsData(UserData userData) {
+        return orderbackendMapper.selectQuotationsData(userData);
+    }
+
+    private Map<String, Object> getQuotationsDataSend(UserDataSend userDataSend) {
+        return orderbackendMapper.selectQuotationsDataSend(userDataSend).get(userDataSend.getUsername());
     }
 
     @Override
@@ -769,6 +790,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         List<Object> productsList = new ArrayList<>();
                         UserUser userUser = new UserUser(useruser);
                         List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
+                        if (getUserUser.isEmpty()) {
+                            logger.error("{} : (用戶商品報價) 用戶不存在", useruser);
+                            throw new ResourceNotFoundException(useruser + " - 用戶不存在");
+                        }
                         for (Map<String, Object> user : getUserUser) {
                             List<Object> messageGroup = new ArrayList<>();
                             messageGroup.add("訂單明細 - 帳號 - " + user.get("username").toString());
@@ -780,16 +805,21 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 messageGroup.add("---------------------------------------");
                                 messageGroup.add("商品編號 - " + arr[0]);
                                 messageGroup.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                messageGroup.add("訂購數量 - " + new BigDecimal(arr[1]));
+                                BigDecimal A = new BigDecimal(arr[1]);
+                                BigDecimal B = new BigDecimal(productsSelect.getFirst().get("stock").toString());
+                                BigDecimal C = B.subtract(A);
+                                messageGroup.add(C.compareTo(BigDecimal.ZERO) < 0 ? "庫存不夠" + C.abs() + "筆" : "庫存足夠");
                                 BigDecimal price = new BigDecimal(productsSelect.getFirst().get("price").toString());
+                                messageGroup.add("訂購數量 - " + A);
+                                messageGroup.add("商品庫存量: " + B);
                                 messageGroup.add("價格 - " + price);
                                 int num = Integer.parseInt(userPercent);
                                 Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
-                                messageGroup.add("---------- " + num + "% ----------");
-                                messageGroup.add("售價: " + queryQuotationsMap.get("sellingPrice").toString());
-                                messageGroup.add("利潤: " + queryQuotationsMap.get("profit").toString());
-                                messageGroup.add("利潤率: " + queryQuotationsMap.get("margin").toString() + "%");
-                                messageGroup.add("---------- " + num + "% ----------");
+                                messageGroup.add("┌-----" + num + "% -----┐");
+                                messageGroup.add("|售價: " + queryQuotationsMap.get("sellingPrice").toString());
+                                messageGroup.add("|利潤: " + queryQuotationsMap.get("profit").toString());
+                                messageGroup.add("|利潤率: " + queryQuotationsMap.get("margin").toString() + "%");
+                                messageGroup.add("└-----" + num + "% -----┘");
                                 messageGroup.add("描述 - " + productsSelect.getFirst().get("description").toString());
                                 messageGroup.add("---------------------------------------");
                             }
@@ -898,16 +928,105 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (確認報價) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
+                        UserUser userUser = new UserUser(useruser);
+                        List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
+                        if (getUserUser.isEmpty()) {
+                            logger.error("{} : (確認報價) 用戶不存在", useruser);
+                            throw new ResourceNotFoundException(useruser + " - 用戶不存在");
+                        }
+                        UserData userDataDetails = new UserData(useruser);
                         List<Object> productsList = new ArrayList<>();
+                        Map<String, Object> detailsData = getDetailsData(userDataDetails);
+                        logger.info("用戶編號: {}", useruser);
+                        logger.info("銷售 % 數: {}", userPercent);
+                        productsList.add("用戶編號: " + useruser);
+                        productsList.add("銷售 % 數: " + userPercent);
+                        String order_item = detailsData.get("order_item").toString();
+                        String[] order_items = order_item.split(",");
+                        Integer quotationsMax = orderbackendMapper.selectQuotationsMax();
+                        BigDecimal decimal = new BigDecimal(String.valueOf(quotationsMax + 1));
 
-
-
-
-
+                        List<Boolean> atLastJudgesList = new ArrayList<>();
+                        List<Object> msg = new ArrayList<>();
+                        for (int i = 0; i < order_items.length; i++) {
+                            String item = order_items[i];
+                            String[] arr = item.split(":");
+                            String userUserProductsId = arr[0];
+                            List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(userUserProductsId)));
+                            BigDecimal product_id = new BigDecimal(productsSelect.getFirst().get("product_id").toString());
+                            String products_name = productsSelect.getFirst().get("products_name").toString();
+                            BigDecimal stock = new BigDecimal(productsSelect.getFirst().get("stock").toString());
+                            boolean judge = stock.subtract(new BigDecimal(arr[1])).compareTo(BigDecimal.ZERO) < 0;
+                            if (judge) {
+                                logger.info("{}:{}:庫存量不夠", product_id, products_name);
+                                msg.add(product_id + ":" + products_name + ":庫存量不夠");
+                            } else {
+                                logger.info("{}:{}:庫存量足夠", product_id, products_name);
+                                msg.add(product_id + ":" + products_name + ":庫存量足夠");
+                            }
+                            atLastJudgesList.add(i, judge);
+                        }
+                        // 只要其中有一項庫存量不足就不存入DB
+                        boolean hasTrue = atLastJudgesList.stream().anyMatch(Boolean.TRUE::equals);
+                        if (hasTrue) {
+                            productsList.add(msg);
+                        } else {
+                            try {
+                                BigDecimal totalPrice = BigDecimal.ZERO;
+                                for (int i = 0; i < order_items.length; i++) {
+                                    String item = order_items[i];
+                                    String[] arr = item.split(":");
+                                    String userUserProductsId = arr[0];
+                                    String userUserQuantity = arr[1];
+                                    BigDecimal quantity = new BigDecimal(userUserQuantity);
+                                    List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(userUserProductsId)));
+                                    BigDecimal product_id = new BigDecimal(productsSelect.getFirst().get("product_id").toString());
+                                    BigDecimal price = new BigDecimal(productsSelect.getFirst().get("price").toString());
+                                    int num = Integer.parseInt(userPercent);
+                                    Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
+                                    BigDecimal sellingPrice = new BigDecimal(queryQuotationsMap.get("sellingPrice").toString());
+                                    BigDecimal total = sellingPrice.multiply(quantity);
+                                    totalPrice = totalPrice.add(total);
+                                    logger.info("用戶訂單: {}", item);
+                                    logger.info("用戶商品編號: {}", userUserProductsId);
+                                    logger.info("用戶商品數量: {}", userUserQuantity);
+                                    logger.info("用戶商品銷售價格: {}", sellingPrice);
+                                    logger.info("用戶商品價格: {}", price);
+                                    logger.info("用戶商品銷售合計: {}", total);
+                                    logger.info("用戶商品單品價格: {}", price);
+                                    List<Object> messageGroup = new ArrayList<>();
+                                    messageGroup.add("┌-----第" + (i + 1) + "筆-----┐");
+                                    messageGroup.add("用戶商品數量: " + userUserQuantity);
+                                    messageGroup.add("用戶商品單品價格: " + price);
+                                    messageGroup.add("用戶商品銷售單品價格: " + sellingPrice);
+                                    messageGroup.add("用戶商品銷售合計: " + total);
+                                    messageGroup.add("└-----第" + (i + 1) + "筆-----┘");
+                                    productsList.add(messageGroup);
+                                    QuotationItems quotationItems = new QuotationItems(decimal);
+                                    quotationItems.setProduct_id(product_id);
+                                    quotationItems.setQuantity(quantity);
+                                    quotationItems.setPrice(sellingPrice);
+                                    quotationItems.setUnit_percent(new BigDecimal(userPercent));
+                                    quotationItems.setUnit_price(price);
+                                    orderbackendMapper.createQuotationItems(quotationItems);
+                                }
+                                Quotations quotations = new Quotations(decimal);
+                                quotations.setUsername(useruser);
+                                quotations.setStatus(Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend());
+                                quotations.setTotal_price(totalPrice);
+                                orderbackendMapper.createQuotations(quotations);
+                            } catch (DataIntegrityViolationException e) {
+                                logger.warn("confirmQuotationsProductItem 新增報價資料不合法，username={}", username);
+                                throw new IsViolationException(username + " - 新增報價資料不合法", e);
+                            } catch (DataAccessException e) {
+                                logger.error("confirmQuotationsProductItem 資料庫錯誤，username={}", username);
+                                throw new DBException(username + " - 系統錯誤，請稍後再試", e);
+                            }
+                        }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
                                 "權限 - " + userSelect.get("permissions").toString(),
-                                "確認報價",
+                                "確認報價單",
                                 ConvertFormat.convert(productsList)
                         );
                         Map<String, Map<Integer, Object>> message = Map.of(
@@ -934,7 +1053,409 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                 logger.error("{} : confirmQuotationsProductItem 資源忙碌，請重試", username);
                 List<Object> messageList = List.of(
                         "帳號-" + username,
-                        username + " - 確認報價，資源忙碌，請重試"
+                        username + " - 確認報價單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> deleteQuotationsProduct(DeleteQuotationsProductItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String useruser = request.getUseruser();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend deleteQuotationsProduct 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (刪除報價) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(刪除報價)使用者錯誤");
+                            throw new RuntimeException(username + " - (刪除報價)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (刪除報價)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(刪除報價)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (刪除報價) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (刪除報價) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        UserUser userUser = new UserUser(useruser);
+                        List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
+                        if (getUserUser.isEmpty()) {
+                            logger.error("{} : (刪除報價) 用戶不存在", useruser);
+                            throw new ResourceNotFoundException(useruser + " - 用戶不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        UserData userDataDetails = new UserData(useruser);
+                        List<Map<String, Object>> quotationsData = getQuotationsData(userDataDetails);
+                        productsList.add("報價單");
+                        for (Map<String, Object> quotationData : quotationsData) {
+                            BigDecimal quotation_idDel = new BigDecimal(quotationData.get("quotation_id").toString());
+                            String usernameDel = quotationData.get("username").toString();
+                            String statusDel = quotationData.get("status").toString();
+                            StringBuilder msg = new StringBuilder();
+                            msg.append("編號").append(quotation_idDel).append(":用戶帳號:").append(usernameDel);
+                            if (Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend().equals(statusDel)) {
+                                QuotationItems quotationItems = new QuotationItems(quotation_idDel);
+                                orderbackendMapper.delQuotationItems(quotationItems);
+                                Quotations quotations = new Quotations(quotation_idDel);
+                                quotations.setUsername(usernameDel);
+                                orderbackendMapper.delQuotations(quotations);
+                                msg.append(":報價單刪除成功");
+                            } else {
+                                msg.append(":報價已送出無法刪除");
+                            }
+                            productsList.add(msg);
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "刪除報價單",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (刪除報價)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : deleteQuotationsProduct 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 刪除報價單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> queryQuotationsProduct(QueryQuotationsProductItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String useruser = request.getUseruser();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend queryQuotationsProduct 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (查詢報價單) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(查詢報價單)使用者錯誤");
+                            throw new RuntimeException(username + " - (查詢報價單)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (查詢報價單)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(查詢報價單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (查詢報價單) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (查詢報價單) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        UserUser userUser = new UserUser(useruser);
+                        List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
+                        if (getUserUser.isEmpty()) {
+                            logger.error("{} : (查詢報價單) 用戶不存在", useruser);
+                            throw new ResourceNotFoundException(useruser + " - 用戶不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        UserData userDataDetails = new UserData(useruser);
+                        List<Map<String, Object>> quotationsData =
+                                orderbackendMapper.quotationsItemsProductsData(userDataDetails);
+                        Map<String, List<Map<String, Object>>> groupListAll = new HashMap<>();
+                        for (Map<String, Object> quotationData : quotationsData) {
+                            String quotationId = quotationData.get("quotation_id").toString();
+                            groupListAll
+                                    .computeIfAbsent(quotationId, k -> new ArrayList<>())
+                                    .add(quotationData);
+                        }
+                        for (Map.Entry<String, List<Map<String, Object>>> entry : groupListAll.entrySet()) {
+                            String key = entry.getKey();
+                            List<Map<String, Object>> list = entry.getValue();
+                            List<Object> messageGroup = new ArrayList<>();
+                            messageGroup.add("報價單編號: " + key);
+                            for (int i = 0; i < list.size(); i++) {
+                                Map<String, Object> quotationData = list.get(i);
+                                String statusQuery = quotationData.get("status").toString();
+                                BigDecimal quantityQuery = new BigDecimal(quotationData.get("quantity").toString());
+                                BigDecimal priceQuery = new BigDecimal(quotationData.get("price").toString());
+                                BigDecimal sumPriceQuery = new BigDecimal(quotationData.get("sum_price").toString());
+                                String productsNameQuery = quotationData.get("products_name").toString();
+                                String descriptionQuery = quotationData.get("description").toString();
+                                messageGroup.add("┌-----第" + (i + 1) + "筆-----┐");
+                                messageGroup.add("|報價單:商品");
+                                messageGroup.add("|用戶名稱: " + useruser);
+                                // estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
+                                messageGroup.add("|狀態: " + quotationsKey.get(statusQuery));
+                                messageGroup.add("|數量: " + quantityQuery);
+                                messageGroup.add("|價格: " + priceQuery);
+                                messageGroup.add("|合計: " + sumPriceQuery);
+                                messageGroup.add("|名稱: " + productsNameQuery);
+                                messageGroup.add("|敘述: " + descriptionQuery);
+                            }
+                            productsList.add(messageGroup);
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "查詢報價單",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (查詢報價單)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : queryQuotationsProduct 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 查詢報價單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> sendQuotationsProduct(SendQuotationsProductItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String useruser = request.getUseruser();
+        final String userUserQuotationsId = request.getUserUserQuotationsId();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend sendQuotationsProduct 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (送出報價單) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(送出報價單)使用者錯誤");
+                            throw new RuntimeException(username + " - (送出報價單)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (送出報價單)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(送出報價單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (送出報價單) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (送出報價單) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        UserUser userUser = new UserUser(useruser);
+                        List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
+                        if (getUserUser.isEmpty()) {
+                            logger.error("{} : (送出報價單) 用戶不存在", useruser);
+                            throw new ResourceNotFoundException(useruser + " - 用戶不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        UserDataSend userDataDetails = new UserDataSend(useruser);
+                        String send = Backend.STATUS_QUOTATIONS_SENT.getBackend();
+                        userDataDetails.setStatus(send);
+                        userDataDetails.setQuotation_id(new BigDecimal(String.valueOf(userUserQuotationsId)));
+                        Map<String, Object> quotationsDataSend = getQuotationsDataSend(userDataDetails);
+                        if (quotationsDataSend == null) {
+                            productsList.add("報價單編號:" + userUserQuotationsId + ":送出失敗，無此報價單");
+                        } else {
+                            String statusSend = quotationsDataSend.get("status").toString();
+                            if (Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend().equals(statusSend)) {
+                                orderbackendMapper.updateQuotations(userDataDetails);
+                                productsList.add("報價單編號:" + userUserQuotationsId + ":送出成功");
+                                productsList.add("報價單狀態:" + quotationsKey.get(send));
+                            } else {
+                                productsList.add("報價單編號:" + userUserQuotationsId + ":已送出，勿重複送單");
+                            }
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "送出報價單",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (送出報價單)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : sendQuotationsProduct 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 送出報價單，資源忙碌，請重試"
                 );
                 Map<String, Map<Integer, Object>> message = Map.of(
                         "content", ConvertFormat.convert(messageList)
