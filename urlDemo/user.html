@@ -83,17 +83,17 @@
                         <td>
                             <input id="product_id_CreateCar" placeholder="輸入商品編號">
                         </td>
-                        <td rowspan="2">4</td>
+                        <td rowspan="3">4</td>
                         <td>輸入商品編號</td>
                     </tr>
                     <tr>
-                        <td>
+                        <td rowspan="2">
                             <input id="product_quantity_CreateCar" placeholder="輸入商品數量">
                         </td>
                         <td>商品數量(同樣商品則增加)</td>
                     </tr>
                     <tr>
-                        <td colspan="3">
+                        <td>
                             <button id="btnCreateCar">新增購物車</button>
                         </td>
                     </tr>
@@ -108,17 +108,17 @@
                         <td>
                             <input id="product_id_UpdateCar" placeholder="輸入商品編號">
                         </td>
-                        <td rowspan="2">6</td>
+                        <td rowspan="3">6</td>
                         <td>輸入商品編號</td>
                     </tr>
                     <tr>
-                        <td>
+                        <td rowspan="2">
                             <input id="product_quantity_UpdateCar" placeholder="輸入商品數量">
                         </td>
                         <td>商品數量(同樣商品則減少)</td>
                     </tr>
                     <tr>
-                        <td colspan="3">
+                        <td>
                             <button id="btnUpdateCar">更改購物車</button>
                         </td>
                     </tr>
@@ -132,14 +132,45 @@
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="3">
+                        <td>
                             <button id="btnConfirm">確認訂單</button>
+                        </td>
+                        <td>8</td>
+                        <td></td>
+                    </tr>
+                </table>
+                <section>
+                    <pre id="car_result" class="car_pre"></pre>
+                </section>
+                <br>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="4">
+                            <h2>報價（quotations）</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="" placeholder="輸入報價單編號">
+                        </td>
+                        <td>9</td>
+                        <td colspan="2">
+                            <button id="">報價單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>確認金額</td>
+                        <td>10</td>
+                        <td>
+                            <button id="">接受</button>
+                        </td>
+                        <td>
+                            <button id="">拒絕</button>
                         </td>
                     </tr>
                 </table>
                 <section>
-                    <h3>API Result</h3>
-                    <pre id="car_result" class="car_pre"></pre>
+                    <pre id="quotations_user_result" class="quotations_user_pre"></pre>
                 </section>
             </div>
         </div>
@@ -195,12 +226,6 @@
                     <dl>
                         <dt>刪除購物車</dt>
                         <dd>用於刪除既有購物車，請謹慎操作，避免誤刪。</dd>
-                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
-                    </dl>
-                </li>
-                <li>
-                    <dl>
-                        <dt>確認訂單</dt>
                         <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
                     </dl>
                 </li>
