@@ -1,5 +1,7 @@
 package com.example.demo.Mapper;
 
+import com.example.demo.Dto.Orderbackend.UserDataSend;
+import com.example.demo.Dto.User.QuotationsProduct;
 import com.example.demo.Dto.User.UserData;
 import com.example.demo.Dto.User.UserdataDetails;
 import org.apache.ibatis.annotations.MapKey;
@@ -29,4 +31,8 @@ public interface UserMapper {
     List<String> queryUserName();
 
     void updateUserdataDetailIsActive(String username);
+
+    List<Map<String, Object>> userQuotationsData(QuotationsProduct quotationsProduct);
+
+    void updateQuotations(UserDataSend userDataDetails);
 }

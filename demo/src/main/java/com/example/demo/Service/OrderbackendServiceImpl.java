@@ -4,6 +4,7 @@ import com.example.demo.Aspect.Permissions;
 import com.example.demo.Common.Backend;
 import com.example.demo.Common.Context;
 import com.example.demo.Common.ConvertFormat;
+import com.example.demo.Common.QuotationsStatusKey;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Orderbackend.*;
 import com.example.demo.Dto.Products.Product;
@@ -86,14 +87,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
             "blacklist", "user:jwt:blacklist:{1}",
             "lock", "user:auth:lock:{1}",
             "fail", "user:auth:fail:{1}"
-    );
-
-    // *報價（quotations） *status -- estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
-    private final Map<String, String> quotationsKey = Map.of(
-            "estimate", "預估",
-            "sent", "已送出",
-            "accepted", "客戶接受",
-            "rejected", "拒絕"
     );
 
     /*
@@ -1289,7 +1282,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 messageGroup.add("|報價單:商品");
                                 messageGroup.add("|用戶名稱: " + useruser);
                                 // estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
-                                messageGroup.add("|狀態: " + quotationsKey.get(statusQuery));
+                                messageGroup.add("|狀態: " + QuotationsStatusKey.quotationsKey.get(statusQuery));
                                 messageGroup.add("|數量: " + quantityQuery);
                                 messageGroup.add("|價格: " + priceQuery);
                                 messageGroup.add("|合計: " + sumPriceQuery);
@@ -1420,7 +1413,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             if (Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend().equals(statusSend)) {
                                 orderbackendMapper.updateQuotations(userDataDetails);
                                 productsList.add("報價單編號:" + userUserQuotationsId + ":送出成功");
-                                productsList.add("報價單狀態:" + quotationsKey.get(send));
+                                productsList.add("報價單狀態:" + QuotationsStatusKey.quotationsKey.get(send));
                             } else {
                                 productsList.add("報價單編號:" + userUserQuotationsId + ":已送出，勿重複送單");
                             }

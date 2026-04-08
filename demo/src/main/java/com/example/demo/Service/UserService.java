@@ -25,4 +25,10 @@ public interface UserService {
     ResponseEntity<?> deleteCarItem(@Valid DeleteCarItemRequest request);
 
     ResponseEntity<?> confirmItem(@Valid ConfirmItemRequest request);
+
+    ResponseEntity<?> quotationsProduct(@Valid QuotationsProductRequest request);
+
+    ResponseEntity<?> userAccepted(@Valid QuotationsProductRequest request);
+
+    ResponseEntity<?> userRejected(@Valid QuotationsProductRequest request);
 }

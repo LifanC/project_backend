@@ -127,7 +127,15 @@
                                quotation_items.product_id = products.product_id
         where userdata_details.is_active = '1'
           and userdata_details.username = #{username}
+        order by quotations.quotation_id
     </select>
+
+    <update id="updateQuotations">
+        update "interviewworks_schema"."quotations"
+        set status = #{status}
+        where username = #{username}
+          and quotation_id = #{quotation_id}
+    </update>
 
     <select id="selectQuotationsDataSend" resultType="java.util.Map">
         select
@@ -143,12 +151,5 @@
           and userdata_details.username = #{username}
           and quotations.quotation_id = #{quotation_id}
     </select>
-
-    <update id="updateQuotations">
-        update "interviewworks_schema"."quotations"
-        set status = #{status}
-        where username = #{username}
-          and quotation_id = #{quotation_id}
-    </update>
 
 </mapper>

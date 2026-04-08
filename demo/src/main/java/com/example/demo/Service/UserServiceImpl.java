@@ -1,9 +1,12 @@
 package com.example.demo.Service;
 
 import com.example.demo.Aspect.Permissions;
+import com.example.demo.Common.Backend;
 import com.example.demo.Common.Context;
 import com.example.demo.Common.ConvertFormat;
+import com.example.demo.Common.QuotationsStatusKey;
 import com.example.demo.Dto.ApiResponse;
+import com.example.demo.Dto.Orderbackend.UserDataSend;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.*;
 import com.example.demo.Exception.*;
@@ -1380,6 +1383,426 @@ public class UserServiceImpl implements UserService {
                 List<Object> messageList = List.of(
                         "帳號-" + username,
                         username + " - 確認訂單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.USER_ITEM_CONFIRM)
+    public ResponseEntity<?> quotationsProduct(QuotationsProductRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String product_id = request.getProduct_id().trim();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("User quotationsProduct 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (報價單) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(報價單)使用者錯誤");
+                            throw new RuntimeException(username + " - (報價單)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (報價單)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(報價單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (報價單) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (報價單) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
+                        quotationsProduct.setUsername(username);
+                        quotationsProduct.setStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_SENT.getBackend(),
+                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend(),
+                                        Backend.STATUS_QUOTATIONS_REJECTED.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
+                        List<Object> messageGroup = new ArrayList<>();
+                        if (quotationsData.isEmpty()) {
+                            messageGroup.add("空");
+                            productsList.add(messageGroup);
+                        } else {
+                            messageGroup.add("報價單編號: " + product_id);
+                            for (int i = 0; i < quotationsData.size(); i++) {
+                                String status = quotationsData.get(i).get("status").toString();
+                                BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
+                                BigDecimal price = new BigDecimal(quotationsData.get(i).get("price").toString());
+                                BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
+                                String productsName = quotationsData.get(i).get("products_name").toString();
+                                String description = quotationsData.get(i).get("description").toString();
+                                messageGroup.add("┌----商品-第" + (i + 1) + "筆-----┐");
+                                messageGroup.add("|數量:" + quantity);
+                                messageGroup.add("|價格:" + price);
+                                messageGroup.add("|合計:" + sumPrice);
+                                messageGroup.add("|名稱:" + productsName);
+                                messageGroup.add("|描述:" + description);
+                                messageGroup.add("|狀態:" + QuotationsStatusKey.quotationsKey.get(status));
+                                messageGroup.add("└------------------┘");
+                                productsList.add(messageGroup);
+                            }
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "報價單",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (報價單)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : quotationsProduct 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 報價單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.USER_ITEM_CONFIRM)
+    public ResponseEntity<?> userAccepted(QuotationsProductRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String product_id = request.getProduct_id().trim();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("User userAccepted 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (接受) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(接受)使用者錯誤");
+                            throw new RuntimeException(username + " - (接受)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (接受)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(接受)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (接受) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (接受) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        UserDataSend userDataDetails = new UserDataSend(username);
+                        String accepted = Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend();
+                        userDataDetails.setStatus(accepted);
+                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
+                        userMapper.updateQuotations(userDataDetails);
+                        QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
+                        quotationsProduct.setUsername(username);
+                        quotationsProduct.setStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
+                        List<Object> messageGroup = new ArrayList<>();
+                        if (quotationsData.isEmpty()) {
+                            messageGroup.add("空");
+                            productsList.add(messageGroup);
+                        } else {
+                            for (int i = 0; i < quotationsData.size(); i++) {
+                                String status = quotationsData.get(i).get("status").toString();
+                                BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
+                                BigDecimal price = new BigDecimal(quotationsData.get(i).get("price").toString());
+                                BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
+                                String productsName = quotationsData.get(i).get("products_name").toString();
+                                String description = quotationsData.get(i).get("description").toString();
+                                messageGroup.add("┌----商品-第" + (i + 1) + "筆-----┐");
+                                messageGroup.add("|報價單編號: " + product_id);
+                                messageGroup.add("|數量:" + quantity);
+                                messageGroup.add("|價格:" + price);
+                                messageGroup.add("|合計:" + sumPrice);
+                                messageGroup.add("|名稱:" + productsName);
+                                messageGroup.add("|描述:" + description);
+                                messageGroup.add("|狀態:" + QuotationsStatusKey.quotationsKey.get(status));
+                                messageGroup.add("└------------------┘");
+                                productsList.add(messageGroup);
+                            }
+                        }
+
+                        // *訂單（orders）
+
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "接受",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (接受)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : userAccepted 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 接受，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.USER_ITEM_CONFIRM)
+    public ResponseEntity<?> userRejected(QuotationsProductRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String product_id = request.getProduct_id().trim();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("User userRejected 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (拒絕) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(拒絕)使用者錯誤");
+                            throw new RuntimeException(username + " - (拒絕)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (拒絕)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(拒絕)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (拒絕) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (拒絕) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        UserDataSend userDataDetails = new UserDataSend(username);
+                        String rejected = Backend.STATUS_QUOTATIONS_REJECTED.getBackend();
+                        userDataDetails.setStatus(rejected);
+                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
+                        userMapper.updateQuotations(userDataDetails);
+                        QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
+                        quotationsProduct.setUsername(username);
+                        quotationsProduct.setStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_REJECTED.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
+                        List<Object> messageGroup = new ArrayList<>();
+                        if (quotationsData.isEmpty()) {
+                            messageGroup.add("空");
+                            productsList.add(messageGroup);
+                        } else {
+                            for (int i = 0; i < quotationsData.size(); i++) {
+                                String status = quotationsData.get(i).get("status").toString();
+                                BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
+                                BigDecimal price = new BigDecimal(quotationsData.get(i).get("price").toString());
+                                BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
+                                String productsName = quotationsData.get(i).get("products_name").toString();
+                                String description = quotationsData.get(i).get("description").toString();
+                                messageGroup.add("┌----商品-第" + (i + 1) + "筆-----┐");
+                                messageGroup.add("|報價單編號: " + product_id);
+                                messageGroup.add("|數量:" + quantity);
+                                messageGroup.add("|價格:" + price);
+                                messageGroup.add("|合計:" + sumPrice);
+                                messageGroup.add("|名稱:" + productsName);
+                                messageGroup.add("|描述:" + description);
+                                messageGroup.add("|狀態:" + QuotationsStatusKey.quotationsKey.get(status));
+                                messageGroup.add("└------------------┘");
+                                productsList.add(messageGroup);
+                            }
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "拒絕",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (拒絕)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : userRejected 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 拒絕，資源忙碌，請重試"
                 );
                 Map<String, Map<Integer, Object>> message = Map.of(
                         "content", ConvertFormat.convert(messageList)

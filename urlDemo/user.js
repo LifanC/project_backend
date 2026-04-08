@@ -139,6 +139,27 @@ function show_car(log = {}) {
     document.getElementById("products_result").innerHTML = "";
 }
 
+function show_quotations(log = {}) {
+    const {
+        code = undefined,
+        status = undefined,
+        message = undefined,
+        error = undefined,
+        path = undefined,
+        timestamp = undefined,
+    } = log;
+    const messageLog = {
+        code,
+        status,
+        message,
+        error,
+        path,
+        timestamp,
+    }
+    document.getElementById('quotations_user_result').innerHTML = JSON.stringify(messageLog, null, 2);
+    document.getElementById("products_result").innerHTML = "";
+}
+
 // POST JSON helper
 async function postJSON(url, data, token) {
     const authHeader = `Bearer ${token}`;
@@ -364,6 +385,51 @@ document.addEventListener('DOMContentLoaded', () => {
             show_car(res);
         } catch (err) {
             show_car(err);
+        }
+    });
+
+    // 報價單
+    document.getElementById('user_quotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('user_quotationsProductId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/quotationsProduct', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
+    // 接受
+    document.getElementById('user_accepted').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('user_quotationsProductId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userAccepted', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
+    // 拒絕
+    document.getElementById('user_rejected').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('user_quotationsProductId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userRejected', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
         }
     });
 

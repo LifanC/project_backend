@@ -1,7 +1,7 @@
 package com.example.demo.Common;
 
 public enum Backend {
-    // *報價（quotations） *status -- estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
+    // *報價（quotations） *status -- estimate（預估） / sent（已送出） / accepted（接受） / rejected（拒絕）
     STATUS_QUOTATIONS_ESTIMATE("estimate"),
     STATUS_QUOTATIONS_SENT("sent"),
     STATUS_QUOTATIONS_ACCEPTED("accepted"),

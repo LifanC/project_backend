@@ -121,7 +121,7 @@ project_backend/
 - *流程：Customer → Quotation → Order → Shipment → Payment*
 - *~*
 - *報價（quotations）
-- *status -- estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
+- *status -- estimate（預估） / sent（已送出） / accepted（接受） / rejected（拒絕）
 - *~*
 - *訂單（orders）
 - *quotation_id -- 從報價轉來

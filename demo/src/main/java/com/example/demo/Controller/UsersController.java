@@ -110,4 +110,34 @@ public class UsersController {
         return userService.confirmItem(request);
     }
 
+    @PostMapping("/quotationsProduct")
+    public ResponseEntity<?> quotationsProduct(
+            @Valid
+            @RequestBody
+            QuotationsProductRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.quotationsProduct(request);
+    }
+
+    @PostMapping("/userAccepted")
+    public ResponseEntity<?> userAccepted(
+            @Valid
+            @RequestBody
+            QuotationsProductRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.userAccepted(request);
+    }
+
+    @PostMapping("/userRejected")
+    public ResponseEntity<?> userRejected(
+            @Valid
+            @RequestBody
+            QuotationsProductRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.userRejected(request);
+    }
+
 }
