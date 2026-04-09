@@ -6,6 +6,8 @@ public class QueryCarItemRequest implements OrderRequest {
 
     private String token;
 
+    private String product_id;
+
     @Override
     public String getUsername() {
         return username;
@@ -21,5 +23,9 @@ public class QueryCarItemRequest implements OrderRequest {
             throw new RuntimeException(username + " - Token 不可為空");
         }
         this.token = token;
+    }
+
+    public String getProduct_id() {
+        return product_id;
     }
 }

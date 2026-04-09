@@ -302,7 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 查詢
     document.getElementById('productsCarSelect').addEventListener('click', async () => {
         const data = {
-            username: document.getElementById('loginUser').value
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_SelectCar').value
         };
         try {
             let token = document.getElementById('token').value

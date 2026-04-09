@@ -1351,6 +1351,11 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String token = request.getToken();
         final String useruser = request.getUseruser();
         final String userUserQuotationsId = request.getUserUserQuotationsId();
+        boolean isNumber = userUserQuotationsId.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (送出報價單)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (送出報價單)商品編號只能包含數字");
+        }
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -1404,7 +1409,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         UserDataSend userDataDetails = new UserDataSend(useruser);
                         String send = Backend.STATUS_QUOTATIONS_SENT.getBackend();
                         userDataDetails.setStatus(send);
-                        userDataDetails.setQuotation_id(new BigDecimal(String.valueOf(userUserQuotationsId)));
+                        userDataDetails.setQuotation_id(new BigDecimal(userUserQuotationsId));
                         Map<String, Object> quotationsDataSend = getQuotationsDataSend(userDataDetails);
                         if (quotationsDataSend == null) {
                             productsList.add("報價單編號:" + userUserQuotationsId + ":送出失敗，無此報價單");

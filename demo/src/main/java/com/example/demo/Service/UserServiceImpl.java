@@ -582,6 +582,14 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<?> productsCarSelect(QueryCarItemRequest request) {
         final String username = request.getUsername();
         final String token = request.getToken();
+        final String product_id = request.getProduct_id().trim();
+        boolean isNumber;
+        if (StringUtils.hasText(product_id)) {
+            isNumber = product_id.matches("^\\d+$");
+        } else {
+            logger.error("{} - (查詢商品)商品編號不可為空", username);
+            throw new BadRequestException(username + " - (查詢商品)商品編號不可為空");
+        }
         UserData userData = new UserData(username);
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
@@ -625,8 +633,11 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (查詢商品)查使用者帳號不存在", username);
                             throw new ResourceNotFoundException(username + " - (查詢商品)查使用者帳號不存在");
                         }
-
-                        List<Map<String, Object>> productsCarSelect = getProduct(new Product());
+                        Product product = new Product();
+                        if (isNumber) {
+                            product.setProduct_id(new BigDecimal(product_id));
+                        }
+                        List<Map<String, Object>> productsCarSelect = getProduct(product);
                         logger.info("User 商品查詢成功");
                         List<Object> messageList = new ArrayList<>();
                         for (Map<String, Object> map : productsCarSelect) {
@@ -691,6 +702,11 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        boolean isNumber = product_id.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (新增購物車)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (新增購物車)商品編號只能包含數字");
+        }
         final String product_quantity = request.getProduct_quantity().trim();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
@@ -991,6 +1007,11 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        boolean isNumber = product_id.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (更改購物車)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (更改購物車)商品編號只能包含數字");
+        }
         final String product_quantity = request.getProduct_quantity().trim();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
@@ -1146,6 +1167,11 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        boolean isNumber = product_id.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (刪除購物車)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (刪除購物車)商品編號只能包含數字");
+        }
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -1411,6 +1437,11 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        boolean isNumber = product_id.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (報價單)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (報價單)商品編號只能包含數字");
+        }
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -1548,6 +1579,11 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        boolean isNumber = product_id.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (接受)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (接受)商品編號只能包含數字");
+        }
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -1592,16 +1628,16 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-                        UserDataSend userDataDetails = new UserDataSend(username);
-                        String accepted = Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend();
-                        userDataDetails.setStatus(accepted);
-                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
-                        userMapper.updateQuotations(userDataDetails);
+//                        UserDataSend userDataDetails = new UserDataSend(username);
+//                        String accepted = Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend();
+//                        userDataDetails.setStatus(accepted);
+//                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
+//                        userMapper.updateQuotations(userDataDetails);
                         QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
                         quotationsProduct.setUsername(username);
                         quotationsProduct.setStatuss(
                                 List.of(
-                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
+                                        Backend.STATUS_QUOTATIONS_SENT.getBackend()
                                 )
                         );
                         List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
@@ -1611,6 +1647,7 @@ public class UserServiceImpl implements UserService {
                             productsList.add(messageGroup);
                         } else {
                             for (int i = 0; i < quotationsData.size(); i++) {
+                                System.err.println(quotationsData.get(i));
                                 String status = quotationsData.get(i).get("status").toString();
                                 BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
                                 BigDecimal price = new BigDecimal(quotationsData.get(i).get("price").toString());
@@ -1691,6 +1728,11 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        boolean isNumber = product_id.matches("^\\d+$");
+        if (!isNumber) {
+            logger.error("{} - (拒絕)商品編號只能包含數字", username);
+            throw new BadRequestException(username + " - (拒絕)商品編號只能包含數字");
+        }
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -1735,16 +1777,16 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-                        UserDataSend userDataDetails = new UserDataSend(username);
-                        String rejected = Backend.STATUS_QUOTATIONS_REJECTED.getBackend();
-                        userDataDetails.setStatus(rejected);
-                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
-                        userMapper.updateQuotations(userDataDetails);
+//                        UserDataSend userDataDetails = new UserDataSend(username);
+//                        String rejected = Backend.STATUS_QUOTATIONS_REJECTED.getBackend();
+//                        userDataDetails.setStatus(rejected);
+//                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
+//                        userMapper.updateQuotations(userDataDetails);
                         QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
                         quotationsProduct.setUsername(username);
                         quotationsProduct.setStatuss(
                                 List.of(
-                                        Backend.STATUS_QUOTATIONS_REJECTED.getBackend()
+                                        Backend.STATUS_QUOTATIONS_SENT.getBackend()
                                 )
                         );
                         List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
