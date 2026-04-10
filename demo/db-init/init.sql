@@ -246,6 +246,7 @@ CREATE TABLE interviewworks_schema.orders (
                                               total_price int8 NULL DEFAULT 0,
                                               created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                               updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                              CONSTRAINT orders_pk PRIMARY KEY (quotation_id),
                                               CONSTRAINT orders_status_check CHECK (
                                                 status IN ('pending', 'confirmed', 'cancelled')
                                               )
@@ -264,7 +265,7 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.order_items;
 
 CREATE TABLE interviewworks_schema.order_items (
-                                                   order_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                                   order_id INT NULL,
                                                    product_id INT NULL,
                                                    quantity int8 NULL DEFAULT 0,
                                                    price int8 NULL DEFAULT 0,
@@ -291,10 +292,10 @@ CREATE TABLE interviewworks_schema.shipments (
                                                  tracking_number varchar NULL,
                                                  created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                  updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-                                                 CONSTRAINT shipments_status_check CHECK (
-                                                    status IN ('preparing', 'shipped', 'delivered')
-                                                 ),
-                                                 CONSTRAINT shipments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.order_items(order_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+                                                     CONSTRAINT shipments_status_check CHECK (
+                                                         status IN ('preparing', 'shipped', 'delivered')
+                                                         ),
+                                                 CONSTRAINT shipments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.orders(quotation_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
 -- 建立觸發器
@@ -310,7 +311,7 @@ CREATE TRIGGER trigger_update_updated_date
 -- DROP TABLE interviewworks_schema.shipment_items;
 
 CREATE TABLE interviewworks_schema.shipment_items (
-                                                      shipment_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+                                                      shipment_id INT NULL,
                                                       product_id INT NULL,
                                                       quantity int8 NULL DEFAULT 0,
                                                       created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -343,7 +344,7 @@ CREATE TABLE interviewworks_schema.payments (
                                                 CONSTRAINT payments_payments_method_check CHECK (
                                                     status IN ('cash', 'credit_card', 'transfer')
                                                 ),
-                                                CONSTRAINT payments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.order_items(order_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+                                                CONSTRAINT payments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.orders(quotation_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
 -- 建立觸發器

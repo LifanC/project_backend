@@ -94,13 +94,13 @@
     <select id="userQuotationsData" resultType="java.util.Map">
         select
             quotations.quotation_id,
+            quotations.status,
             userdata_details.username,
             quotation_items.quantity,
             quotation_items.price,
             quotation_items.quantity * quotation_items.price as sum_price,
             products.products_name,
-            products.description,
-            quotations.status
+            products.description
         from
             "interviewworks_schema"."userdata_details" userdata_details
                 inner join "interviewworks_schema"."quotations" quotations

@@ -6,6 +6,7 @@ import com.example.demo.Common.Context;
 import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Common.QuotationsStatusKey;
 import com.example.demo.Dto.ApiResponse;
+import com.example.demo.Dto.Orderbackend.Order;
 import com.example.demo.Dto.Orderbackend.UserDataSend;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.*;
@@ -1628,11 +1629,6 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-//                        UserDataSend userDataDetails = new UserDataSend(username);
-//                        String accepted = Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend();
-//                        userDataDetails.setStatus(accepted);
-//                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
-//                        userMapper.updateQuotations(userDataDetails);
                         QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
                         quotationsProduct.setUsername(username);
                         quotationsProduct.setStatuss(
@@ -1641,34 +1637,48 @@ public class UserServiceImpl implements UserService {
                                 )
                         );
                         List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
-                        List<Object> messageGroup = new ArrayList<>();
                         if (quotationsData.isEmpty()) {
-                            messageGroup.add("空");
-                            productsList.add(messageGroup);
+                            List<Object> messageGroup = List.of("空");
+                            productsList = List.of(messageGroup);
                         } else {
-                            for (int i = 0; i < quotationsData.size(); i++) {
-                                System.err.println(quotationsData.get(i));
-                                String status = quotationsData.get(i).get("status").toString();
-                                BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
-                                BigDecimal price = new BigDecimal(quotationsData.get(i).get("price").toString());
-                                BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
-                                String productsName = quotationsData.get(i).get("products_name").toString();
-                                String description = quotationsData.get(i).get("description").toString();
-                                messageGroup.add("┌----商品-第" + (i + 1) + "筆-----┐");
-                                messageGroup.add("|報價單編號: " + product_id);
-                                messageGroup.add("|數量:" + quantity);
-                                messageGroup.add("|價格:" + price);
-                                messageGroup.add("|合計:" + sumPrice);
-                                messageGroup.add("|名稱:" + productsName);
-                                messageGroup.add("|描述:" + description);
-                                messageGroup.add("|狀態:" + QuotationsStatusKey.quotationsKey.get(status));
-                                messageGroup.add("└------------------┘");
-                                productsList.add(messageGroup);
-                            }
+                            UserDataSend userDataDetails = new UserDataSend(username);
+                            String accepted = Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend();
+                            userDataDetails.setStatus(accepted);
+                            userDataDetails.setQuotation_id(new BigDecimal(product_id));
+                            userMapper.updateQuotations(userDataDetails);
+
+
+//                            // *訂單（orders）
+//                            Order order = new Order(new BigDecimal(product_id));
+//                            String pending = Backend.STATUS_ORDERS_PENDING.getBackend();
+//                            order.setStatuss(List.of(pending));
+//                            OrderItems orderItems = new OrderItems(decimal);
+
+
+
+//                            quotationsProduct.setStatuss(List.of(accepted));
+//                            quotationsData = userMapper.userQuotationsData(quotationsProduct);
+//                            for (int i = 0; i < quotationsData.size(); i++) {
+//                                String status = quotationsData.get(i).get("status").toString();
+//                                BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
+//                                BigDecimal price = new BigDecimal(quotationsData.get(i).get("price").toString());
+//                                BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
+//                                String productsName = quotationsData.get(i).get("products_name").toString();
+//                                String description = quotationsData.get(i).get("description").toString();
+//                                List<Object> messageGroup = List.of(
+//                                        "┌----商品-第" + (i + 1) + "筆-----┐",
+//                                        "|報價單編號: " + product_id,
+//                                        "|數量:" + quantity,
+//                                        "|價格:" + price,
+//                                        "|合計:" + sumPrice,
+//                                        "|名稱:" + productsName,
+//                                        "|描述:" + description,
+//                                        "|狀態:" + QuotationsStatusKey.quotationsKey.get(status),
+//                                        "└------------------┘"
+//                                );
+//                                productsList.add(messageGroup);
+//                            }
                         }
-
-                        // *訂單（orders）
-
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
                                 "權限 - " + userSelect.get("permissions").toString(),
@@ -1777,11 +1787,6 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-//                        UserDataSend userDataDetails = new UserDataSend(username);
-//                        String rejected = Backend.STATUS_QUOTATIONS_REJECTED.getBackend();
-//                        userDataDetails.setStatus(rejected);
-//                        userDataDetails.setQuotation_id(new BigDecimal(product_id));
-//                        userMapper.updateQuotations(userDataDetails);
                         QuotationsProduct quotationsProduct = new QuotationsProduct(new BigDecimal(product_id));
                         quotationsProduct.setUsername(username);
                         quotationsProduct.setStatuss(
@@ -1790,11 +1795,17 @@ public class UserServiceImpl implements UserService {
                                 )
                         );
                         List<Map<String, Object>> quotationsData = userMapper.userQuotationsData(quotationsProduct);
-                        List<Object> messageGroup = new ArrayList<>();
                         if (quotationsData.isEmpty()) {
-                            messageGroup.add("空");
-                            productsList.add(messageGroup);
+                            List<Object> messageGroup = List.of("空");
+                            productsList = List.of(messageGroup);
                         } else {
+                            UserDataSend userDataDetails = new UserDataSend(username);
+                            String rejected = Backend.STATUS_QUOTATIONS_REJECTED.getBackend();
+                            userDataDetails.setStatus(rejected);
+                            userDataDetails.setQuotation_id(new BigDecimal(product_id));
+                            userMapper.updateQuotations(userDataDetails);
+                            quotationsProduct.setStatuss(List.of(rejected));
+                            quotationsData = userMapper.userQuotationsData(quotationsProduct);
                             for (int i = 0; i < quotationsData.size(); i++) {
                                 String status = quotationsData.get(i).get("status").toString();
                                 BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
@@ -1802,15 +1813,17 @@ public class UserServiceImpl implements UserService {
                                 BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
                                 String productsName = quotationsData.get(i).get("products_name").toString();
                                 String description = quotationsData.get(i).get("description").toString();
-                                messageGroup.add("┌----商品-第" + (i + 1) + "筆-----┐");
-                                messageGroup.add("|報價單編號: " + product_id);
-                                messageGroup.add("|數量:" + quantity);
-                                messageGroup.add("|價格:" + price);
-                                messageGroup.add("|合計:" + sumPrice);
-                                messageGroup.add("|名稱:" + productsName);
-                                messageGroup.add("|描述:" + description);
-                                messageGroup.add("|狀態:" + QuotationsStatusKey.quotationsKey.get(status));
-                                messageGroup.add("└------------------┘");
+                                List<Object> messageGroup = List.of(
+                                        "┌----商品-第" + (i + 1) + "筆-----┐",
+                                        "|報價單編號: " + product_id,
+                                        "|數量:" + quantity,
+                                        "|價格:" + price,
+                                        "|合計:" + sumPrice,
+                                        "|名稱:" + productsName,
+                                        "|描述:" + description,
+                                        "|狀態:" + QuotationsStatusKey.quotationsKey.get(status),
+                                        "└------------------┘"
+                                );
                                 productsList.add(messageGroup);
                             }
                         }
