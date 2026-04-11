@@ -1,20 +1,24 @@
-package com.example.demo.Dto.User;
+package com.example.demo.Dto.Orderbackend;
 
+import com.example.demo.Dto.User.OrderRequest;
 import jakarta.validation.constraints.NotBlank;
 
-public class QuotationsProductRequest implements OrderRequest {
+public class OrdersConfirmedCancelledItemRequest implements OrderRequest {
 
     private String username;
 
     private String token;
 
-    @NotBlank(message = "報價單編號不可為空")
-    private String quotation_id;
-
     @Override
     public String getUsername() {
         return username;
     }
+
+    @NotBlank(message = "用戶帳號不可為空")
+    private String useruser;
+
+    @NotBlank(message = "訂單編號不可為空")
+    private String ordersId;
 
     public String getToken() {
         return token;
@@ -28,7 +32,11 @@ public class QuotationsProductRequest implements OrderRequest {
         this.token = token;
     }
 
-    public String getQuotation_id() {
-        return quotation_id;
+    public String getUseruser() {
+        return useruser;
+    }
+
+    public String getOrdersId() {
+        return ordersId;
     }
 }

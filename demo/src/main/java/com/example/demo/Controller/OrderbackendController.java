@@ -1,9 +1,6 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Dto.Orderbackend.DeleteQuotationsProductItemRequest;
-import com.example.demo.Dto.Orderbackend.QueryQuotationsProductItemRequest;
-import com.example.demo.Dto.Orderbackend.QuotationsProductItemRequest;
-import com.example.demo.Dto.Orderbackend.SendQuotationsProductItemRequest;
+import com.example.demo.Dto.Orderbackend.*;
 import com.example.demo.Dto.User.*;
 import com.example.demo.Service.OrderbackendService;
 import jakarta.validation.Valid;
@@ -112,6 +109,46 @@ public class OrderbackendController {
             @RequestHeader("Authorization") String authHeader) {
         request.setAuthHeader(authHeader);
         return orderbackendService.sendQuotationsProduct(request);
+    }
+
+    @PostMapping("/ordersUser")
+    public ResponseEntity<?> ordersUser(
+            @Valid
+            @RequestBody
+            OrdersUserItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.ordersUser(request);
+    }
+
+    @PostMapping("/ordersProduct")
+    public ResponseEntity<?> ordersProduct(
+            @Valid
+            @RequestBody
+            OrdersProductItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.ordersProduct(request);
+    }
+
+    @PostMapping("/ordersConfirmed")
+    public ResponseEntity<?> ordersConfirmed(
+            @Valid
+            @RequestBody
+            OrdersConfirmedCancelledItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.ordersConfirmed(request);
+    }
+
+    @PostMapping("/ordersCancelled")
+    public ResponseEntity<?> ordersCancelled(
+            @Valid
+            @RequestBody
+            OrdersConfirmedCancelledItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.ordersCancelled(request);
     }
 
 }

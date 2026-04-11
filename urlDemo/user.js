@@ -389,11 +389,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 報價單編號
+    document.getElementById('quotationsProductId').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/quotationsProductId', data, token);
+            show_quotations(res);
+        } catch (err) {
+            show_quotations(err);
+        }
+    });
+
     // 報價單
-    document.getElementById('user_quotationsProduct').addEventListener('click', async () => {
+    document.getElementById('quotationsProduct').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('user_quotationsProductId').value
+            quotation_id: document.getElementById('user_quotationsProduct').value
         };
         try {
             let token = document.getElementById('token').value
@@ -408,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user_accepted').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('user_quotationsProductId').value
+            quotation_id: document.getElementById('user_quotationsProductId').value
         };
         try {
             let token = document.getElementById('token').value
@@ -423,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user_rejected').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            product_id: document.getElementById('user_quotationsProductId').value
+            quotation_id: document.getElementById('user_quotationsProductId').value
         };
         try {
             let token = document.getElementById('token').value

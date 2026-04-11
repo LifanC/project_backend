@@ -1,15 +1,12 @@
-package com.example.demo.Dto.User;
+package com.example.demo.Dto.Orderbackend;
 
-import jakarta.validation.constraints.NotBlank;
+import com.example.demo.Dto.User.OrderRequest;
 
-public class QuotationsProductRequest implements OrderRequest {
+public class OrdersUserItemRequest implements OrderRequest {
 
     private String username;
 
     private String token;
-
-    @NotBlank(message = "報價單編號不可為空")
-    private String quotation_id;
 
     @Override
     public String getUsername() {
@@ -28,7 +25,4 @@ public class QuotationsProductRequest implements OrderRequest {
         this.token = token;
     }
 
-    public String getQuotation_id() {
-        return quotation_id;
-    }
 }

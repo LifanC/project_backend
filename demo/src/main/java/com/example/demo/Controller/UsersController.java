@@ -110,6 +110,16 @@ public class UsersController {
         return userService.confirmItem(request);
     }
 
+    @PostMapping("/quotationsProductId")
+    public ResponseEntity<?> quotationsProductId(
+            @Valid
+            @RequestBody
+            QuotationsProductIdRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.quotationsProductId(request);
+    }
+
     @PostMapping("/quotationsProduct")
     public ResponseEntity<?> quotationsProduct(
             @Valid

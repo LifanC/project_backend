@@ -91,7 +91,33 @@
         where username = #{username}
     </update>
 
-    <select id="userQuotationsData" resultType="java.util.Map">
+    <select id="userdataDetailsDataId" resultType="java.util.Map">
+        select distinct
+            quotations.quotation_id,
+            quotations.status,
+            userdata_details.username
+        from
+            "interviewworks_schema"."userdata_details" userdata_details
+                inner join "interviewworks_schema"."quotations" quotations
+                           on
+                               userdata_details.username = quotations.username
+                inner join "interviewworks_schema"."quotation_items" quotation_items
+                           on
+                               quotations.quotation_id = quotation_items.quotation_id
+        <where>
+            and userdata_details.is_active = '1'
+            and userdata_details.username = #{username}
+            <if test="statuss != null and statuss.size() > 0">
+                and quotations.status in
+                <foreach collection="statuss" item="status" open="(" separator="," close=")">
+                    #{status}
+                </foreach>
+            </if>
+        </where>
+        order by quotations.quotation_id
+    </select>
+
+    <select id="userdataDetailsData" resultType="java.util.Map">
         select
             quotations.quotation_id,
             quotations.status,
@@ -112,15 +138,19 @@
                 inner join "interviewworks_schema"."products" products
                            on
                                quotation_items.product_id = products.product_id
-        where userdata_details.is_active = '1'
-          and quotations.quotation_id = #{quotation_id}
-          and userdata_details.username = #{username}
-        <if test="statuss != null and statuss.size() > 0">
-            and quotations.status in
-            <foreach collection="statuss" item="status" open="(" separator="," close=")">
-                #{status}
-            </foreach>
-        </if>
+        <where>
+            and userdata_details.is_active = '1'
+            <if test="quotation_id != null and quotation_id != ''">
+                and quotations.quotation_id = #{quotation_id}
+            </if>
+            and userdata_details.username = #{username}
+            <if test="statuss != null and statuss.size() > 0">
+                and quotations.status in
+                <foreach collection="statuss" item="status" open="(" separator="," close=")">
+                    #{status}
+                </foreach>
+            </if>
+        </where>
         order by quotations.quotation_id
     </select>
 
@@ -130,5 +160,54 @@
         where username = #{username}
           and quotation_id = #{quotation_id}
     </update>
+
+    <select id="selectQuotations" resultType="java.util.Map">
+        select
+            quotations.quotation_id,
+            quotations.username,
+            quotations.status,
+            quotations.total_price
+        from "interviewworks_schema"."quotations" quotations
+        where quotations.quotation_id = #{quotation_id}
+          and quotations.username = #{username}
+    </select>
+
+    <select id="selectOrdersItemsMax" resultType="java.lang.Integer">
+        select coalesce(max(order_id), 0)
+        from "interviewworks_schema"."orders"
+    </select>
+
+    <insert id="createOrders">
+        insert
+        into "interviewworks_schema"."orders" (
+            order_id,
+            quotation_id,
+            status,
+            total_price)
+        values (#{order_id},
+                #{quotation_id},
+                #{status},
+                #{total_price})
+    </insert>
+
+    <select id="getOrdersQuotations" resultType="java.util.Map">
+        select
+            quotations.quotation_id,
+            quotations.status,
+            quotation_items.quantity,
+            quotation_items.price,
+            quotation_items.quantity * quotation_items.price as sum_price,
+            products.products_name,
+            products.description
+        from "interviewworks_schema"."quotations" quotations
+                 inner join "interviewworks_schema"."quotation_items" quotation_items
+                            on
+                                quotations.quotation_id = quotation_items.quotation_id
+                 inner join "interviewworks_schema"."products" products
+                            on
+                                quotation_items.product_id = products.product_id
+        where quotations.quotation_id = #{quotation_id}
+          and quotations.username = #{username}
+    </select>
 
 </mapper>

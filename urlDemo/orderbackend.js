@@ -117,6 +117,26 @@ function show_quotations(log = {}) {
     document.getElementById('quotations_result').innerHTML = JSON.stringify(messageLog, null, 2);
 }
 
+function show_orders(log = {}) {
+    const {
+        code = undefined,
+        status = undefined,
+        message = undefined,
+        error = undefined,
+        path = undefined,
+        timestamp = undefined,
+    } = log;
+    const messageLog = {
+        code,
+        status,
+        message,
+        error,
+        path,
+        timestamp,
+    }
+    document.getElementById('orders_result').innerHTML = JSON.stringify(messageLog, null, 2);
+}
+
 // POST JSON helper
 async function postJSON(url, data, token) {
     const authHeader = `Bearer ${token}`;
@@ -345,6 +365,68 @@ document.addEventListener('DOMContentLoaded', () => {
             show_quotations(res);
         } catch (err) {
             show_quotations(err);
+        }
+    });
+
+    // 查詢用戶訂單名單
+    document.getElementById('btnOrdersUser').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersUser', data, token);
+            show_orders(res);
+        } catch (err) {
+            show_orders(err);
+        }
+    });
+
+    // 查詢訂單
+    document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserOrders').value,
+            ordersId: document.getElementById('userOrdersId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersProduct', data, token);
+            show_orders(res);
+        } catch (err) {
+            show_orders(err);
+        }
+    });
+
+    // 確認訂單
+    document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserOrders').value,
+            ordersId: document.getElementById('userOrdersId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersConfirmed', data, token);
+            show_orders(res);
+        } catch (err) {
+            show_orders(err);
+        }
+    });
+
+    // 取消訂單
+    document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserOrders').value,
+            ordersId: document.getElementById('userOrdersId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersCancelled', data, token);
+            show_orders(res);
+        } catch (err) {
+            show_orders(err);
         }
     });
 

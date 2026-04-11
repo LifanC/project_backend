@@ -10,6 +10,7 @@ public enum Permissions {
     USER_ITEM_TOKEN("user:item:token"),
     ORDERBACKEND_ITEM_TOKEN("orderbackend:item:token"),
     USER_ITEM_CONFIRM("user:item:confirm"),
+    USER_ITEM_QUOTATIONS("user:item:quotations"),
     ;
 
     private final String permission;

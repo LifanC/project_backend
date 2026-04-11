@@ -1,5 +1,7 @@
 package com.example.demo.Mapper;
 
+import com.example.demo.Dto.User.Orders;
+import com.example.demo.Dto.Orderbackend.Quotations;
 import com.example.demo.Dto.Orderbackend.UserDataSend;
 import com.example.demo.Dto.User.QuotationsProduct;
 import com.example.demo.Dto.User.UserData;
@@ -32,7 +34,18 @@ public interface UserMapper {
 
     void updateUserdataDetailIsActive(String username);
 
-    List<Map<String, Object>> userQuotationsData(QuotationsProduct quotationsProduct);
+    List<Map<String, Object>> userdataDetailsDataId(QuotationsProduct quotationsProduct);
+
+    List<Map<String, Object>> userdataDetailsData(QuotationsProduct quotationsProduct);
 
     void updateQuotations(UserDataSend userDataDetails);
+
+    @MapKey("username")
+    Map<String, Map<String, Object>> selectQuotations(Quotations quotations);
+
+    Integer selectOrdersItemsMax();
+
+    void createOrders(Orders orders);
+
+    List<Map<String, Object>> getOrdersQuotations(Quotations quotations);
 }

@@ -152,4 +152,67 @@
           and quotations.quotation_id = #{quotation_id}
     </select>
 
+    <select id="selectOrdersData" resultType="java.util.Map">
+        select distinct
+            orders.order_id,
+            orders.status,
+            quotations.username
+        from
+            "interviewworks_schema"."orders" orders
+                inner join "interviewworks_schema"."quotations" quotations
+                           on
+                               orders.quotation_id = orders.quotation_id
+        <where>
+            <if test="order_id != null and order_id != ''">
+                and orders.order_id = #{order_id}
+            </if>
+            <if test="username != null and username != ''">
+                and quotations.username = #{username}
+            </if>
+            <if test="quotationsStatuss != null and quotationsStatuss.size() > 0">
+                and quotations.status in
+                <foreach collection="quotationsStatuss" item="quotationsStatus" open="(" separator="," close=")">
+                    #{quotationsStatus}
+                </foreach>
+            </if>
+            <if test="statuss != null and statuss.size() > 0">
+                and orders.status in
+                <foreach collection="statuss" item="status" open="(" separator="," close=")">
+                    #{status}
+                </foreach>
+            </if>
+        </where>
+        order by orders.order_id
+    </select>
+
+    <update id="updateOrders">
+        update "interviewworks_schema"."orders"
+        set status = #{status}
+        where order_id = #{order_id}
+    </update>
+
+    <select id="serialMax" resultType="java.lang.Integer">
+        select coalesce(max(serial::int), 0) + 1
+        from "interviewworks_schema"."shipments"
+        where date_part = #{date_part};
+    </select>
+
+    <insert id="createShipments">
+        insert
+        into "interviewworks_schema"."shipments" (
+            order_id,
+            status,
+            prefix,
+            date_part,
+            serial,
+            tracking_number
+        )
+        values (#{order_id},
+                #{status},
+                #{prefix},
+                #{date_part},
+                #{serial},
+                #{tracking_number})
+    </insert>
+
 </mapper>

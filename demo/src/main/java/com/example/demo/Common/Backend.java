@@ -16,10 +16,10 @@ public enum Backend {
     STATUS_SHIPMENTS_DELIVERED("delivered"),
     // *收款（payments）
     // *status -- unpaid（未付） / partial（部分） / paid（已付）
-    // *method -- cash（現金） / credit_card（信用卡） / transfer（轉帳）
     STATUS_PAYMENTS_UNPAID("unpaid"),
     STATUS_PAYMENTS_PARTIAL("partial"),
-    STATUS_PAYMENTS_PAID("unpaid"),
+    STATUS_PAYMENTS_PAID("paid"),
+    // *method -- cash（現金） / credit_card（信用卡） / transfer（轉帳）
     METHOD_PAYMENTS_CASH("cash"),
     METHOD_PAYMENTS_CREDIT_CARD("credit_card"),
     METHOD_PAYMENTS_TRANSFER("transfer"),

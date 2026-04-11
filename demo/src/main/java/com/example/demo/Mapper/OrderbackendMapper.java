@@ -1,9 +1,7 @@
 package com.example.demo.Mapper;
 
-import com.example.demo.Dto.Orderbackend.QuotationItems;
-import com.example.demo.Dto.Orderbackend.Quotations;
-import com.example.demo.Dto.Orderbackend.UserDataSend;
-import com.example.demo.Dto.Orderbackend.UserUser;
+import com.example.demo.Dto.Orderbackend.*;
+import com.example.demo.Dto.User.Orders;
 import com.example.demo.Dto.User.UserData;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Mapper;
@@ -37,4 +35,12 @@ public interface OrderbackendMapper {
 
     @MapKey("username")
     Map<String, Map<String, Object>> selectQuotationsDataSend(UserDataSend userDataSend);
+
+    List<Map<String, Object>> selectOrdersData(Orders orders);
+
+    void updateOrders(Orders orders);
+
+    Integer serialMax(Shipments shipments);
+
+    void createShipments(Shipments shipments);
 }

@@ -19,8 +19,9 @@ public class QuotationItems {
     public QuotationItems() {
     }
 
-    public QuotationItems(BigDecimal quotation_id) {
+    public QuotationItems(BigDecimal quotation_id, BigDecimal product_id) {
         this.quotation_id = quotation_id;
+        this.product_id = product_id;
     }
 
     public BigDecimal getQuotation_id() {

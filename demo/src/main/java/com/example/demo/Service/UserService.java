@@ -26,6 +26,8 @@ public interface UserService {
 
     ResponseEntity<?> confirmItem(@Valid ConfirmItemRequest request);
 
+    ResponseEntity<?> quotationsProductId(@Valid QuotationsProductIdRequest request);
+
     ResponseEntity<?> quotationsProduct(@Valid QuotationsProductRequest request);
 
     ResponseEntity<?> userAccepted(@Valid QuotationsProductRequest request);
