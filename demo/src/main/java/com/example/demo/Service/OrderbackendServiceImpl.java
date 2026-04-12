@@ -43,7 +43,9 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -1855,8 +1857,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             shipments.setStatus(preparing);
                             shipments.setPrefix(prefix);
                             shipments.setDate_part(datePart);
-                            Integer maxNum = orderbackendMapper.serialMax(shipments);
-                            String serial = String.format("%03d", maxNum);
+                            String serial = String.format("%03d", orderbackendMapper.serialMax(shipments));
                             shipments.setSerial(serial);
                             String trackingNumber = prefix + datePart + serial;
                             shipments.setTracking_number(trackingNumber);
@@ -2031,6 +2032,612 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                 List<Object> messageList = List.of(
                         "帳號-" + username,
                         username + " - 取消訂單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> shipmentsTrackingNumber(ShipmentsItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String useruser = request.getUseruser();
+        final String ordersId = request.getOrdersId();
+        final String trackingNumber = request.getTrackingNumber().trim().toUpperCase();
+        final String datePart = request.getDatePart().trim();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend shipmentsTrackingNumber 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (查詢用戶出貨名單) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(查詢用戶出貨名單)使用者錯誤");
+                            throw new RuntimeException(username + " - (查詢用戶出貨名單)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (查詢用戶出貨名單)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(查詢用戶出貨名單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (查詢用戶出貨名單) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (查詢用戶出貨名單) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        if (StringUtils.hasText(useruser)) {
+                            logger.info("(查詢用戶出貨名單)用戶帳號 - {}", useruser);
+                            UserUser userUser = new UserUser(useruser);
+                            List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
+                            if (getUserUser.isEmpty()) {
+                                logger.error("{} : (查詢用戶出貨名單) 用戶不存在", useruser);
+                                throw new ResourceNotFoundException(useruser + " - 用戶不存在");
+                            }
+                        }
+                        BigDecimal ordersIdBigDecimal = null;
+                        if (StringUtils.hasText(ordersId)) {
+                            logger.info("(查詢用戶出貨名單)出貨單編號 - {}", ordersId);
+                            boolean isNumber = ordersId.matches("^\\d+$");
+                            if (!isNumber) {
+                                logger.error("{} - (查詢用戶出貨名單)出貨編號只能包含數字", username);
+                                throw new BadRequestException(username + " - (查詢用戶出貨名單)出貨編號只能包含數字");
+                            }
+                            ordersIdBigDecimal = new BigDecimal(ordersId);
+                        }
+                        if (StringUtils.hasText(trackingNumber)) {
+                            logger.info("(查詢用戶出貨名單)追蹤號碼(13碼) - {}", trackingNumber);
+                            boolean isOk = trackingNumber.matches("^[A-Za-z]{2}[A-Za-z0-9]{0,11}$");
+                            if (!isOk) {
+                                logger.error("{} - (查詢用戶出貨名單)追蹤號碼格式錯誤(13碼)", trackingNumber);
+                                throw new BadRequestException("(查詢用戶出貨名單)追蹤號碼格式錯誤(13碼) - " + trackingNumber);
+                            }
+                        }
+                        if (StringUtils.hasText(datePart)) {
+                            logger.info("(查詢用戶出貨名單)日期範圍(YYYYMM) - {}", datePart);
+                            boolean isNumber = datePart.matches("^\\d+$");
+                            if (!isNumber) {
+                                logger.error("{} - (查詢用戶出貨名單)日期範圍(YYYYMM)只能包含數字", datePart);
+                                throw new BadRequestException("(查詢用戶出貨名單)日期範圍(YYYYMM)只能包含數字 - " + datePart);
+                            }
+                            try {
+                                DateTimeFormatter formatter = DateTimeFormatter
+                                        .ofPattern("uuuuMM")
+                                        .withResolverStyle(ResolverStyle.STRICT);
+                                YearMonth.parse(datePart, formatter);
+                            } catch (Exception e) {
+                                logger.error("(查詢用戶出貨名單)日期範圍(YYYYMM)格式錯誤 - {}", datePart, e);
+                                throw new BadRequestException("(查詢用戶出貨名單)日期範圍(YYYYMM)格式錯誤 - " + datePart, e);
+                            }
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        Shipments shipments = new Shipments(ordersIdBigDecimal);
+                        shipments.setUsername(useruser);
+                        shipments.setTracking_number(trackingNumber);
+                        shipments.setDate_part(datePart);
+                        shipments.setQuotationsStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
+                                )
+                        );
+                        shipments.setOrdersStatuss(
+                                List.of(
+                                        Backend.STATUS_ORDERS_CONFIRMED.getBackend()
+                                )
+                        );
+                        shipments.setShipmentsStatuss(
+                                List.of(
+                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend(),
+                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend(),
+                                        Backend.STATUS_SHIPMENTS_DELIVERED.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        for (int i = 0; i < shipmentsData.size(); i++) {
+                            String order_id = shipmentsData.get(i).get("order_id").toString();
+                            String shipmentsUsername = shipmentsData.get(i).get("username").toString();
+                            String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                            String status = shipmentsData.get(i).get("status").toString();
+                            List<Object> messageGroup = new ArrayList<>();
+                            messageGroup.add("第" + (i + 1) + "筆");
+                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                            messageGroup.add("追蹤號碼:" + tracking_number);
+                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                            productsList.add(messageGroup);
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "查詢用戶出貨名單",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (查詢用戶出貨名單)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : shipmentsTrackingNumber 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 查詢用戶出貨名單，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> shipmentsShipped(ShipmentsTrackingNumberItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String trackingNumber = request.getTrackingNumber().trim().toUpperCase();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend shipmentsShipped 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (已出貨) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(已出貨)使用者錯誤");
+                            throw new RuntimeException(username + " - (已出貨)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (已出貨)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(已出貨)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (已出貨) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (已出貨) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        Shipments shipments = new Shipments();
+                        shipments.setTracking_number(trackingNumber);
+                        shipments.setQuotationsStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
+                                )
+                        );
+                        shipments.setOrdersStatuss(
+                                List.of(
+                                        Backend.STATUS_ORDERS_CONFIRMED.getBackend()
+                                )
+                        );
+                        shipments.setShipmentsStatuss(
+                                List.of(
+                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        if (shipmentsData.isEmpty()) {
+                            List<Object> messageGroup = List.of("空");
+                            productsList = List.of(messageGroup);
+                        } else {
+                            String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
+                            shipments.setStatus(shipped);
+                            orderbackendMapper.updateShipments(shipments);
+                            for (int i = 0; i < shipmentsData.size(); i++) {
+                                String order_id = shipmentsData.get(i).get("order_id").toString();
+                                String shipmentsUsername = shipmentsData.get(i).get("username").toString();
+                                String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                                List<Object> messageGroup = new ArrayList<>();
+                                messageGroup.add("第" + (i + 1) + "筆");
+                                messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                                messageGroup.add("追蹤號碼:" + tracking_number);
+                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(shipped));
+                                productsList.add(messageGroup);
+                            }
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "已出貨",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (已出貨)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : shipmentsShipped 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 已出貨，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> shipmentsDelivered(ShipmentsTrackingNumberItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String trackingNumber = request.getTrackingNumber().trim().toUpperCase();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend shipmentsDelivered 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (已送達) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(已送達)使用者錯誤");
+                            throw new RuntimeException(username + " - (已送達)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (已送達)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(已送達)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (已送達) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (已送達) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        Shipments shipments = new Shipments();
+                        shipments.setTracking_number(trackingNumber);
+                        shipments.setQuotationsStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
+                                )
+                        );
+                        shipments.setOrdersStatuss(
+                                List.of(
+                                        Backend.STATUS_ORDERS_CONFIRMED.getBackend()
+                                )
+                        );
+                        shipments.setShipmentsStatuss(
+                                List.of(
+                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        if (shipmentsData.isEmpty()) {
+                            List<Object> messageGroup = List.of("空");
+                            productsList = List.of(messageGroup);
+                        } else {
+                            String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
+                            shipments.setStatus(delivered);
+                            orderbackendMapper.updateShipments(shipments);
+                            for (int i = 0; i < shipmentsData.size(); i++) {
+                                String order_id = shipmentsData.get(i).get("order_id").toString();
+                                String shipmentsUsername = shipmentsData.get(i).get("username").toString();
+                                String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                                List<Object> messageGroup = new ArrayList<>();
+                                messageGroup.add("第" + (i + 1) + "筆");
+                                messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                                messageGroup.add("追蹤號碼:" + tracking_number);
+                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(delivered));
+                                productsList.add(messageGroup);
+                            }
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "已送達",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (已送達)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : shipmentsDelivered 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 已送達，資源忙碌，請重試"
+                );
+                Map<String, Map<Integer, Object>> message = Map.of(
+                        "content", ConvertFormat.convert(messageList)
+                );
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                message
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
+    public ResponseEntity<?> shipmentsRollback(ShipmentsTrackingNumberItemRequest request) {
+        final String username = request.getUsername();
+        final String token = request.getToken();
+        final String trackingNumber = request.getTrackingNumber().trim().toUpperCase();
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("orderbackend shipmentsRollback 拿鎖");
+                try {
+                    try {
+                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
+                        if (Boolean.FALSE.equals(exists)) {
+                            logger.error("{} : (恢復狀態) Token 不存在或已過期", username);
+                            throw new BadRequestException(username + " - Token 不存在或已過期");
+                        }
+                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
+                        String usernameAccessJwt = accessClaims.getSubject();
+                        if (!username.equals(usernameAccessJwt)) {
+                            logger.error("(恢復狀態)使用者錯誤");
+                            throw new RuntimeException(username + " - (恢復狀態)使用者錯誤");
+                        }
+                        String accessRole = accessClaims.get("roles", String.class);
+                        String accessJti = accessClaims.getId();
+                        logger.info("{}(權限{}) : (恢復狀態)有效的 JWT token {}",
+                                usernameAccessJwt, accessRole, accessJti);
+                        String method = Context.get().get("method").toString();
+                        String permissionsContext = Context.get().get("permissions").toString();
+                        String descriptionContext = Context.get().get("description").toString();
+                        String roles = Context.get().get("roles").toString();
+                        logger.info("(恢復狀態)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
+                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
+
+                        String accessRedisKey = redisKey.get("access")
+                                .replace("{1}", accessJti)
+                                .replace("{2}", usernameAccessJwt);
+                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
+                        if (Boolean.FALSE.equals(accessExists)) {
+                            logger.error("{} : (恢復狀態) Token 已過期", usernameAccessJwt);
+                            throw new BadRequestException(username + " - Token 已過期");
+                        }
+                        UserData userData = new UserData(username);
+                        Map<String, Object> userSelect = getUserData(userData);
+                        if (userSelect == null) {
+                            logger.error("{} : (恢復狀態) 使用者不存在", username);
+                            throw new ResourceNotFoundException(username + " - 使用者不存在");
+                        }
+                        List<Object> productsList = new ArrayList<>();
+                        Shipments shipments = new Shipments();
+                        shipments.setTracking_number(trackingNumber);
+                        shipments.setQuotationsStatuss(
+                                List.of(
+                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
+                                )
+                        );
+                        shipments.setOrdersStatuss(
+                                List.of(
+                                        Backend.STATUS_ORDERS_CONFIRMED.getBackend()
+                                )
+                        );
+                        shipments.setShipmentsStatuss(
+                                List.of(
+                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend(),
+                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend(),
+                                        Backend.STATUS_SHIPMENTS_DELIVERED.getBackend()
+                                )
+                        );
+                        List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        if (shipmentsData.isEmpty()) {
+                            List<Object> messageGroup = List.of("空");
+                            productsList = List.of(messageGroup);
+                        } else {
+                            String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
+                            shipments.setStatus(preparing);
+                            orderbackendMapper.updateShipments(shipments);
+                            for (int i = 0; i < shipmentsData.size(); i++) {
+                                String order_id = shipmentsData.get(i).get("order_id").toString();
+                                String shipmentsUsername = shipmentsData.get(i).get("username").toString();
+                                String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                                List<Object> messageGroup = new ArrayList<>();
+                                messageGroup.add("第" + (i + 1) + "筆");
+                                messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                                messageGroup.add("追蹤號碼:" + tracking_number);
+                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
+                                productsList.add(messageGroup);
+                            }
+                        }
+                        List<Object> messageList = List.of(
+                                "帳號 - " + username,
+                                "權限 - " + userSelect.get("permissions").toString(),
+                                "恢復狀態",
+                                ConvertFormat.convert(productsList)
+                        );
+                        Map<String, Map<Integer, Object>> message = Map.of(
+                                "content", ConvertFormat.convert(messageList)
+                        );
+                        HttpStatus status = HttpStatus.OK;
+                        return ResponseEntity
+                                .status(status)
+                                .body(ApiResponse.api(
+                                        status,
+                                        message
+                                ));
+                    } catch (JwtException e) {
+                        // JWT 不合法
+                        logger.error("{} : (恢復狀態)無效的 JWT token", username);
+                        throw new BadRequestException(username + " - 無效的 JWT token", e);
+                    }
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("{} : shipmentsRollback 資源忙碌，請重試", username);
+                List<Object> messageList = List.of(
+                        "帳號-" + username,
+                        username + " - 恢復狀態，資源忙碌，請重試"
                 );
                 Map<String, Map<Integer, Object>> message = Map.of(
                         "content", ConvertFormat.convert(messageList)

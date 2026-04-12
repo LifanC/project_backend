@@ -585,12 +585,9 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
-        boolean isNumber;
+        boolean isNumber = false;
         if (StringUtils.hasText(product_id)) {
             isNumber = product_id.matches("^\\d+$");
-        } else {
-            logger.error("{} - (查詢商品)商品編號不可為空", username);
-            throw new BadRequestException(username + " - (查詢商品)商品編號不可為空");
         }
         UserData userData = new UserData(username);
         try {

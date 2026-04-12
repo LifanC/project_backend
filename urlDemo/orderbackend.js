@@ -137,6 +137,26 @@ function show_orders(log = {}) {
     document.getElementById('orders_result').innerHTML = JSON.stringify(messageLog, null, 2);
 }
 
+function show_Shipments(log = {}) {
+    const {
+        code = undefined,
+        status = undefined,
+        message = undefined,
+        error = undefined,
+        path = undefined,
+        timestamp = undefined,
+    } = log;
+    const messageLog = {
+        code,
+        status,
+        message,
+        error,
+        path,
+        timestamp,
+    }
+    document.getElementById('shipments_result').innerHTML = JSON.stringify(messageLog, null, 2);
+}
+
 // POST JSON helper
 async function postJSON(url, data, token) {
     const authHeader = `Bearer ${token}`;
@@ -427,6 +447,69 @@ document.addEventListener('DOMContentLoaded', () => {
             show_orders(res);
         } catch (err) {
             show_orders(err);
+        }
+    });
+
+    // 查詢用戶出貨名單
+    document.getElementById('btnShipmentsUser').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserShipments').value,
+            orderId: document.getElementById('userUserShipmentsId').value,
+            trackingNumber: document.getElementById('userShipmentsTrackingNumber').value,
+            datePart: document.getElementById('userShipmentsDatePart').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/shipmentsTrackingNumber', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
+        }
+    });
+
+    // 已出貨
+    document.getElementById('btnShipmentsShipped').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('userTrackingNumber').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/shipmentsShipped', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
+        }
+    });
+
+    // 已送達
+    document.getElementById('btnShipmentsDelivered').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('userTrackingNumber').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/shipmentsDelivered', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
+        }
+    });
+    
+    // 恢復狀態
+    document.getElementById('btnShipmentsRollback').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('userTrackingNumber').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/shipmentsRollback', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
         }
     });
 

@@ -151,4 +151,44 @@ public class OrderbackendController {
         return orderbackendService.ordersCancelled(request);
     }
 
+    @PostMapping("/shipmentsTrackingNumber")
+    public ResponseEntity<?> shipmentsTrackingNumber(
+            @Valid
+            @RequestBody
+            ShipmentsItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.shipmentsTrackingNumber(request);
+    }
+
+    @PostMapping("/shipmentsShipped")
+    public ResponseEntity<?> shipmentsShipped(
+            @Valid
+            @RequestBody
+            ShipmentsTrackingNumberItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.shipmentsShipped(request);
+    }
+
+    @PostMapping("/shipmentsDelivered")
+    public ResponseEntity<?> shipmentsDelivered(
+            @Valid
+            @RequestBody
+            ShipmentsTrackingNumberItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.shipmentsDelivered(request);
+    }
+
+    @PostMapping("/shipmentsRollback")
+    public ResponseEntity<?> shipmentsRollback(
+            @Valid
+            @RequestBody
+            ShipmentsTrackingNumberItemRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return orderbackendService.shipmentsRollback(request);
+    }
+
 }

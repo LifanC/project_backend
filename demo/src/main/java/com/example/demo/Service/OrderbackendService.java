@@ -33,4 +33,12 @@ public interface OrderbackendService {
     ResponseEntity<?> ordersConfirmed(@Valid OrdersConfirmedCancelledItemRequest request);
 
     ResponseEntity<?> ordersCancelled(@Valid OrdersConfirmedCancelledItemRequest request);
+
+    ResponseEntity<?> shipmentsTrackingNumber(@Valid ShipmentsItemRequest request);
+
+    ResponseEntity<?> shipmentsShipped(@Valid ShipmentsTrackingNumberItemRequest request);
+
+    ResponseEntity<?> shipmentsDelivered(@Valid ShipmentsTrackingNumberItemRequest request);
+
+    ResponseEntity<?> shipmentsRollback(@Valid ShipmentsTrackingNumberItemRequest request);
 }

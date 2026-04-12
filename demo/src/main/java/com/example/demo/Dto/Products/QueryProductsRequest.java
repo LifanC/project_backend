@@ -8,8 +8,4 @@ public class QueryProductsRequest {
         return product_id;
     }
 
-    public void setProduct_id(String product_id) {
-        this.product_id = product_id;
-    }
-
 }

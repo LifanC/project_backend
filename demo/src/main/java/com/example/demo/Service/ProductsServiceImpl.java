@@ -6,10 +6,7 @@ import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.Products.ProductsRequest;
 import com.example.demo.Dto.Products.QueryProductsRequest;
 import com.example.demo.Dto.Products.UpdateProductsRequest;
-import com.example.demo.Exception.DBException;
-import com.example.demo.Exception.IsViolationException;
-import com.example.demo.Exception.ResourceAlreadyExistsException;
-import com.example.demo.Exception.ResourceNotFoundException;
+import com.example.demo.Exception.*;
 import com.example.demo.Mapper.ProductMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,8 +144,13 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public ResponseEntity<?> select(QueryProductsRequest request) {
         Product product = new Product();
-        final String productId = request.getProduct_id().trim();
+        final String productId = request.getProduct_id();
         if (StringUtils.hasText(productId)) {
+            boolean isNumber = productId.matches("^\\d+$");
+            if (!isNumber) {
+                logger.error("{} - 商品編號只能包含數字", productId);
+                throw new BadRequestException("商品編號只能包含數字 - " + productId);
+            }
             product.setProduct_id(new BigDecimal(productId));
         }
         try {
@@ -163,19 +165,22 @@ public class ProductsServiceImpl implements ProductsService {
                     logger.info("Products 商品查詢成功");
                     List<Object> messageList = new ArrayList<>();
                     for (Map<String, Object> map : productsSelect) {
+                        String product_id = map.get("product_id").toString();
                         String products_name = map.get("products_name").toString();
                         BigDecimal price = new BigDecimal(map.get("price").toString());
                         BigDecimal stock = new BigDecimal(map.get("stock").toString());
                         String description = map.get("description").toString();
-                        messageList.add("---------------------------------------");
-                        messageList.add("商品編號 - " + productId);
-                        messageList.add("商品名稱 - " + products_name);
-                        messageList.add("價格 - " + price);
-                        messageList.add("庫存量 - " + stock);
-                        messageList.add("描述 - " + description);
-                        messageList.add("新增日期" + ((Timestamp) map.get("created_date")).toLocalDateTime());
-                        messageList.add("更改日期" + ((Timestamp) map.get("updated_date")).toLocalDateTime());
-                        messageList.add("---------------------------------------");
+                        List<Object> messageGroup = new ArrayList<>();
+                        messageGroup.add("---------------------------------------");
+                        messageGroup.add("商品編號 - " + product_id);
+                        messageGroup.add("商品名稱 - " + products_name);
+                        messageGroup.add("價格 - " + price);
+                        messageGroup.add("庫存量 - " + stock);
+                        messageGroup.add("描述 - " + description);
+                        messageGroup.add("新增日期" + ((Timestamp) map.get("created_date")).toLocalDateTime());
+                        messageGroup.add("更改日期" + ((Timestamp) map.get("updated_date")).toLocalDateTime());
+                        messageGroup.add("---------------------------------------");
+                        messageList.add(messageGroup);
                     }
                     Map<String, Map<Integer, Object>> message = Map.of(
                             "content", ConvertFormat.convert(messageList)

@@ -144,6 +144,51 @@
                 <section>
                     <pre id="orders_result" class="orders_pre"></pre>
                 </section>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="3">
+                            <h2>出貨（shipments）</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="userUserShipments" placeholder="輸入用戶帳號">
+                        </td>
+                        <td rowspan="4">9</td>
+                        <td rowspan="4">
+                            <button id="btnShipmentsUser">查詢用戶出貨名單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="userUserShipmentsId" placeholder="輸入訂單編號">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="userShipmentsTrackingNumber" placeholder="輸入追蹤號碼(共13碼)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="userShipmentsDatePart" placeholder="輸入日期範圍(YYYYMM)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="userTrackingNumber" placeholder="輸入追蹤號碼(共13碼)">
+                        </td>
+                        <td>10</td>
+                        <td>
+                            <button id="btnShipmentsShipped">已出貨</button>
+                            <button id="btnShipmentsDelivered">已送達</button>
+                            <button id="btnShipmentsRollback">恢復狀態</button>
+                        </td>
+                    </tr>
+                </table>
+                <section>
+                    <pre id="shipments_result" class="shipments_pre"></pre>
+                </section>
             </div>
         </div>
 

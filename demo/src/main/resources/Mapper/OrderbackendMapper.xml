@@ -194,7 +194,8 @@
     <select id="serialMax" resultType="java.lang.Integer">
         select coalesce(max(serial::int), 0) + 1
         from "interviewworks_schema"."shipments"
-        where date_part = #{date_part};
+        where date_part = #{date_part}
+        and prefix = #{prefix}
     </select>
 
     <insert id="createShipments">
@@ -214,5 +215,59 @@
                 #{serial},
                 #{tracking_number})
     </insert>
+
+    <select id="selectShipmentsData" resultType="java.util.Map">
+        select shipments.order_id,
+               shipments.status,
+               shipments.date_part,
+               shipments.tracking_number,
+               quotations.username
+        from "interviewworks_schema"."shipments" shipments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                shipments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id = quotations.quotation_id
+        <where>
+            <if test="order_id != null">
+                and shipments.order_id = #{order_id}
+            </if>
+            <if test="username != null and username != ''">
+                and quotations.username = #{username}
+            </if>
+            <if test="tracking_number != null and tracking_number != ''">
+                and shipments.tracking_number like concat(#{tracking_number}, '%')
+            </if>
+            <if test="date_part != null and date_part != ''">
+                and shipments.date_part like concat(#{date_part}, '%')
+            </if>
+            <if test="quotationsStatuss != null and quotationsStatuss.size() > 0">
+                and quotations.status in
+                <foreach collection="quotationsStatuss" item="quotationsStatus" open="(" separator="," close=")">
+                    #{quotationsStatus}
+                </foreach>
+            </if>
+            <if test="ordersStatuss != null and ordersStatuss.size() > 0">
+                and orders.status in
+                <foreach collection="ordersStatuss" item="ordersStatus" open="(" separator="," close=")">
+                    #{ordersStatus}
+                </foreach>
+            </if>
+            <if test="shipmentsStatuss != null and shipmentsStatuss.size() > 0">
+                and shipments.status in
+                <foreach collection="shipmentsStatuss" item="shipmentsStatus" open="(" separator="," close=")">
+                    #{shipmentsStatus}
+                </foreach>
+            </if>
+        </where>
+        order by shipments.order_id
+    </select>
+
+    <update id="updateShipments">
+        update "interviewworks_schema"."shipments"
+        set status = #{status}
+        where tracking_number = #{tracking_number}
+    </update>
 
 </mapper>

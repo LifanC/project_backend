@@ -43,4 +43,8 @@ public interface OrderbackendMapper {
     Integer serialMax(Shipments shipments);
 
     void createShipments(Shipments shipments);
+
+    List<Map<String, Object>> selectShipmentsData(Shipments shipments);
+
+    void updateShipments(Shipments shipments);
 }
