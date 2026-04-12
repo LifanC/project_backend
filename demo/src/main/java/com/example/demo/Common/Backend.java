@@ -14,7 +14,7 @@ public enum Backend {
     STATUS_SHIPMENTS_PENDING("preparing"),
     STATUS_SHIPMENTS_SHIPPED("shipped"),
     STATUS_SHIPMENTS_DELIVERED("delivered"),
-    // *收款（payments）
+    // *付款（payments）
     // *status -- unpaid（未付） / partial（部分） / paid（已付）
     STATUS_PAYMENTS_UNPAID("unpaid"),
     STATUS_PAYMENTS_PARTIAL("partial"),

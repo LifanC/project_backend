@@ -1863,6 +1863,12 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             shipments.setTracking_number(trackingNumber);
                             orderbackendMapper.createShipments(shipments);
                             productsList.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
+                            // *付款（payments）
+
+
+
+
+
                         }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,

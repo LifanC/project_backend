@@ -103,7 +103,7 @@ project_backend/
 - *編輯商品*
 - *送出報價*
 ### 2. 📦 訂單管理
-- *從報價轉訂單（按鈕🔥）*
+- *從報價轉訂單*
 - *查看訂單詳情*
 ### 3. 🚚 出貨管理
 - *建立出貨單*
@@ -117,7 +117,7 @@ project_backend/
 - *3. 報價（Quotation）*
 - *4. 訂單（Order）*
 - *5. 出貨（Shipment）*
-- *6. 收款（Payment）*
+- *6. 付款（Payment）*
 - *流程：Customer → Quotation → Order → Shipment → Payment*
 - *~*
 - *報價（quotations）
@@ -131,7 +131,7 @@ project_backend/
 - *order_id -- 從訂單轉來
 - *status -- preparing（備貨中） / shipped（已出貨） / delivered（已送達）
 - *~*
-- *收款（payments）
+- *付款（payments）
 - *order_id -- 從訂單轉來
 - *status -- unpaid（未付） / partial（部分） / paid（已付）
 - *method -- cash（現金） / credit_card（信用卡） / transfer（轉帳）

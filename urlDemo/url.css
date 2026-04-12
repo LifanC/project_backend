@@ -87,7 +87,8 @@
 
   .form input,
   .form textarea,
-  .form button {
+  .form button,
+  .form select {
       padding: 10px 12px;
       border: 1px solid #ccc;
   }
@@ -147,4 +148,14 @@
       position: sticky;
       top: 10px;
       height: fit-content;
+  }
+
+  .form select {
+      background: white;
+      cursor: pointer;
+  }
+
+  .form select:focus {
+      outline: none;
+      border-color: #333;
   }
