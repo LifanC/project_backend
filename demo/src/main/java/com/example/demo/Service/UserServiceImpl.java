@@ -1,10 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.Aspect.Permissions;
-import com.example.demo.Common.Backend;
-import com.example.demo.Common.Context;
-import com.example.demo.Common.ConvertFormat;
-import com.example.demo.Common.StatusKey;
+import com.example.demo.Common.*;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.User.Orders;
 import com.example.demo.Dto.Orderbackend.Quotations;
@@ -35,6 +32,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.SecretKey;
 import java.math.BigDecimal;
@@ -58,34 +57,25 @@ public class UserServiceImpl implements UserService {
     private long expirationSeconds;
 
     private final SecretMapper secretMapper;
-
     private final UserMapper userMapper;
-
     private final ProductMapper productMapper;
-
     private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     public UserServiceImpl(
             SecretMapper secretMapper,
             UserMapper userMapper,
             ProductMapper productMapper,
-            StringRedisTemplate stringRedisTemplate) {
+            StringRedisTemplate stringRedisTemplate,
+            ObjectMapper objectMapper) {
         this.secretMapper = secretMapper;
         this.userMapper = userMapper;
         this.productMapper = productMapper;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.objectMapper = objectMapper;
     }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
-    // <App>:<Domain>:<Purpose>:<ID>
-    private final Map<String, String> redisKey = Map.of(
-            "refresh", "user:jwt:refresh:{1}",
-            "access", "user:jwt:access:{1}:{2}",
-            "blacklist", "user:jwt:blacklist:{1}",
-            "lock", "user:auth:lock:{1}",
-            "fail", "user:auth:fail:{1}"
-    );
 
     // 單次回源鎖
     private final ReentrantLock lock = new ReentrantLock();
@@ -143,14 +133,24 @@ public class UserServiceImpl implements UserService {
                     final long failExpireSeconds = expirationSeconds;
                     // lockKey TTL（鎖 ? 秒）
                     final long lockSeconds = 60;
-                    String lockKey = redisKey.get("lock").replace("{1}", username);
-                    String failKey = redisKey.get("fail").replace("{1}", username);
+                    String lockKey = RedisKey.redisKey.get("lock").replace("{1}", username);
+                    String failKey = RedisKey.redisKey.get("fail").replace("{1}", username);
                     if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey))) {
                         Long ttl = stringRedisTemplate.getExpire(lockKey, TimeUnit.SECONDS);
                         logger.error("{} : 連續錯誤{}次，帳號暫時被鎖，請稍後再試({}秒)", username, maxFailAttempts, ttl);
                         throw new RuntimeException(username + " - 連續錯誤" + maxFailAttempts + "次，帳號暫時被鎖，請稍後再試(" + ttl + "秒)");
                     }
-                    Map<String, Object> userSelect = getUserData(userData);
+
+                    Map<String, Object> userSelect;
+                    String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                    String json = stringRedisTemplate.opsForValue().get(userOnly);
+                    if (json != null) {
+                        userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                    } else {
+                        userSelect = getUserData(userData);
+                        String jsonMap = objectMapper.writeValueAsString(userSelect);
+                        stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                    }
                     if (userSelect == null) {
                         logger.error("{} : (Token 取得)帳號不存在", username);
                         throw new ResourceNotFoundException(username + " - 帳號不存在");
@@ -178,7 +178,7 @@ public class UserServiceImpl implements UserService {
                     stringRedisTemplate.delete(lockKey);
 
                     // JWT 簽名與驗證用的「祕密字串（secret）」
-                    final String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                    final String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                     String jti = UUID.randomUUID().toString();
                     int expirationSecondsAddRndomNumber = expirationSecondsAddRndomNumber();
                     final String refreshToken = Jwts.builder()
@@ -261,7 +261,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User validate 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (Token驗證)不存在或已過期，請重新取得 Token", username);
@@ -277,13 +277,22 @@ public class UserServiceImpl implements UserService {
                         String usernameJwtId = claims.getId();
                         logger.info("{} : (Token驗證)有效的 JWT token", usernameJwt);
 
-                        String blacklistRedisKey = redisKey.get("blacklist").replace("{1}", usernameJwtId);
+                        String blacklistRedisKey = RedisKey.redisKey.get("blacklist").replace("{1}", usernameJwtId);
                         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
                             logger.error("{} : (Token驗證)Token 已被撤銷", username);
                             throw new RuntimeException(username + " - Token 已被撤銷");
                         }
 
-                        Map<String, Object> userSelect = getUserData(userData);
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (Token驗證)帳號不存在", username);
                             throw new ResourceNotFoundException(username + " - 帳號不存在");
@@ -304,7 +313,7 @@ public class UserServiceImpl implements UserService {
                                 )
                                 .signWith(getKeyForToday())
                                 .compact();
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", "*")
                                 .replace("{2}", usernameJwt);
                         // 避免 Redis key 無限制增加導致記憶體耗盡
@@ -334,7 +343,7 @@ public class UserServiceImpl implements UserService {
                             // 這是一個 建議值，Redis 可能返回多於或少於這個數量，取決於內部算法。
                             redisDels(accessRedisKey, cnt);
                         }
-                        accessRedisKey = redisKey.get("access")
+                        accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", jti)
                                 .replace("{2}", usernameJwt);
                         Boolean success = stringRedisTemplate.opsForValue().setIfAbsent(
@@ -414,7 +423,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User logout 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (Token登出)不存在或已過期", username);
@@ -430,7 +439,7 @@ public class UserServiceImpl implements UserService {
                                 .getBody();
 
                         String usernameAccessJwtId = refreshClaims.getId();
-                        String blacklistRedisKey = redisKey.get("blacklist").replace("{1}", usernameAccessJwtId);
+                        String blacklistRedisKey = RedisKey.redisKey.get("blacklist").replace("{1}", usernameAccessJwtId);
                         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
                             logger.error("{} : (Token登出)Token 已被撤銷", username);
                             throw new RuntimeException(username + " - Token 已被撤銷");
@@ -462,12 +471,21 @@ public class UserServiceImpl implements UserService {
                             throw new RuntimeException(username + " - 使用者錯誤");
                         }
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", "*")
                                 .replace("{2}", usernameAccessJwt);
                         stringRedisTemplate.delete(accessRedisKey);
 
-                        Map<String, Object> userSelect = getUserData(userData);
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : 登出 Token 帳號不存在", username);
                             throw new ResourceNotFoundException(username + " - 登出 Token 帳號不存在");
@@ -562,7 +580,7 @@ public class UserServiceImpl implements UserService {
 
         String username = refreshClaims.getSubject();
         String usernameAccessJwtId = refreshClaims.getId();
-        String blacklistRedisKey = redisKey.get("blacklist").replace("{1}", usernameAccessJwtId);
+        String blacklistRedisKey = RedisKey.redisKey.get("blacklist").replace("{1}", usernameAccessJwtId);
         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(blacklistRedisKey))) {
             logger.error("{} : Token 已被撤銷", username);
             throw new RuntimeException(username + " - Token 已被撤銷");
@@ -596,7 +614,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User productsCarSelect 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (查詢商品) Token 不存在或已過期", username);
@@ -619,7 +637,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(查詢商品)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -627,7 +645,17 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (查詢商品) Token 已過期", usernameAccessJwt);
                             throw new BadRequestException(username + " - Token 已過期");
                         }
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (查詢商品)查使用者帳號不存在", username);
                             throw new ResourceNotFoundException(username + " - (查詢商品)查使用者帳號不存在");
@@ -713,7 +741,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User createCarItem 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (新增購物車) Token 不存在或已過期", username);
@@ -736,7 +764,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(新增購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -747,7 +775,17 @@ public class UserServiceImpl implements UserService {
 
                         UserData userData = new UserData(username);
                         UserdataDetails userdataDetails = new UserdataDetails(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (新增購物車) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -881,7 +919,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User queryCarItem 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (查詢購物車) Token 不存在或已過期", username);
@@ -904,7 +942,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(查詢購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -913,7 +951,17 @@ public class UserServiceImpl implements UserService {
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (查詢購物車) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1018,7 +1066,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User updateCarItem 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (更改購物車) Token 不存在或已過期", username);
@@ -1041,7 +1089,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(更改購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -1051,7 +1099,17 @@ public class UserServiceImpl implements UserService {
                         }
                         UserData userData = new UserData(username);
                         UserdataDetails userdataDetails = new UserdataDetails(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (更改購物車) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1177,7 +1235,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User deleteCarItem 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (刪除購物車) Token 不存在或已過期", username);
@@ -1200,7 +1258,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(刪除購物車)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -1211,7 +1269,17 @@ public class UserServiceImpl implements UserService {
 
                         UserData userData = new UserData(username);
                         UserdataDetails userdataDetails = new UserdataDetails(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (刪除購物車) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1329,7 +1397,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User confirmItem 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (確認訂單) Token 不存在或已過期", username);
@@ -1352,7 +1420,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(確認訂單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -1361,7 +1429,17 @@ public class UserServiceImpl implements UserService {
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (確認訂單) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1441,7 +1519,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User quotationsProductId 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (報價單編號) Token 不存在或已過期", username);
@@ -1464,7 +1542,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(報價單編號)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -1473,7 +1551,17 @@ public class UserServiceImpl implements UserService {
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (報價單編號) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1573,7 +1661,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User quotationsProduct 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (報價單) Token 不存在或已過期", username);
@@ -1596,7 +1684,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(報價單)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -1605,7 +1693,17 @@ public class UserServiceImpl implements UserService {
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (報價單) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1715,7 +1813,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User userAccepted 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (接受) Token 不存在或已過期", username);
@@ -1738,7 +1836,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(接受)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
@@ -1747,7 +1845,17 @@ public class UserServiceImpl implements UserService {
                             throw new BadRequestException(username + " - Token 已過期");
                         }
                         UserData userData = new UserData(username);
-                        Map<String, Object> userSelect = getUserData(userData);
+
+                        Map<String, Object> userSelect;
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String json = stringRedisTemplate.opsForValue().get(userOnly);
+                        if (json != null) {
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        } else {
+                            userSelect = getUserData(userData);
+                            String jsonMap = objectMapper.writeValueAsString(userSelect);
+                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        }
                         if (userSelect == null) {
                             logger.error("{} : (接受) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
@@ -1880,7 +1988,7 @@ public class UserServiceImpl implements UserService {
                 logger.info("User userRejected 拿鎖");
                 try {
                     try {
-                        String refreshRedisKey = redisKey.get("refresh").replace("{1}", username);
+                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
                         Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
                         if (Boolean.FALSE.equals(exists)) {
                             logger.error("{} : (拒絕) Token 不存在或已過期", username);
@@ -1903,7 +2011,7 @@ public class UserServiceImpl implements UserService {
                         logger.info("(拒絕)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
                                 usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
 
-                        String accessRedisKey = redisKey.get("access")
+                        String accessRedisKey = RedisKey.redisKey.get("access")
                                 .replace("{1}", accessJti)
                                 .replace("{2}", usernameAccessJwt);
                         Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);

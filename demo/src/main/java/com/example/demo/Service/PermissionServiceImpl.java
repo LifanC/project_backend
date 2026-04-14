@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.Common.ConvertFormat;
+import com.example.demo.Common.RedisKey;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Permissions.PermissionRequest;
 import com.example.demo.Dto.Permissions.Permission;
@@ -13,11 +14,14 @@ import com.example.demo.Mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.*;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -32,14 +36,20 @@ public class PermissionServiceImpl implements PermissionService {
     private final PermissionMapper permissionMapper;
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     public PermissionServiceImpl(
             PermissionMapper permissionMapper,
             UserMapper userMapper,
-            RoleMapper roleMapper) {
+            RoleMapper roleMapper,
+            StringRedisTemplate stringRedisTemplate,
+            ObjectMapper objectMapper) {
         this.permissionMapper = permissionMapper;
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.objectMapper = objectMapper;
     }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -111,8 +121,7 @@ public class PermissionServiceImpl implements PermissionService {
                                 "帳號 - " + username,
                                 "權限 - " + permissions,
                                 username + " - 註冊權限帳號成功",
-                                "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime(),
-                                "更改日期" + ((Timestamp) permissionsSelect.get("updated_date")).toLocalDateTime()
+                                "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime()
                         );
                         Map<String, Map<Integer, Object>> message = Map.of(
                                 "content", ConvertFormat.convert(messageList)
@@ -174,7 +183,17 @@ public class PermissionServiceImpl implements PermissionService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Permission query 拿鎖");
                 try {
-                    List<String> permissionsSelect = permissionMapper.selectAll();
+                    List<String> permissionsSelect;
+                    String permissionsAllKey =
+                            RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
+                    String json = stringRedisTemplate.opsForValue().get(permissionsAllKey);
+                    if (json != null) {
+                        permissionsSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                    } else {
+                        permissionsSelect = permissionMapper.selectAll();
+                        String jsonMap = objectMapper.writeValueAsString(permissionsSelect);
+                        stringRedisTemplate.opsForValue().set(permissionsAllKey, jsonMap);
+                    }
                     if (permissionsSelect.isEmpty()) {
                         throw new ResourceNotFoundException("查詢帳號不存在");
                     }

@@ -13,6 +13,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -27,12 +28,15 @@ public class CommonAspect {
 
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
     public CommonAspect(
             UserMapper userMapper,
-            RoleMapper roleMapper) {
+            RoleMapper roleMapper,
+            StringRedisTemplate stringRedisTemplate) {
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     // 單次回源鎖
@@ -88,7 +92,6 @@ public class CommonAspect {
                             "description", description
                     );
                     Context.set(text);
-
                 } finally {
                     lock.unlock();
                 }
