@@ -1,6 +1,7 @@
 package com.example.demo.Aspect;
 
 import com.example.demo.Common.Context;
+import com.example.demo.Common.RedisKey;
 import com.example.demo.Dto.User.OrderRequest;
 import com.example.demo.Dto.User.UserData;
 import com.example.demo.Exception.ResourceNotFoundException;
@@ -13,8 +14,11 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -26,17 +30,34 @@ public class CommonAspect {
 
     private final Logger logger = LoggerFactory.getLogger(CommonAspect.class);
 
+    // ? redis 到期時間 Seconds
+    @Value("${jwt.expirationSeconds}")
+    private long expirationSeconds;
+
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
     private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     public CommonAspect(
             UserMapper userMapper,
             RoleMapper roleMapper,
-            StringRedisTemplate stringRedisTemplate) {
+            StringRedisTemplate stringRedisTemplate,
+            ObjectMapper objectMapper) {
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.objectMapper = objectMapper;
+    }
+
+    /*
+     * 防 Cache Stampede（雪崩）
+     * 問題：* 大量 key 同時過期 → DB 被打爆
+     * */
+    private int expirationSecondsAddRndomNumber() {
+        int min = 1;
+        int max = 60;
+        return Math.toIntExact(expirationSeconds + (new Random().nextInt((max - min) + 1) + min));
     }
 
     // 單次回源鎖
@@ -57,17 +78,39 @@ public class CommonAspect {
                 logger.info("checkRole 拿鎖");
                 try {
                     OrderRequest req = (OrderRequest) joinPoint.getArgs()[0];
-                    UserData userData = new UserData(req.getUsername());
-                    Map<String, Object> userSelect = getUserData(userData);
-                    if (userSelect == null) {
-                        logger.error("帳號不存在");
-                        throw new ResourceNotFoundException("帳號不存在");
+                    String username = req.getUsername();
+                    UserData userData = new UserData(username);
+                    Map<String, Object> userSelect;
+                    String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                    String jsonUserOnly = stringRedisTemplate.opsForValue().get(userOnly);
+                    if (jsonUserOnly != null) {
+                        userSelect = objectMapper.readValue(jsonUserOnly, new TypeReference<>() {});
+                    } else {
+                        userSelect = getUserData(userData);
+                        String jsonMap = objectMapper.writeValueAsString(userSelect);
+                        stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     }
-
-                    List<String> selectRoles = roleMapper.getSelectRoles(req.getUsername());
+                    if (userSelect == null) {
+                        logger.error("{} - 帳號不存在", username);
+                        throw new ResourceNotFoundException(username + " - 帳號不存在");
+                    }
+                    List<String> selectRoles;
+                    String userRole = RedisKey.redisCommonAspectKey.get("userRole").replace("{1}", username);
+                    String jsonRole = stringRedisTemplate.opsForValue().get(userRole);
+                    if (jsonRole != null) {
+                        selectRoles = objectMapper.readValue(jsonRole, new TypeReference<>() {});
+                    } else {
+                        selectRoles = roleMapper.getSelectRoles(username);
+                        String jsonMap = objectMapper.writeValueAsString(selectRoles);
+                        stringRedisTemplate.opsForValue().set(
+                                userRole, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
+                    }
+                    if (selectRoles.isEmpty()) {
+                        logger.error("{} - 權限不存在", username);
+                        throw new ResourceNotFoundException(username + " - 權限不存在");
+                    }
                     String allowedRoles = checkRole.value().getPermission();
-
-                    // 只要使用者有其中一個角色就通過
                     boolean hasRole = selectRoles.stream().anyMatch(role -> role.equals(allowedRoles));
                     logger.info("指定權限： {}", allowedRoles);
                     logger.info("是否權限內： {}", (hasRole) ? "是" : "否");
@@ -82,7 +125,6 @@ public class CommonAspect {
                                 "角色權限(" + permissions + ")訪問(" + allowedRoles + ")被拒絕，" +
                                         "需要 : " + description + "(" + selectRoles + ")");
                     }
-
                     MethodSignature signature = (MethodSignature) joinPoint.getSignature();
                     String method = signature.getMethod().getName();
                     Map<String, Object> text = Map.of(

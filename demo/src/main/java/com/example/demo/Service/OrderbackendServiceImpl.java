@@ -167,7 +167,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                     } else {
                         userSelect = getUserData(userData);
                         String jsonMap = objectMapper.writeValueAsString(userSelect);
-                        stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     }
                     if (userSelect == null) {
                         logger.error("{} : (Token 取得)帳號不存在", username);
@@ -309,7 +310,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (Token驗證)帳號不存在", username);
@@ -502,7 +504,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : 登出 Token 帳號不存在", username);
@@ -667,7 +670,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : 查使用者帳號不存在", username);
@@ -816,7 +820,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (用戶商品報價) 使用者不存在", username);
@@ -967,7 +972,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (確認報價) 使用者不存在", username);
@@ -1173,7 +1179,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (刪除報價) 使用者不存在", username);
@@ -1313,7 +1320,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (查詢報價單) 使用者不存在", username);
@@ -1474,7 +1482,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (送出報價單) 使用者不存在", username);
@@ -1609,7 +1618,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (查詢用戶訂單名單) 使用者不存在", username);
@@ -1759,7 +1769,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (訂單) 使用者不存在", username);
@@ -1914,7 +1925,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (確認訂單) 使用者不存在", username);
@@ -2089,7 +2101,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (取消訂單) 使用者不存在", username);
@@ -2414,7 +2427,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (已出貨) 使用者不存在", username);
@@ -2564,7 +2578,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                    userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (已送達) 使用者不存在", username);

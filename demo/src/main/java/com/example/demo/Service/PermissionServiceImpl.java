@@ -13,6 +13,7 @@ import com.example.demo.Mapper.RoleMapper;
 import com.example.demo.Mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PermissionServiceImpl implements PermissionService {
 
     private final Logger logger = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
+    // ? redis 到期時間 Seconds
+    @Value("${jwt.expirationSeconds}")
+    private long expirationSeconds;
 
     private final PermissionMapper permissionMapper;
     private final UserMapper userMapper;
@@ -53,6 +58,16 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    /*
+     * 防 Cache Stampede（雪崩）
+     * 問題：* 大量 key 同時過期 → DB 被打爆
+     * */
+    private int expirationSecondsAddRndomNumber() {
+        int min = 1;
+        int max = 60;
+        return Math.toIntExact(expirationSeconds + (new Random().nextInt((max - min) + 1) + min));
+    }
 
     // 單次回源鎖
     private final ReentrantLock lock = new ReentrantLock();
@@ -112,10 +127,20 @@ public class PermissionServiceImpl implements PermissionService {
                         permission.setPermissions(permissions);
                         permissionMapper.create(permission);
                         logger.info("Permission 註冊權限帳號成功，username={}, permissions={}", username, permissions);
+
                         UserData userData = new UserData(username);
                         userMapper.create(userData);
                         logger.info("UserData 註冊權限帳號成功，username={}", username);
+                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                        String jsonMap = objectMapper.writeValueAsString(userData);
+                        stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
+                        String permissionsAllKey =
+                                RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
+                        stringRedisTemplate.delete(permissionsAllKey);
+
                         roleMapper.createUserRole(username, getRoleId().get(permissions));
+
                         Map<String, Object> permissionsSelect = getPermission(permission);
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
@@ -192,7 +217,8 @@ public class PermissionServiceImpl implements PermissionService {
                     } else {
                         permissionsSelect = permissionMapper.selectAll();
                         String jsonMap = objectMapper.writeValueAsString(permissionsSelect);
-                        stringRedisTemplate.opsForValue().set(permissionsAllKey, jsonMap);
+                        stringRedisTemplate.opsForValue().set(
+                                permissionsAllKey, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     }
                     if (permissionsSelect.isEmpty()) {
                         throw new ResourceNotFoundException("查詢帳號不存在");
@@ -342,11 +368,19 @@ public class PermissionServiceImpl implements PermissionService {
                         throw new ResourceNotFoundException(username + " - 刪除帳號密碼錯誤");
                     }
                     permissionMapper.delete(permission);
+
                     UserData userData = new UserData(username);
                     userMapper.delete(userData);
+                    String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
+                    stringRedisTemplate.delete(userOnly);
+                    String permissionsAllKey =
+                            RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
+                    stringRedisTemplate.delete(permissionsAllKey);
+
                     UserdataDetails userdataDetails = new UserdataDetails(username);
                     userMapper.deleteUserdataDetail(userdataDetails);
                     roleMapper.deleteUserRole(username);
+
                     logger.info("Permission 帳號已刪除");
                     String permissions = permissionsSelect.get("permissions").toString();
                     List<Object> messageList = List.of(

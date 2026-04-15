@@ -23,4 +23,9 @@ public class RedisKey {
             "userOnly", "user:map:only:{1}"
     );
 
+    // <App>:<Domain>:<Purpose>:<ID>
+    public static final Map<String, String> redisCommonAspectKey = Map.of(
+            "userRole", "commonAspect:list:role:{1}"
+    );
+
 }

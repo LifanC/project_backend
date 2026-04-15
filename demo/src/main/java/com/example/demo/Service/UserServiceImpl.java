@@ -149,7 +149,8 @@ public class UserServiceImpl implements UserService {
                     } else {
                         userSelect = getUserData(userData);
                         String jsonMap = objectMapper.writeValueAsString(userSelect);
-                        stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                        stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     }
                     if (userSelect == null) {
                         logger.error("{} : (Token 取得)帳號不存在", username);
@@ -291,7 +292,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (Token驗證)帳號不存在", username);
@@ -484,7 +486,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : 登出 Token 帳號不存在", username);
@@ -654,7 +657,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (查詢商品)查使用者帳號不存在", username);
@@ -784,7 +788,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (新增購物車) 使用者不存在", username);
@@ -960,7 +965,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (查詢購物車) 使用者不存在", username);
@@ -1108,7 +1114,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (更改購物車) 使用者不存在", username);
@@ -1278,7 +1285,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (刪除購物車) 使用者不存在", username);
@@ -1438,7 +1446,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (確認訂單) 使用者不存在", username);
@@ -1560,7 +1569,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (報價單編號) 使用者不存在", username);
@@ -1702,7 +1712,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (報價單) 使用者不存在", username);
@@ -1854,7 +1865,8 @@ public class UserServiceImpl implements UserService {
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
-                            stringRedisTemplate.opsForValue().set(userOnly, jsonMap);
+                            stringRedisTemplate.opsForValue().set(
+                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         }
                         if (userSelect == null) {
                             logger.error("{} : (接受) 使用者不存在", username);
