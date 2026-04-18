@@ -127,7 +127,7 @@
                                quotation_items.product_id = products.product_id
         where userdata_details.is_active = '1'
           and userdata_details.username = #{username}
-        order by quotations.quotation_id
+        order by quotations.quotation_id desc
     </select>
 
     <update id="updateQuotations">
@@ -155,6 +155,7 @@
     <select id="selectOrdersData" resultType="java.util.Map">
         select distinct
             orders.order_id,
+            orders.quotation_id,
             orders.status,
             quotations.username
         from
@@ -221,7 +222,11 @@
                shipments.status,
                shipments.date_part,
                shipments.tracking_number,
-               quotations.username
+               quotations.username,
+               payments.status as payments_status,
+               payments.payments_method as payments_method,
+               payments.amount as payments_amount,
+               orders.total_price as orders_total_price
         from "interviewworks_schema"."shipments" shipments
                  inner join "interviewworks_schema"."orders" orders
                             on
@@ -229,6 +234,9 @@
                  inner join "interviewworks_schema"."quotations" quotations
                             on
                                 orders.quotation_id = quotations.quotation_id
+                 inner join "interviewworks_schema"."payments" payments
+                            on
+                                orders.order_id = payments.order_id
         <where>
             <if test="order_id != null">
                 and shipments.order_id = #{order_id}
@@ -260,6 +268,18 @@
                     #{shipmentsStatus}
                 </foreach>
             </if>
+            <if test="paymentsStatuss != null and paymentsStatuss.size() > 0">
+                and payments.status in
+                <foreach collection="paymentsStatuss" item="paymentsStatus" open="(" separator="," close=")">
+                    #{paymentsStatus}
+                </foreach>
+            </if>
+            <if test="paymentsMethods != null and paymentsMethods.size() > 0">
+                and payments.payments_method in
+                <foreach collection="paymentsMethods" item="paymentsMethod" open="(" separator="," close=")">
+                    #{paymentsMethod}
+                </foreach>
+            </if>
         </where>
         order by shipments.order_id
     </select>
@@ -269,5 +289,19 @@
         set status = #{status}
         where tracking_number = #{tracking_number}
     </update>
+
+    <insert id="createPayments">
+        insert
+        into "interviewworks_schema"."payments" (
+            order_id,
+            amount,
+            status,
+            payments_method
+        )
+        values (#{order_id},
+                #{amount},
+                #{status},
+                #{payments_method})
+    </insert>
 
 </mapper>

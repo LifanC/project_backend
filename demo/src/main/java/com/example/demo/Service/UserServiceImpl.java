@@ -40,7 +40,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -207,7 +206,7 @@ public class UserServiceImpl implements UserService {
                             "帳號 - " + username,
                             "權限 - " + permissions,
                             username + " - Token 取得成功",
-                            LocalDateTime.now()
+                            ConvertFormat.time("")
                     );
                     Map<String, Map<Integer, Object>> message = Map.of(
                             "content", ConvertFormat.convert(messageList)
@@ -364,7 +363,7 @@ public class UserServiceImpl implements UserService {
                                 "帳號 - " + username,
                                 "權限 - " + permissions,
                                 username + " - Token 驗證成功",
-                                LocalDateTime.now()
+                                ConvertFormat.time("")
                         );
                         Map<String, Map<Integer, Object>> message = new TreeMap<>();
                         message.put("content", ConvertFormat.convert(messageList));
@@ -498,7 +497,7 @@ public class UserServiceImpl implements UserService {
                                 "帳號 - " + username,
                                 "權限 - " + permissions,
                                 username + " - Token 已登出",
-                                LocalDateTime.now()
+                                ConvertFormat.time("")
                         );
                         Map<String, Map<Integer, Object>> message = new TreeMap<>();
                         message.put("content", ConvertFormat.convert(messageList));
@@ -857,7 +856,7 @@ public class UserServiceImpl implements UserService {
                                     "權限 - " + userSelect.get("permissions").toString(),
                                     msg,
                                     productsList,
-                                    "新增日期" + LocalDateTime.now()
+                                    "新增日期" + ConvertFormat.time("")
                             );
                             Map<String, Map<Integer, Object>> message = Map.of(
                                     "content", ConvertFormat.convert(messageList)
@@ -1005,8 +1004,8 @@ public class UserServiceImpl implements UserService {
                             productsList.add("---------------------------------------");
                         }
                         messageList.add(productsList);
-                        messageList.add("新增訂單日期" + ((Timestamp) userdataDetailsSelect.get("created_date")).toLocalDateTime());
-                        messageList.add("更改訂單日期" + ((Timestamp) userdataDetailsSelect.get("updated_date")).toLocalDateTime());
+                        messageList.add("新增訂單日期 - " + ConvertFormat.time(userdataDetailsSelect.get("created_date").toString()));
+                        messageList.add("更改訂單日期 - " + ConvertFormat.time(userdataDetailsSelect.get("updated_date").toString()));
                         Map<String, Map<Integer, Object>> message = Map.of(
                                 "content", ConvertFormat.convert(messageList)
                         );
@@ -1169,7 +1168,7 @@ public class UserServiceImpl implements UserService {
                                     "權限 - " + userSelect.get("permissions").toString(),
                                     msg,
                                     productsList,
-                                    "更改日期" + LocalDateTime.now()
+                                    "更改日期" + ConvertFormat.time("")
                             );
                             Map<String, Map<Integer, Object>> message = Map.of(
                                     "content", ConvertFormat.convert(messageList)
@@ -1341,7 +1340,7 @@ public class UserServiceImpl implements UserService {
                                     "帳號 - " + username,
                                     "權限 - " + userSelect.get("permissions").toString(),
                                     productsList,
-                                    "刪除日期" + LocalDateTime.now()
+                                    "刪除日期" + ConvertFormat.time("")
                             );
                             Map<String, Map<Integer, Object>> message = Map.of(
                                     "content", ConvertFormat.convert(messageList)

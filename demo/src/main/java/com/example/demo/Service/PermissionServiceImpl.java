@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -131,10 +130,6 @@ public class PermissionServiceImpl implements PermissionService {
                         UserData userData = new UserData(username);
                         userMapper.create(userData);
                         logger.info("UserData 註冊權限帳號成功，username={}", username);
-                        String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
-                        String jsonMap = objectMapper.writeValueAsString(userData);
-                        stringRedisTemplate.opsForValue().set(
-                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                         String permissionsAllKey =
                                 RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
                         stringRedisTemplate.delete(permissionsAllKey);
@@ -146,7 +141,7 @@ public class PermissionServiceImpl implements PermissionService {
                                 "帳號 - " + username,
                                 "權限 - " + permissions,
                                 username + " - 註冊權限帳號成功",
-                                "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime()
+                                "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString())
                         );
                         Map<String, Map<Integer, Object>> message = Map.of(
                                 "content", ConvertFormat.convert(messageList)
@@ -303,8 +298,8 @@ public class PermissionServiceImpl implements PermissionService {
                             "帳號 - " + username,
                             "權限 - " + permissions,
                             username + " - 已更改權限",
-                            "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime(),
-                            "更改日期" + ((Timestamp) permissionsSelect.get("updated_date")).toLocalDateTime()
+                            "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString()),
+                            "更改日期 - " + ConvertFormat.time(permissionsSelect.get("updated_date").toString())
                     );
                     Map<String, Map<Integer, Object>> message = Map.of(
                             "content", ConvertFormat.convert(messageList)
@@ -371,8 +366,6 @@ public class PermissionServiceImpl implements PermissionService {
 
                     UserData userData = new UserData(username);
                     userMapper.delete(userData);
-                    String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
-                    stringRedisTemplate.delete(userOnly);
                     String permissionsAllKey =
                             RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
                     stringRedisTemplate.delete(permissionsAllKey);
@@ -387,8 +380,8 @@ public class PermissionServiceImpl implements PermissionService {
                             "帳號 - " + username,
                             "權限 - " + permissions,
                             username + " - 帳號已刪除",
-                            "新增日期" + ((Timestamp) permissionsSelect.get("created_date")).toLocalDateTime(),
-                            "更改日期" + ((Timestamp) permissionsSelect.get("updated_date")).toLocalDateTime()
+                            "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString()),
+                            "更改日期 - " + ConvertFormat.time(permissionsSelect.get("updated_date").toString())
                     );
                     Map<String, Map<Integer, Object>> message = Map.of(
                             "content", ConvertFormat.convert(messageList)

@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user_accepted').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            quotation_id: document.getElementById('user_quotationsProductId').value
+            quotation_id: document.getElementById('user_quotationsProduct').value
         };
         try {
             let token = document.getElementById('token').value
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('user_rejected').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            quotation_id: document.getElementById('user_quotationsProductId').value
+            quotation_id: document.getElementById('user_quotationsProduct').value
         };
         try {
             let token = document.getElementById('token').value

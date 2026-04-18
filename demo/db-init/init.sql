@@ -304,13 +304,13 @@ CREATE TABLE interviewworks_schema.payments (
                                                 payments_method varchar(100) NOT NULL DEFAULT NULL::character varying,
                                                 created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                 updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                CONSTRAINT payments_pk PRIMARY KEY (order_id),
                                                 CONSTRAINT payments_status_check CHECK (
                                                     status IN ('unpaid', 'partial', 'paid')
-                                                ),
-                                                CONSTRAINT payments_pk PRIMARY KEY (order_id),
+                                                    ),
                                                 CONSTRAINT payments_payments_method_check CHECK (
-                                                    status IN ('cash', 'credit_card', 'transfer')
-                                                ),
+                                                    payments_method IN ('cash', 'credit_card', 'transfer')
+                                                    ),
                                                 CONSTRAINT payments_fk FOREIGN KEY (order_id) REFERENCES interviewworks_schema.orders(order_id) ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 

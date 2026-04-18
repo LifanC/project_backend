@@ -12,10 +12,9 @@ public class UpdateCarItemRequest implements OrderRequest {
     @NotBlank(message = "商品編號不可為空")
     private String product_id;
 
-    @NotBlank(message = "商品數量不可為空")
     @Pattern(
-            regexp = "^[1-9]\\d*$",
-            message = "商品數量不可小於1且不包含英文、中文與小數"
+            regexp = "^[1-9]\\d?$",
+            message = "商品數量需為1~99之間的整數"
     )
     private String product_quantity;
 

@@ -47,4 +47,6 @@ public interface OrderbackendMapper {
     List<Map<String, Object>> selectShipmentsData(Shipments shipments);
 
     void updateShipments(Shipments shipments);
+
+    void createPayments(Payments payments);
 }

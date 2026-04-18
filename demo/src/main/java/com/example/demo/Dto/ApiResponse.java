@@ -1,8 +1,8 @@
 package com.example.demo.Dto;
 
+import com.example.demo.Common.ConvertFormat;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 public class ApiResponse {
@@ -12,7 +12,7 @@ public class ApiResponse {
                 "code", code,
                 "status", code.value(),
                 "message", messageMap,
-                "timestamp", LocalDateTime.now()
+                "timestamp", ConvertFormat.time("")
         );
     }
 

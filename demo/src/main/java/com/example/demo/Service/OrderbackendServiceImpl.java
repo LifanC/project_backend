@@ -49,6 +49,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderbackendServiceImpl implements OrderbackendService {
@@ -163,7 +164,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                     String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                     String json = stringRedisTemplate.opsForValue().get(userOnly);
                     if (json != null) {
-                        userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                        });
                     } else {
                         userSelect = getUserData(userData);
                         String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -225,7 +227,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             "帳號 - " + username,
                             "權限 - " + permissions,
                             username + " - Token 取得成功",
-                            LocalDateTime.now()
+                            ConvertFormat.time("")
                     );
                     Map<String, Map<Integer, Object>> message = Map.of(
                             "content", ConvertFormat.convert(messageList)
@@ -306,7 +308,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -382,7 +385,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 "帳號 - " + username,
                                 "權限 - " + permissions,
                                 username + " - Token 驗證成功",
-                                LocalDateTime.now()
+                                ConvertFormat.time("")
                         );
                         Map<String, Map<Integer, Object>> message = new TreeMap<>();
                         message.put("content", ConvertFormat.convert(messageList));
@@ -500,7 +503,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -516,7 +520,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 "帳號 - " + username,
                                 "權限 - " + permissions,
                                 username + " - Token 已登出",
-                                LocalDateTime.now()
+                                ConvertFormat.time("")
                         );
                         Map<String, Map<Integer, Object>> message = new TreeMap<>();
                         message.put("content", ConvertFormat.convert(messageList));
@@ -666,7 +670,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -684,8 +689,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 "權限 - " + permissions,
                                 username + " - 查詢使用者名單",
                                 isUserName,
-                                "新增日期" + ((Timestamp) userSelect.get("created_date")).toLocalDateTime(),
-                                "更改日期" + ((Timestamp) userSelect.get("updated_date")).toLocalDateTime()
+                                "新增日期 - " + ConvertFormat.time(userSelect.get("created_date").toString()),
+                                "更改日期 - " + ConvertFormat.time(userSelect.get("updated_date").toString())
                         );
                         Map<String, Map<Integer, Object>> message = Map.of(
                                 "content", ConvertFormat.convert(messageList)
@@ -741,17 +746,19 @@ public class OrderbackendServiceImpl implements OrderbackendService {
      * 售價 = 成本 ÷ (1 - 利潤率)
      * */
     // 利潤率 = (售價 - 成本) ÷ 售價
-    private Map<String, BigDecimal> calculateByMargin(BigDecimal cost, double marginPercent) {
+    private Map<String, BigDecimal> calculateByMargin(BigDecimal cost, String marginPercent) {
         Map<String, BigDecimal> map = new HashMap<>();
 
         // 1. 先算售價
-        double rate = 1 - (marginPercent / 100);
-        BigDecimal sellingPrice = cost
-                .divide(BigDecimal.valueOf(rate), 0, RoundingMode.HALF_UP);
+        BigDecimal rate = BigDecimal.ONE
+                .subtract(
+                        (new BigDecimal(marginPercent)
+                                .divide(new BigDecimal("100"), 10, RoundingMode.HALF_UP))
+                );
+        BigDecimal sellingPrice = cost.divide(rate, 0, RoundingMode.HALF_UP);
 
         // 2. 算利潤
-        BigDecimal profit = sellingPrice
-                .subtract(cost).setScale(0, RoundingMode.HALF_UP);
+        BigDecimal profit = sellingPrice.subtract(cost).setScale(0, RoundingMode.HALF_UP);
 
         // 3. 算實際利潤率（再驗證一次）
         BigDecimal margin = profit
@@ -816,7 +823,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -853,7 +861,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 messageGroup.add("訂購數量 - " + A);
                                 messageGroup.add("商品庫存量: " + B);
                                 messageGroup.add("價格 - " + price);
-                                int num = Integer.parseInt(userPercent);
+                                String num = userPercent;
                                 Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
                                 messageGroup.add("┌-----" + num + "% -----┐");
                                 messageGroup.add("|售價: " + queryQuotationsMap.get("sellingPrice").toString());
@@ -968,7 +976,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1033,7 +1042,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                     List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(userUserProductsId)));
                                     BigDecimal product_id = new BigDecimal(productsSelect.getFirst().get("product_id").toString());
                                     BigDecimal price = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                                    int num = Integer.parseInt(userPercent);
+                                    String num = userPercent;
                                     Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
                                     BigDecimal sellingPrice = new BigDecimal(queryQuotationsMap.get("sellingPrice").toString());
                                     BigDecimal total = sellingPrice.multiply(quantity);
@@ -1046,12 +1055,12 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                     logger.info("用戶商品銷售合計: {}", total);
                                     logger.info("用戶商品單品價格: {}", price);
                                     List<Object> messageGroup = new ArrayList<>();
-                                    messageGroup.add("┌-----第" + (i + 1) + "筆-----┐");
+                                    messageGroup.add("┌----------第" + (i + 1) + "筆----------┐");
                                     messageGroup.add("用戶商品數量: " + userUserQuantity);
                                     messageGroup.add("用戶商品單品價格: " + price);
                                     messageGroup.add("用戶商品銷售單品價格: " + sellingPrice);
                                     messageGroup.add("用戶商品銷售合計: " + total);
-                                    messageGroup.add("└-----第" + (i + 1) + "筆-----┘");
+                                    messageGroup.add("└----------第" + (i + 1) + "筆----------┘");
                                     productsList.add(messageGroup);
                                     QuotationItems quotationItems = new QuotationItems(decimal, product_id);
                                     quotationItems.setQuantity(quantity);
@@ -1175,7 +1184,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1316,7 +1326,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1337,14 +1348,23 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         UserData userDataDetails = new UserData(useruser);
                         List<Map<String, Object>> quotationsData =
                                 orderbackendMapper.quotationsItemsProductsData(userDataDetails);
-                        Map<String, List<Map<String, Object>>> groupListAll = new HashMap<>();
+                        Map<String, List<Map<String, Object>>> groupListAll = new TreeMap<>();
                         for (Map<String, Object> quotationData : quotationsData) {
                             String quotationId = quotationData.get("quotation_id").toString();
                             groupListAll
                                     .computeIfAbsent(quotationId, k -> new ArrayList<>())
                                     .add(quotationData);
                         }
-                        for (Map.Entry<String, List<Map<String, Object>>> entry : groupListAll.entrySet()) {
+                        Map<String, List<Map<String, Object>>> sorte = groupListAll.entrySet()
+                                .stream()
+                                .sorted(Map.Entry.<String, List<Map<String, Object>>>comparingByKey().reversed())
+                                .collect(Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e1,
+                                        LinkedHashMap::new
+                                ));
+                        for (Map.Entry<String, List<Map<String, Object>>> entry : sorte.entrySet()) {
                             String key = entry.getKey();
                             List<Map<String, Object>> list = entry.getValue();
                             List<Object> messageGroup = new ArrayList<>();
@@ -1357,7 +1377,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 BigDecimal sumPriceQuery = new BigDecimal(quotationData.get("sum_price").toString());
                                 String productsNameQuery = quotationData.get("products_name").toString();
                                 String descriptionQuery = quotationData.get("description").toString();
-                                messageGroup.add("┌-----第" + (i + 1) + "筆-----┐");
+                                messageGroup.add("|-----第" + (i + 1) + "筆-----|");
                                 messageGroup.add("|報價單:商品");
                                 messageGroup.add("|用戶名稱: " + useruser);
                                 // estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
@@ -1478,7 +1498,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1614,7 +1635,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1646,11 +1668,13 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             for (int i = 0; i < ordersData.size(); i++) {
                                 String order_id = ordersData.get(i).get("order_id").toString();
+                                String quotation_id = ordersData.get(i).get("quotation_id").toString();
                                 String status = ordersData.get(i).get("status").toString();
                                 String quotationsUsername = ordersData.get(i).get("username").toString();
                                 List<Object> messageGroup = new ArrayList<>();
                                 messageGroup.add("第" + (i + 1) + "筆");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + quotationsUsername);
+                                messageGroup.add("訂單編號:" + order_id + ":用戶:" + quotationsUsername);
+                                messageGroup.add("報價單編號:" + quotation_id);
                                 messageGroup.add("狀態:" + StatusKey.ordersStatusKey.get(status));
                                 productsList.add(messageGroup);
                             }
@@ -1765,7 +1789,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1804,11 +1829,13 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         } else {
                             for (int i = 0; i < ordersData.size(); i++) {
                                 String order_id = ordersData.get(i).get("order_id").toString();
+                                String quotation_id = ordersData.get(i).get("quotation_id").toString();
                                 String status = ordersData.get(i).get("status").toString();
                                 String quotationsUsername = ordersData.get(i).get("username").toString();
                                 List<Object> messageGroup = new ArrayList<>();
                                 messageGroup.add("第" + (i + 1) + "筆");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + quotationsUsername);
+                                messageGroup.add("訂單編號:" + order_id + ":用戶:" + quotationsUsername);
+                                messageGroup.add("報價單編號:" + quotation_id);
                                 messageGroup.add("狀態:" + StatusKey.ordersStatusKey.get(status));
                                 productsList.add(messageGroup);
                             }
@@ -1921,7 +1948,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1960,6 +1988,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             }
                             orders.setStatus(confirmed);
                             orderbackendMapper.updateOrders(orders);
+
                             // *出貨（shipments）
                             /*
                              * TW = 地區
@@ -1982,12 +2011,15 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             shipments.setTracking_number(trackingNumber);
                             orderbackendMapper.createShipments(shipments);
                             productsList.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
+
                             // *付款（payments）
-
-
-
-
-
+                            Payments payments = new Payments(new BigDecimal(ordersId));
+                            String unpaid = Backend.STATUS_PAYMENTS_UNPAID.getBackend();
+                            String cash = Backend.METHOD_PAYMENTS_CASH.getBackend();
+                            payments.setAmount(BigDecimal.ZERO);
+                            payments.setStatus(unpaid);
+                            payments.setPayments_method(cash);
+                            orderbackendMapper.createPayments(payments);
                         }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
@@ -2097,7 +2129,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -2308,17 +2341,41 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                         Backend.STATUS_SHIPMENTS_DELIVERED.getBackend()
                                 )
                         );
+                        shipments.setPaymentsStatuss(
+                                List.of(
+                                        Backend.STATUS_PAYMENTS_UNPAID.getBackend(),
+                                        Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
+                                        Backend.STATUS_PAYMENTS_PAID.getBackend()
+                                )
+                        );
+                        shipments.setPaymentsMethods(
+                                List.of(
+                                        Backend.METHOD_PAYMENTS_CASH.getBackend(),
+                                        Backend.METHOD_PAYMENTS_CREDIT_CARD.getBackend(),
+                                        Backend.METHOD_PAYMENTS_TRANSFER.getBackend()
+                                )
+                        );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         for (int i = 0; i < shipmentsData.size(); i++) {
                             String order_id = shipmentsData.get(i).get("order_id").toString();
                             String shipmentsUsername = shipmentsData.get(i).get("username").toString();
                             String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
                             String status = shipmentsData.get(i).get("status").toString();
+                            String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
+                            String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
+                            String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
+                            String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
                             List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("第" + (i + 1) + "筆");
+                            messageGroup.add("----------第" + (i + 1) + "筆----------");
                             messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
                             messageGroup.add("追蹤號碼:" + tracking_number);
                             messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            messageGroup.add("已付金額:" + paymentsAmount);
+                            messageGroup.add("需付款金額:" + ordersTotalPrice);
+                            messageGroup.add("應付款金額:" +
+                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
                             productsList.add(messageGroup);
                         }
                         List<Object> messageList = List.of(
@@ -2423,7 +2480,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -2452,23 +2510,56 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                         Backend.STATUS_SHIPMENTS_PENDING.getBackend()
                                 )
                         );
+                        shipments.setPaymentsStatuss(
+                                List.of(
+                                        Backend.STATUS_PAYMENTS_UNPAID.getBackend(),
+                                        Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
+                                        Backend.STATUS_PAYMENTS_PAID.getBackend()
+                                )
+                        );
+                        shipments.setPaymentsMethods(
+                                List.of(
+                                        Backend.METHOD_PAYMENTS_CASH.getBackend(),
+                                        Backend.METHOD_PAYMENTS_CREDIT_CARD.getBackend(),
+                                        Backend.METHOD_PAYMENTS_TRANSFER.getBackend()
+                                )
+                        );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         if (shipmentsData.isEmpty()) {
                             List<Object> messageGroup = List.of("空");
                             productsList = List.of(messageGroup);
                         } else {
-                            String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
-                            shipments.setStatus(shipped);
-                            orderbackendMapper.updateShipments(shipments);
                             for (int i = 0; i < shipmentsData.size(); i++) {
                                 String order_id = shipmentsData.get(i).get("order_id").toString();
                                 String shipmentsUsername = shipmentsData.get(i).get("username").toString();
                                 String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                                String status = shipmentsData.get(i).get("status").toString();
+                                String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
+                                String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
+                                String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
+                                String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
+                                String unpaid = Backend.STATUS_PAYMENTS_UNPAID.getBackend();
+                                String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
+                                String paid = Backend.STATUS_PAYMENTS_PAID.getBackend();
+                                String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
                                 List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
+                                messageGroup.add("----------第" + (i + 1) + "筆----------");
                                 messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
                                 messageGroup.add("追蹤號碼:" + tracking_number);
-                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(shipped));
+                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                                if (unpaid.equals(paymentsStatus)) {
+                                    messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                                    messageGroup.add("已付金額:" + paymentsAmount);
+                                    messageGroup.add("需付款金額:" + ordersTotalPrice);
+                                    messageGroup.add("應付款金額:" +
+                                            new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
+                                    messageGroup.add("未繳清金額不出貨");
+                                } else if (partial.equals(paymentsStatus) || paid.equals(paymentsStatus)) {
+                                    shipments.setOrder_id(new BigDecimal(order_id));
+                                    shipments.setStatus(shipped);
+                                    orderbackendMapper.updateShipments(shipments);
+                                }
                                 productsList.add(messageGroup);
                             }
                         }
@@ -2574,7 +2665,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
+                            });
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -2600,7 +2692,20 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         shipments.setShipmentsStatuss(
                                 List.of(
-                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend()
+                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend()
+                                )
+                        );
+                        shipments.setPaymentsStatuss(
+                                List.of(
+                                        Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
+                                        Backend.STATUS_PAYMENTS_PAID.getBackend()
+                                )
+                        );
+                        shipments.setPaymentsMethods(
+                                List.of(
+                                        Backend.METHOD_PAYMENTS_CASH.getBackend(),
+                                        Backend.METHOD_PAYMENTS_CREDIT_CARD.getBackend(),
+                                        Backend.METHOD_PAYMENTS_TRANSFER.getBackend()
                                 )
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
@@ -2608,18 +2713,32 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             List<Object> messageGroup = List.of("空");
                             productsList = List.of(messageGroup);
                         } else {
-                            String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
-                            shipments.setStatus(delivered);
-                            orderbackendMapper.updateShipments(shipments);
                             for (int i = 0; i < shipmentsData.size(); i++) {
                                 String order_id = shipmentsData.get(i).get("order_id").toString();
                                 String shipmentsUsername = shipmentsData.get(i).get("username").toString();
                                 String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                                String status = shipmentsData.get(i).get("status").toString();
+                                String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
+                                String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
+                                String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
+                                String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
+                                String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
+                                String paid = Backend.STATUS_PAYMENTS_PAID.getBackend();
+                                String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
                                 List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
+                                messageGroup.add("----------第" + (i + 1) + "筆----------");
                                 messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
                                 messageGroup.add("追蹤號碼:" + tracking_number);
-                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(delivered));
+                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                                messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                                messageGroup.add("已付金額:" + paymentsAmount);
+                                messageGroup.add("需付款金額:" + ordersTotalPrice);
+                                if (partial.equals(paymentsStatus) || paid.equals(paymentsStatus)) {
+                                    shipments.setOrder_id(new BigDecimal(order_id));
+                                    shipments.setStatus(delivered);
+                                    orderbackendMapper.updateShipments(shipments);
+                                }
                                 productsList.add(messageGroup);
                             }
                         }
@@ -2740,9 +2859,19 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         shipments.setShipmentsStatuss(
                                 List.of(
-                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend(),
-                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend(),
-                                        Backend.STATUS_SHIPMENTS_DELIVERED.getBackend()
+                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend()
+                                )
+                        );
+                        shipments.setPaymentsStatuss(
+                                List.of(
+                                        Backend.STATUS_PAYMENTS_UNPAID.getBackend()
+                                )
+                        );
+                        shipments.setPaymentsMethods(
+                                List.of(
+                                        Backend.METHOD_PAYMENTS_CASH.getBackend(),
+                                        Backend.METHOD_PAYMENTS_CREDIT_CARD.getBackend(),
+                                        Backend.METHOD_PAYMENTS_TRANSFER.getBackend()
                                 )
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
@@ -2750,19 +2879,30 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             List<Object> messageGroup = List.of("空");
                             productsList = List.of(messageGroup);
                         } else {
-                            String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
-                            shipments.setStatus(preparing);
-                            orderbackendMapper.updateShipments(shipments);
                             for (int i = 0; i < shipmentsData.size(); i++) {
                                 String order_id = shipmentsData.get(i).get("order_id").toString();
                                 String shipmentsUsername = shipmentsData.get(i).get("username").toString();
                                 String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
+                                String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
+                                String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
+                                String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
+                                String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
+                                String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
                                 List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
+                                messageGroup.add("----------第" + (i + 1) + "筆----------");
                                 messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
                                 messageGroup.add("追蹤號碼:" + tracking_number);
                                 messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
+                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                                messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                                messageGroup.add("已付金額:" + paymentsAmount);
+                                messageGroup.add("需付款金額:" + ordersTotalPrice);
+                                messageGroup.add("應付款金額:" +
+                                        new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
                                 productsList.add(messageGroup);
+                                shipments.setOrder_id(new BigDecimal(order_id));
+                                shipments.setStatus(preparing);
+                                orderbackendMapper.updateShipments(shipments);
                             }
                         }
                         List<Object> messageList = List.of(

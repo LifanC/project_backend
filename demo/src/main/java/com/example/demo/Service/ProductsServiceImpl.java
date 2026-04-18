@@ -87,8 +87,8 @@ public class ProductsServiceImpl implements ProductsService {
                         messageList.add("價格 - " + price);
                         messageList.add("庫存量 - " + stock);
                         messageList.add("描述 - " + description);
-                        messageList.add("新增日期" + ((Timestamp) productsSelect.getFirst().get("created_date")).toLocalDateTime());
-                        messageList.add("更改日期" + ((Timestamp) productsSelect.getFirst().get("updated_date")).toLocalDateTime());
+                        messageList.add("新增日期 - " + ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
+                        messageList.add("更改日期 - " + ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
                         messageList.add("---------------------------------------");
                         Map<String, Map<Integer, Object>> message = Map.of(
                                 "content", ConvertFormat.convert(messageList)
@@ -177,8 +177,8 @@ public class ProductsServiceImpl implements ProductsService {
                         messageGroup.add("價格 - " + price);
                         messageGroup.add("庫存量 - " + stock);
                         messageGroup.add("描述 - " + description);
-                        messageGroup.add("新增日期" + ((Timestamp) map.get("created_date")).toLocalDateTime());
-                        messageGroup.add("更改日期" + ((Timestamp) map.get("updated_date")).toLocalDateTime());
+                        messageGroup.add("新增日期 - " + ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
+                        messageGroup.add("更改日期 - " + ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
                         messageGroup.add("---------------------------------------");
                         messageList.add(messageGroup);
                     }
@@ -258,7 +258,7 @@ public class ProductsServiceImpl implements ProductsService {
                             "價格 - " + productsSelect.getFirst().get("price"),
                             "庫存量 - " + productsSelect.getFirst().get("stock"),
                             "描述 - " + productsSelect.getFirst().get("description"),
-                            "更改日期" + ((Timestamp) productsSelect.getFirst().get("updated_date")).toLocalDateTime(),
+                            "更改日期 - " + ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()),
                             "---------------------------------------");
                     Map<String, Map<Integer, Object>> message = Map.of(
                             "content", ConvertFormat.convert(messageList)

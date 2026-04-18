@@ -25,6 +25,10 @@ public class Shipments {
 
     private List<String> shipmentsStatuss;
 
+    private List<String> paymentsStatuss;
+
+    private List<String> paymentsMethods;
+
     public Shipments() {
     }
 
@@ -110,5 +114,21 @@ public class Shipments {
 
     public void setShipmentsStatuss(List<String> shipmentsStatuss) {
         this.shipmentsStatuss = shipmentsStatuss;
+    }
+
+    public List<String> getPaymentsStatuss() {
+        return paymentsStatuss;
+    }
+
+    public void setPaymentsStatuss(List<String> paymentsStatuss) {
+        this.paymentsStatuss = paymentsStatuss;
+    }
+
+    public List<String> getPaymentsMethods() {
+        return paymentsMethods;
+    }
+
+    public void setPaymentsMethods(List<String> paymentsMethods) {
+        this.paymentsMethods = paymentsMethods;
     }
 }

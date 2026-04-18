@@ -13,10 +13,9 @@ public class QuotationsProductItemRequest implements OrderRequest {
     @NotBlank(message = "用戶帳號不可為空")
     private String useruser;
 
-    @NotBlank(message = "銷售%數不可為空")
     @Pattern(
-            regexp = "^\\d+$",
-            message = "銷售%數不可包含英文、中文與小數"
+            regexp = "^[1-9]\\d?$",
+            message = "銷售%數需為1~99之間的整數"
     )
     private String userPercent;
 
