@@ -150,4 +150,34 @@ public class UsersController {
         return userService.userRejected(request);
     }
 
+    @PostMapping("/userShipments")
+    public ResponseEntity<?> userShipments(
+            @Valid
+            @RequestBody
+            ShipmentsRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.userShipments(request);
+    }
+
+    @PostMapping("/userPayments")
+    public ResponseEntity<?> userPayments(
+            @Valid
+            @RequestBody
+            PaymentsRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.userPayments(request);
+    }
+
+    @PostMapping("/userPayMoney")
+    public ResponseEntity<?> userPayMoney(
+            @Valid
+            @RequestBody
+            PayMoneyRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        request.setAuthHeader(authHeader);
+        return userService.userPayMoney(request);
+    }
+
 }

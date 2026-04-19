@@ -1738,9 +1738,9 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
-        final String ordersId = request.getOrdersId().trim();
-        if (StringUtils.hasText(ordersId)) {
-            boolean isNumber = ordersId.matches("^\\d+$");
+        final String orderId = request.getOrderId().trim();
+        if (StringUtils.hasText(orderId)) {
+            boolean isNumber = orderId.matches("^\\d+$");
             if (!isNumber) {
                 logger.error("{} - (訂單)訂單編號只能包含數字", username);
                 throw new BadRequestException(username + " - (訂單)訂單編號只能包含數字");
@@ -1808,7 +1808,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-                        Orders orders = new Orders(StringUtils.hasText(ordersId) ? new BigDecimal(ordersId) : null);
+                        Orders orders = new Orders(StringUtils.hasText(orderId) ? new BigDecimal(orderId) : null);
                         orders.setUsername(useruser);
                         orders.setQuotationsStatuss(
                                 List.of(
@@ -1899,8 +1899,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
-        final String ordersId = request.getOrdersId().trim();
-        boolean isNumber = ordersId.matches("^\\d+$");
+        final String orderId = request.getOrderId().trim();
+        boolean isNumber = orderId.matches("^\\d+$");
         if (!isNumber) {
             logger.error("{} - (確認訂單)訂單編號只能包含數字", username);
             throw new BadRequestException(username + " - (確認訂單)訂單編號只能包含數字");
@@ -1967,7 +1967,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-                        Orders orders = new Orders(new BigDecimal(ordersId));
+                        Orders orders = new Orders(new BigDecimal(orderId));
                         orders.setUsername(useruser);
                         orders.setQuotationsStatuss(List.of(Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()));
                         orders.setStatuss(List.of(Backend.STATUS_ORDERS_PENDING.getBackend()));
@@ -2000,7 +2000,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             LocalDate today = LocalDate.now();
                             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
                             String datePart = today.format(formatter);
-                            Shipments shipments = new Shipments(new BigDecimal(ordersId));
+                            Shipments shipments = new Shipments(new BigDecimal(orderId));
                             String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
                             shipments.setStatus(preparing);
                             shipments.setPrefix(prefix);
@@ -2013,7 +2013,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             productsList.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
 
                             // *付款（payments）
-                            Payments payments = new Payments(new BigDecimal(ordersId));
+                            Payments payments = new Payments(new BigDecimal(orderId));
                             String unpaid = Backend.STATUS_PAYMENTS_UNPAID.getBackend();
                             String cash = Backend.METHOD_PAYMENTS_CASH.getBackend();
                             payments.setAmount(BigDecimal.ZERO);
@@ -2080,8 +2080,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
-        final String ordersId = request.getOrdersId().trim();
-        boolean isNumber = ordersId.matches("^\\d+$");
+        final String orderId = request.getOrderId().trim();
+        boolean isNumber = orderId.matches("^\\d+$");
         if (!isNumber) {
             logger.error("{} - (取消訂單)訂單編號只能包含數字", username);
             throw new BadRequestException(username + " - (取消訂單)訂單編號只能包含數字");
@@ -2148,7 +2148,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
                         List<Object> productsList = new ArrayList<>();
-                        Orders orders = new Orders(new BigDecimal(ordersId));
+                        Orders orders = new Orders(new BigDecimal(orderId));
                         orders.setUsername(useruser);
                         orders.setQuotationsStatuss(List.of(Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()));
                         orders.setStatuss(List.of(Backend.STATUS_ORDERS_PENDING.getBackend()));
@@ -2229,7 +2229,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
-        final String ordersId = request.getOrdersId();
+        final String orderId = request.getOrderId();
         final String trackingNumber = request.getTrackingNumber().trim().toUpperCase();
         final String datePart = request.getDatePart().trim();
         try {
@@ -2285,21 +2285,21 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             }
                         }
                         BigDecimal ordersIdBigDecimal = null;
-                        if (StringUtils.hasText(ordersId)) {
-                            logger.info("(查詢用戶出貨名單)出貨單編號 - {}", ordersId);
-                            boolean isNumber = ordersId.matches("^\\d+$");
+                        if (StringUtils.hasText(orderId)) {
+                            logger.info("(查詢用戶出貨名單)出貨單編號 - {}", orderId);
+                            boolean isNumber = orderId.matches("^\\d+$");
                             if (!isNumber) {
-                                logger.error("{} - (查詢用戶出貨名單)出貨編號只能包含數字", username);
-                                throw new BadRequestException(username + " - (查詢用戶出貨名單)出貨編號只能包含數字");
+                                logger.error("{} - (查詢用戶出貨名單)出貨編號只能包含數字", orderId);
+                                throw new BadRequestException(orderId + " - (查詢用戶出貨名單)出貨編號只能包含數字");
                             }
-                            ordersIdBigDecimal = new BigDecimal(ordersId);
+                            ordersIdBigDecimal = new BigDecimal(orderId);
                         }
                         if (StringUtils.hasText(trackingNumber)) {
                             logger.info("(查詢用戶出貨名單)追蹤號碼(13碼) - {}", trackingNumber);
-                            boolean isOk = trackingNumber.matches("^[A-Za-z]{2}[A-Za-z0-9]{0,11}$");
+                            boolean isOk = trackingNumber.matches("^[A-Za-z]{2}[0-9]{0,11}$");
                             if (!isOk) {
-                                logger.error("{} - (查詢用戶出貨名單)追蹤號碼格式錯誤(13碼)", trackingNumber);
-                                throw new BadRequestException("(查詢用戶出貨名單)追蹤號碼格式錯誤(13碼) - " + trackingNumber);
+                                logger.error("{} - (查詢用戶出貨名單)追蹤號碼格式需為2碼英文+11碼數字（共13碼）", trackingNumber);
+                                throw new BadRequestException("(查詢用戶出貨名單)追蹤號碼格式需為2碼英文+11碼數字（共13碼） - " + trackingNumber);
                             }
                         }
                         if (StringUtils.hasText(datePart)) {
@@ -2512,7 +2512,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         shipments.setPaymentsStatuss(
                                 List.of(
-                                        Backend.STATUS_PAYMENTS_UNPAID.getBackend(),
                                         Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
                                         Backend.STATUS_PAYMENTS_PAID.getBackend()
                                 )
@@ -2529,39 +2528,31 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             List<Object> messageGroup = List.of("空");
                             productsList = List.of(messageGroup);
                         } else {
-                            for (int i = 0; i < shipmentsData.size(); i++) {
-                                String order_id = shipmentsData.get(i).get("order_id").toString();
-                                String shipmentsUsername = shipmentsData.get(i).get("username").toString();
-                                String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
-                                String status = shipmentsData.get(i).get("status").toString();
-                                String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
-                                String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
-                                String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
-                                String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
-                                String unpaid = Backend.STATUS_PAYMENTS_UNPAID.getBackend();
-                                String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
-                                String paid = Backend.STATUS_PAYMENTS_PAID.getBackend();
-                                String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("----------第" + (i + 1) + "筆----------");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                                messageGroup.add("追蹤號碼:" + tracking_number);
-                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
-                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                                if (unpaid.equals(paymentsStatus)) {
-                                    messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                                    messageGroup.add("已付金額:" + paymentsAmount);
-                                    messageGroup.add("需付款金額:" + ordersTotalPrice);
-                                    messageGroup.add("應付款金額:" +
-                                            new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
-                                    messageGroup.add("未繳清金額不出貨");
-                                } else if (partial.equals(paymentsStatus) || paid.equals(paymentsStatus)) {
-                                    shipments.setOrder_id(new BigDecimal(order_id));
-                                    shipments.setStatus(shipped);
-                                    orderbackendMapper.updateShipments(shipments);
-                                }
-                                productsList.add(messageGroup);
-                            }
+                            String order_id = shipmentsData.getFirst().get("order_id").toString();
+                            String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
+                            String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
+                            String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
+                            String paymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
+                            String paymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
+                            String ordersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
+                            String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
+                            shipments.setStatus(shipped);
+                            orderbackendMapper.updateShipments(shipments);
+                            List<Object> messageGroup = new ArrayList<>();
+                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                            messageGroup.add("追蹤號碼:" + tracking_number);
+                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(shipped));
+                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            messageGroup.add("已付金額:" + paymentsAmount);
+                            messageGroup.add("需付款金額:" + ordersTotalPrice);
+                            messageGroup.add("應付款金額:" +
+                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
+                            String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
+                            messageGroup.add(partial.equals(paymentsStatus)
+                                    ? "----------未繳清金額----------"
+                                    : "----------已繳清金額----------");
+                            productsList.add(messageGroup);
                         }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
@@ -2697,7 +2688,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         shipments.setPaymentsStatuss(
                                 List.of(
-                                        Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
                                         Backend.STATUS_PAYMENTS_PAID.getBackend()
                                 )
                         );
@@ -2713,34 +2703,27 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             List<Object> messageGroup = List.of("空");
                             productsList = List.of(messageGroup);
                         } else {
-                            for (int i = 0; i < shipmentsData.size(); i++) {
-                                String order_id = shipmentsData.get(i).get("order_id").toString();
-                                String shipmentsUsername = shipmentsData.get(i).get("username").toString();
-                                String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
-                                String status = shipmentsData.get(i).get("status").toString();
-                                String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
-                                String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
-                                String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
-                                String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
-                                String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
-                                String paid = Backend.STATUS_PAYMENTS_PAID.getBackend();
-                                String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("----------第" + (i + 1) + "筆----------");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                                messageGroup.add("追蹤號碼:" + tracking_number);
-                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
-                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                                messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                                messageGroup.add("已付金額:" + paymentsAmount);
-                                messageGroup.add("需付款金額:" + ordersTotalPrice);
-                                if (partial.equals(paymentsStatus) || paid.equals(paymentsStatus)) {
-                                    shipments.setOrder_id(new BigDecimal(order_id));
-                                    shipments.setStatus(delivered);
-                                    orderbackendMapper.updateShipments(shipments);
-                                }
-                                productsList.add(messageGroup);
-                            }
+                            String order_id = shipmentsData.getFirst().get("order_id").toString();
+                            String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
+                            String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
+                            String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
+                            String paymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
+                            String paymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
+                            String ordersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
+                            String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
+                            shipments.setStatus(delivered);
+                            orderbackendMapper.updateShipments(shipments);
+                            List<Object> messageGroup = new ArrayList<>();
+                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                            messageGroup.add("追蹤號碼:" + tracking_number);
+                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(delivered));
+                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            messageGroup.add("已付金額:" + paymentsAmount);
+                            messageGroup.add("需付款金額:" + ordersTotalPrice);
+                            messageGroup.add("應付款金額:" +
+                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
+                            productsList.add(messageGroup);
                         }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,
@@ -2864,7 +2847,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         shipments.setPaymentsStatuss(
                                 List.of(
-                                        Backend.STATUS_PAYMENTS_UNPAID.getBackend()
+                                        Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
+                                        Backend.STATUS_PAYMENTS_PAID.getBackend()
                                 )
                         );
                         shipments.setPaymentsMethods(
@@ -2879,31 +2863,27 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             List<Object> messageGroup = List.of("空");
                             productsList = List.of(messageGroup);
                         } else {
-                            for (int i = 0; i < shipmentsData.size(); i++) {
-                                String order_id = shipmentsData.get(i).get("order_id").toString();
-                                String shipmentsUsername = shipmentsData.get(i).get("username").toString();
-                                String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
-                                String paymentsStatus = shipmentsData.get(i).get("payments_status").toString();
-                                String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
-                                String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
-                                String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
-                                String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("----------第" + (i + 1) + "筆----------");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                                messageGroup.add("追蹤號碼:" + tracking_number);
-                                messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
-                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                                messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                                messageGroup.add("已付金額:" + paymentsAmount);
-                                messageGroup.add("需付款金額:" + ordersTotalPrice);
-                                messageGroup.add("應付款金額:" +
-                                        new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
-                                productsList.add(messageGroup);
-                                shipments.setOrder_id(new BigDecimal(order_id));
-                                shipments.setStatus(preparing);
-                                orderbackendMapper.updateShipments(shipments);
-                            }
+                            String order_id = shipmentsData.getFirst().get("order_id").toString();
+                            String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
+                            String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
+                            String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
+                            String paymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
+                            String paymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
+                            String ordersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
+                            String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
+                            shipments.setStatus(preparing);
+                            orderbackendMapper.updateShipments(shipments);
+                            List<Object> messageGroup = new ArrayList<>();
+                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                            messageGroup.add("追蹤號碼:" + tracking_number);
+                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
+                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            messageGroup.add("已付金額:" + paymentsAmount);
+                            messageGroup.add("需付款金額:" + ordersTotalPrice);
+                            messageGroup.add("應付款金額:" +
+                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
+                            productsList.add(messageGroup);
                         }
                         List<Object> messageList = List.of(
                                 "帳號 - " + username,

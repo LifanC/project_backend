@@ -33,4 +33,10 @@ public interface UserService {
     ResponseEntity<?> userAccepted(@Valid QuotationsProductRequest request);
 
     ResponseEntity<?> userRejected(@Valid QuotationsProductRequest request);
+
+    ResponseEntity<?> userShipments(@Valid ShipmentsRequest request);
+
+    ResponseEntity<?> userPayments(@Valid PaymentsRequest request);
+
+    ResponseEntity<?> userPayMoney(@Valid PayMoneyRequest request);
 }

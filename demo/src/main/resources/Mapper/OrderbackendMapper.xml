@@ -304,4 +304,20 @@
                 #{payments_method})
     </insert>
 
+    <update id="updatePayments">
+        update "interviewworks_schema"."payments"
+        <set>
+            <if test="amount != null">
+                amount = #{amount},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="payments_method != null and payments_method != ''">
+                payments_method = #{payments_method},
+            </if>
+        </set>
+        where order_id = #{order_id}
+    </update>
+
 </mapper>

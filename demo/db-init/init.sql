@@ -127,7 +127,8 @@ VALUES ('user:item:query', 'ADMIN'),
        ('user:item:token', 'GUEST'),
        ('orderbackend:item:token', 'ADMIN'),
        ('user:item:confirm', 'GUEST'),
-       ('user:item:quotations', 'GUEST');
+       ('user:item:quotations', 'GUEST'),
+       ('user:item:shipments', 'GUEST');
 
 -- interviewworks.user_role definition
 
@@ -165,7 +166,8 @@ VALUES (1, 2),
        (1, 7),
        (3, 8),
        (1, 9),
-       (1, 10);
+       (1, 10),
+       (1, 11);
 
 -- interviewworks_schema.products definition
 

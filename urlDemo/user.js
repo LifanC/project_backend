@@ -160,6 +160,26 @@ function show_quotations(log = {}) {
     document.getElementById("products_result").innerHTML = "";
 }
 
+function show_Shipments(log = {}) {
+    const {
+        code = undefined,
+        status = undefined,
+        message = undefined,
+        error = undefined,
+        path = undefined,
+        timestamp = undefined,
+    } = log;
+    const messageLog = {
+        code,
+        status,
+        message,
+        error,
+        path,
+        timestamp,
+    }
+    document.getElementById('shipments_result').innerHTML = JSON.stringify(messageLog, null, 2);
+}
+
 // POST JSON helper
 async function postJSON(url, data, token) {
     const authHeader = `Bearer ${token}`;
@@ -445,6 +465,58 @@ document.addEventListener('DOMContentLoaded', () => {
             show_quotations(res);
         } catch (err) {
             show_quotations(err);
+        }
+    });
+
+    // 查詢出貨資訊
+    document.getElementById('user_shipments').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            orderId: document.getElementById('user_shipmentsId').value,
+            trackingNumber: document.getElementById('user_shipmentsTrackingNumber').value,
+            datePart: document.getElementById('user_shipmentsDatePart').value,
+            shipmentsStatus: document.getElementById('user_shipmentsStatus').value,
+            paymentsStatus: document.getElementById('user_paymentsStatus').value,
+            paymentsMethod: document.getElementById('user_paymentsMethod').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userShipments', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
+        }
+    });
+
+    // 查詢付款資訊
+    document.getElementById('user_payments').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('user_paymentsTrackingNumber').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userPayments', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
+        }
+    });
+
+    // 付款
+    document.getElementById('user_payMoney').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('user_paymentsTrackingNumber').value,
+            amount: document.getElementById('user_paymentsAmount').value,
+            paymentsMethod: document.getElementById('user_paymentsPaymentsMethod').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userPayMoney', data, token);
+            show_Shipments(res);
+        } catch (err) {
+            show_Shipments(err);
         }
     });
 

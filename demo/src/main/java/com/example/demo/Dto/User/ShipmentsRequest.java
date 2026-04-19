@@ -1,20 +1,22 @@
-package com.example.demo.Dto.Orderbackend;
+package com.example.demo.Dto.User;
 
-import com.example.demo.Dto.User.OrderRequest;
-
-public class ShipmentsItemRequest implements OrderRequest {
+public class ShipmentsRequest implements OrderRequest {
 
     private String username;
 
     private String token;
-
-    private String useruser;
 
     private String orderId;
 
     private String trackingNumber;
 
     private String datePart;
+
+    private String shipmentsStatus;
+
+    private String paymentsStatus;
+
+    private String paymentsMethod;
 
     @Override
     public String getUsername() {
@@ -33,10 +35,6 @@ public class ShipmentsItemRequest implements OrderRequest {
         this.token = token;
     }
 
-    public String getUseruser() {
-        return useruser;
-    }
-
     public String getOrderId() {
         return orderId;
     }
@@ -47,5 +45,17 @@ public class ShipmentsItemRequest implements OrderRequest {
 
     public String getDatePart() {
         return datePart;
+    }
+
+    public String getShipmentsStatus() {
+        return shipmentsStatus;
+    }
+
+    public String getPaymentsStatus() {
+        return paymentsStatus;
+    }
+
+    public String getPaymentsMethod() {
+        return paymentsMethod;
     }
 }

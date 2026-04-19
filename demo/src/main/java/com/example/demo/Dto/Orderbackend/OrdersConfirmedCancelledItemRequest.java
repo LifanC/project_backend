@@ -18,7 +18,7 @@ public class OrdersConfirmedCancelledItemRequest implements OrderRequest {
     private String useruser;
 
     @NotBlank(message = "訂單編號不可為空")
-    private String ordersId;
+    private String orderId;
 
     public String getToken() {
         return token;
@@ -36,7 +36,7 @@ public class OrdersConfirmedCancelledItemRequest implements OrderRequest {
         return useruser;
     }
 
-    public String getOrdersId() {
-        return ordersId;
+    public String getOrderId() {
+        return orderId;
     }
 }

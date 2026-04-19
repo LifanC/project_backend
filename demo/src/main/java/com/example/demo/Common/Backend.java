@@ -34,4 +34,13 @@ public enum Backend {
     public String getBackend() {
         return backend;
     }
+
+    public static Backend fromBackend(String value) {
+        for (Backend b : Backend.values()) {
+            if (b.backend.equals(value)) {
+                return b;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for value: " + value);
+    }
 }

@@ -49,4 +49,6 @@ public interface OrderbackendMapper {
     void updateShipments(Shipments shipments);
 
     void createPayments(Payments payments);
+
+    void updatePayments(Payments payments);
 }

@@ -1,23 +1,17 @@
-package com.example.demo.Dto.Orderbackend;
+package com.example.demo.Dto.User;
 
-import com.example.demo.Dto.User.OrderRequest;
-import jakarta.validation.constraints.NotBlank;
-
-public class OrdersProductItemRequest implements OrderRequest {
+public class PaymentsRequest implements OrderRequest {
 
     private String username;
 
     private String token;
 
+    private String trackingNumber;
+
     @Override
     public String getUsername() {
         return username;
     }
-
-    @NotBlank(message = "用戶帳號不可為空")
-    private String useruser;
-
-    private String orderId;
 
     public String getToken() {
         return token;
@@ -31,11 +25,8 @@ public class OrdersProductItemRequest implements OrderRequest {
         this.token = token;
     }
 
-    public String getUseruser() {
-        return useruser;
+    public String getTrackingNumber() {
+        return trackingNumber;
     }
 
-    public String getOrderId() {
-        return orderId;
-    }
 }

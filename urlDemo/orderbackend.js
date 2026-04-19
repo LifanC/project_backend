@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             username: document.getElementById('loginUser').value,
             useruser: document.getElementById('userUserOrders').value,
-            ordersId: document.getElementById('userOrdersId').value
+            orderId: document.getElementById('userOrderId').value
         };
         try {
             let token = document.getElementById('token').value
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             username: document.getElementById('loginUser').value,
             useruser: document.getElementById('userUserOrders').value,
-            ordersId: document.getElementById('userOrdersId').value
+            orderId: document.getElementById('userOrderId').value
         };
         try {
             let token = document.getElementById('token').value
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             username: document.getElementById('loginUser').value,
             useruser: document.getElementById('userUserOrders').value,
-            ordersId: document.getElementById('userOrdersId').value
+            orderId: document.getElementById('userOrderId').value
         };
         try {
             let token = document.getElementById('token').value
