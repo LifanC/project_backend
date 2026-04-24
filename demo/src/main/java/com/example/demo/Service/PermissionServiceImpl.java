@@ -92,16 +92,16 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public ResponseEntity<?> testLogin() {
         logger.info("permissions/testLogin: Permissions is working!");
-        List<Object> messageList = List.of("Permissions is working!");
-        Map<String, Map<Integer, Object>> message = Map.of(
-                "content", ConvertFormat.convert(messageList)
-        );
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> dataMap = new TreeMap<>();
+        dataMap.put("1", List.of("Permissions is working!"));
+        data.add(dataMap);
         HttpStatus status = HttpStatus.OK;
         return ResponseEntity
                 .status(status)
                 .body(ApiResponse.api(
                         status,
-                        message
+                        data
                 ));
     }
 
@@ -143,15 +143,16 @@ public class PermissionServiceImpl implements PermissionService {
                                 username + " - 註冊權限帳號成功",
                                 "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString())
                         );
-                        Map<String, Map<Integer, Object>> message = Map.of(
-                                "content", ConvertFormat.convert(messageList)
-                        );
+                        List<Map<String, Object>> data = new ArrayList<>();
+                        Map<String, Object> dataMap = new TreeMap<>();
+                        dataMap.put("1", messageList);
+                        data.add(dataMap);
                         HttpStatus status = HttpStatus.CREATED;
                         return ResponseEntity
                                 .status(status)
                                 .body(ApiResponse.api(
                                         status,
-                                        message
+                                        data
                                 ));
                     } catch (DuplicateKeyException e) {
                         logger.warn("Permission 註冊失敗，註冊權限帳號已存在，username={}", username);
@@ -175,15 +176,13 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 註冊，資源忙碌，請重試"
                 );
-                Map<String, Map<Integer, Object>> message = Map.of(
-                        "content", ConvertFormat.convert(messageList)
-                );
+				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
                         .body(ApiResponse.api(
                                 status,
-                                message
+                                data
                         ));
             }
         } catch (InterruptedException e) {
@@ -223,15 +222,16 @@ public class PermissionServiceImpl implements PermissionService {
                             "帳號查詢成功",
                             permissionsSelect
                     );
-                    Map<String, Map<Integer, Object>> message = Map.of(
-                            "content", ConvertFormat.convert(messageList)
-                    );
+                    List<Map<String, Object>> data = new ArrayList<>();
+                    Map<String, Object> dataMap = new TreeMap<>();
+                    dataMap.put("1", messageList);
+                    data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
                             .body(ApiResponse.api(
                                     status,
-                                    message
+                                    data
                             ));
                 } finally {
                     lock.unlock();
@@ -240,15 +240,16 @@ public class PermissionServiceImpl implements PermissionService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("query 資源忙碌，請重試");
-                Map<String, Map<Integer, Object>> message = Map.of(
-                        "content", ConvertFormat.convert(List.of("查詢，資源忙碌，請重試"))
+                List<Object> messageList = List.of(
+                        "查詢，資源忙碌，請重試"
                 );
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
                         .body(ApiResponse.api(
                                 status,
-                                message
+                                data
                         ));
             }
         } catch (InterruptedException e) {
@@ -301,15 +302,16 @@ public class PermissionServiceImpl implements PermissionService {
                             "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString()),
                             "更改日期 - " + ConvertFormat.time(permissionsSelect.get("updated_date").toString())
                     );
-                    Map<String, Map<Integer, Object>> message = Map.of(
-                            "content", ConvertFormat.convert(messageList)
-                    );
+                    List<Map<String, Object>> data = new ArrayList<>();
+                    Map<String, Object> dataMap = new TreeMap<>();
+                    dataMap.put("1", messageList);
+                    data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
                             .body(ApiResponse.api(
                                     status,
-                                    message
+                                    data
                             ));
                 } finally {
                     lock.unlock();
@@ -323,15 +325,13 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 更改權限，資源忙碌，請重試"
                 );
-                Map<String, Map<Integer, Object>> message = Map.of(
-                        "content", ConvertFormat.convert(messageList)
-                );
+				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
                         .body(ApiResponse.api(
                                 status,
-                                message
+                                data
                         ));
             }
         } catch (InterruptedException e) {
@@ -383,15 +383,16 @@ public class PermissionServiceImpl implements PermissionService {
                             "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString()),
                             "更改日期 - " + ConvertFormat.time(permissionsSelect.get("updated_date").toString())
                     );
-                    Map<String, Map<Integer, Object>> message = Map.of(
-                            "content", ConvertFormat.convert(messageList)
-                    );
+                    List<Map<String, Object>> data = new ArrayList<>();
+                    Map<String, Object> dataMap = new TreeMap<>();
+                    dataMap.put("1", messageList);
+                    data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
                             .body(ApiResponse.api(
                                     status,
-                                    message
+                                    data
                             ));
                 } finally {
                     lock.unlock();
@@ -404,15 +405,13 @@ public class PermissionServiceImpl implements PermissionService {
                         "帳號 -" + username,
                         username + " - 刪除權限，資源忙碌，請重試"
                 );
-                Map<String, Map<Integer, Object>> message = Map.of(
-                        "content", ConvertFormat.convert(messageList)
-                );
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
                         .body(ApiResponse.api(
                                 status,
-                                message
+                                data
                         ));
             }
         } catch (InterruptedException e) {

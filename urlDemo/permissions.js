@@ -81,7 +81,7 @@ function show(log = {}) {
     const {
         code = undefined,
         status = undefined,
-        message = undefined,
+        data = undefined,
         error = undefined,
         path = undefined,
         timestamp = undefined,
@@ -89,7 +89,7 @@ function show(log = {}) {
     const messageLog = {
         code,
         status,
-        message,
+        data,
         error,
         path,
         timestamp,

@@ -73,7 +73,57 @@ testLogin()
 async function testLogin() {
     const res = await api.get('products/testLogin', null);
     show(res);
+    // tableFormat(res)
 }
+
+// function tableFormat(res) {
+//     let htmlHead = "";
+//     htmlHead += "<thead>";
+//     htmlHead += "<tr>";
+//     htmlHead += `<td>${"code"}</td>`;
+//     htmlHead += `<td>${res.code}</td>`;
+//     htmlHead += "</tr>";
+//     htmlHead += "<tr>";
+//     htmlHead += `<td>${"status"}</td>`;
+//     htmlHead += `<td>${res.status}</td>`;
+//     htmlHead += "</tr>";
+//     htmlHead += "</tr></thead>";
+//     document.getElementById('products_code').innerHTML = htmlHead;
+    
+//     let html = "";
+//     // 表頭
+//     html += "<thead><tr>";
+//     Object.keys(res.data[0]).forEach(key => {
+//         if (key.includes("_name")) {
+//             html += `<th>${res.data[0][key]}</th>`;
+//         }
+//     });
+//     html += "</tr></thead>";
+//     // 表身
+//     html += "<tbody>";
+//     res.data.forEach(row => {
+//         html += "<tr>";
+//         Object.keys(row).forEach(key => {
+//             if (!key.includes("_name")) {
+//                 html += `<td>${row[key]}</td>`;
+//             }
+//         });
+//         html += "</tr>";
+//     });
+//     html += "</tbody>";
+    
+//     document.getElementById('products_table').innerHTML = html;
+//     document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+// }
+
+// function escapeHTML(str) {
+//     return String(str)
+//         .replace(/&/g, "&amp;")
+//         .replace(/</g, "&lt;")
+//         .replace(/>/g, "&gt;")
+//         .replace(/"/g, "&quot;")
+//         .replace(/'/g, "&#039;");
+// }
 
 moveFocus('form');
 
@@ -81,7 +131,7 @@ function show(log = {}) {
     const {
         code = undefined,
         status = undefined,
-        message = undefined,
+        data = undefined,
         error = undefined,
         path = undefined,
         timestamp = undefined,
@@ -89,7 +139,7 @@ function show(log = {}) {
     const messageLog = {
         code,
         status,
-        message,
+        data,
         error,
         path,
         timestamp,

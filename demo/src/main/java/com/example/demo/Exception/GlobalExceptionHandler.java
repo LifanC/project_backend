@@ -1,6 +1,5 @@
 package com.example.demo.Exception;
 
-import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Dto.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +35,16 @@ public class GlobalExceptionHandler {
                     );
                 });
 
-        Map<String, Map<Integer, Object>> message = msg("參數驗證失敗");
-        message.put("error", ConvertFormat.convert(List.of(fieldErrors)));
+        List<Map<String, Object>> data = msg("參數驗證失敗");
+        Map<String, Object> dataMap = new TreeMap<>();
+        dataMap.put("error", List.of(fieldErrors));
+        data.add(dataMap);
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return ResponseEntity
                 .status(status)
                 .body(ApiResponse.api(
                         status,
-                        message
+                        data
                 ));
     }
 
@@ -125,10 +126,12 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    private Map<String, Map<Integer, Object>> msg(String ex) {
-        Map<String, Map<Integer, Object>> message = new TreeMap<>();
-        message.put("content", ConvertFormat.convert(List.of(ex)));
-        return message;
+    private List<Map<String, Object>> msg(String ex) {
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> dataMap = new TreeMap<>();
+        dataMap.put("ex", ex);
+        data.add(dataMap);
+        return data;
     }
 
 }
