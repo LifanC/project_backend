@@ -73,57 +73,61 @@ testLogin()
 async function testLogin() {
     const res = await api.get('products/testLogin', null);
     show(res);
-    // tableFormat(res)
+    starTableFormat(res)
 }
 
-// function tableFormat(res) {
-//     let htmlHead = "";
-//     htmlHead += "<thead>";
-//     htmlHead += "<tr>";
-//     htmlHead += `<td>${"code"}</td>`;
-//     htmlHead += `<td>${res.code}</td>`;
-//     htmlHead += "</tr>";
-//     htmlHead += "<tr>";
-//     htmlHead += `<td>${"status"}</td>`;
-//     htmlHead += `<td>${res.status}</td>`;
-//     htmlHead += "</tr>";
-//     htmlHead += "</tr></thead>";
-//     document.getElementById('products_code').innerHTML = htmlHead;
-    
-//     let html = "";
-//     // 表頭
-//     html += "<thead><tr>";
-//     Object.keys(res.data[0]).forEach(key => {
-//         if (key.includes("_name")) {
-//             html += `<th>${res.data[0][key]}</th>`;
-//         }
-//     });
-//     html += "</tr></thead>";
-//     // 表身
-//     html += "<tbody>";
-//     res.data.forEach(row => {
-//         html += "<tr>";
-//         Object.keys(row).forEach(key => {
-//             if (!key.includes("_name")) {
-//                 html += `<td>${row[key]}</td>`;
-//             }
-//         });
-//         html += "</tr>";
-//     });
-//     html += "</tbody>";
-    
-//     document.getElementById('products_table').innerHTML = html;
-//     document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
-// }
+function starTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "</tr>";
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</thead>";
+    document.getElementById('products_code').innerHTML = htmlHead;
 
-// function escapeHTML(str) {
-//     return String(str)
-//         .replace(/&/g, "&amp;")
-//         .replace(/</g, "&lt;")
-//         .replace(/>/g, "&gt;")
-//         .replace(/"/g, "&quot;")
-//         .replace(/'/g, "&#039;");
-// }
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    Object.keys(res.data[0]).forEach(key => {
+        if (key.includes("_name")) {
+            html += `<th>${res.data[0][key]}</th>`;
+        }
+    });
+    html += "</tr></thead>";
+    // 表身
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+        Object.keys(row).forEach(key => {
+            if (!key.includes("_name")) {
+                html += `<td>${row[key]}</td>`;
+            }
+        });
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('products_table', html);
+    document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+function getTableById(id, html) {
+    document.getElementById(id).innerHTML = html;
+}
+
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 moveFocus('form');
 
@@ -222,6 +226,54 @@ async function deleteJSON(url, params) {
     }
 }
 
+function tableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('products_code').innerHTML = htmlHead;
+
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    let names = ["備註", "編號", "名稱", "價錢", "庫存量", "描述", "新增時間", "更改時間"];
+    names.forEach(key => {
+        html += `<th>${key}</th>`;
+    });
+    html += "</tr></thead>";
+    // 表身
+    const fields = [
+        "remark",
+        "product_id",
+        "products_name",
+        "price",
+        "stock",
+        "description",
+        "created_date",
+        "updated_date"
+    ];
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+
+        fields.forEach(key => {
+            html += `<td>${row[key] ?? ""}</td>`;
+        });
+
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('products_table', html);
+    document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // 新增
@@ -235,8 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('products/insert', data);
             show(res);
+            tableFormat(res);
         } catch (err) {
             show(err);
+            tableFormat(res);
         }
     });
 
@@ -248,8 +302,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('products/select', data);
             show(res);
+            tableFormat(res);
         } catch (err) {
             show(err);
+            tableFormat(err);
         }
     });
 
@@ -265,8 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.put('products/update', data);
             show(res);
+            tableFormat(res);
         } catch (err) {
             show(err);
+            tableFormat(res);
         }
     });
 
@@ -278,8 +336,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.delete('products/delete', data);
             show(res);
+            tableFormat(res);
         } catch (err) {
             show(err);
+            tableFormat(res);
         }
     });
 

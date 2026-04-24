@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -77,20 +76,16 @@ public class ProductsServiceImpl implements ProductsService {
                     try {
                         productMapper.create(product);
                         List<Map<String, Object>> productsSelect = getProduct(product);
-                        List<Object> messageList = new ArrayList<>();
-                        messageList.add("---------------------------------------");
-                        messageList.add(products_name + " - 新增商品成功");
-                        messageList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
-                        messageList.add("商品名稱 - " + products_name);
-                        messageList.add("價格 - " + price);
-                        messageList.add("庫存量 - " + stock);
-                        messageList.add("描述 - " + description);
-                        messageList.add("新增日期 - " + ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
-                        messageList.add("更改日期 - " + ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
-                        messageList.add("---------------------------------------");
                         List<Map<String, Object>> data = new ArrayList<>();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
+                        dataMap.put("remark", "新增商品成功");
+                        dataMap.put("product_id", productsSelect.getFirst().get("product_id").toString());
+                        dataMap.put("products_name", products_name);
+                        dataMap.put("price", price);
+                        dataMap.put("stock", stock);
+                        dataMap.put("description", description);
+                        dataMap.put("created_date", ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
+                        dataMap.put("updated_date", ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
                         data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
@@ -116,11 +111,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : insert 資源忙碌，請重試", products_name);
-                List<Object> messageList = List.of(
-                        "商品名稱 -" + products_name,
-                        products_name + " - 新增，資源忙碌，請重試"
-                );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+				List<Map<String, Object>> data = List.of(Map.of("ex", "新增，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -160,29 +151,24 @@ public class ProductsServiceImpl implements ProductsService {
                         throw new ResourceNotFoundException("查詢商品不存在");
                     }
                     logger.info("Products 商品查詢成功");
-                    List<Object> messageList = new ArrayList<>();
+
+                    List<Map<String, Object>> data = new ArrayList<>();
                     for (Map<String, Object> map : productsSelect) {
                         String product_id = map.get("product_id").toString();
                         String products_name = map.get("products_name").toString();
                         BigDecimal price = new BigDecimal(map.get("price").toString());
                         BigDecimal stock = new BigDecimal(map.get("stock").toString());
                         String description = map.get("description").toString();
-                        List<Object> messageGroup = new ArrayList<>();
-                        messageGroup.add("---------------------------------------");
-                        messageGroup.add("商品編號 - " + product_id);
-                        messageGroup.add("商品名稱 - " + products_name);
-                        messageGroup.add("價格 - " + price);
-                        messageGroup.add("庫存量 - " + stock);
-                        messageGroup.add("描述 - " + description);
-                        messageGroup.add("新增日期 - " + ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
-                        messageGroup.add("更改日期 - " + ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
-                        messageGroup.add("---------------------------------------");
-                        messageList.add(messageGroup);
+                        Map<String, Object> dataMap = new TreeMap<>();
+                        dataMap.put("product_id", product_id);
+                        dataMap.put("products_name", products_name);
+                        dataMap.put("price", price);
+                        dataMap.put("stock", stock);
+                        dataMap.put("description", description);
+                        dataMap.put("created_date", ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
+                        dataMap.put("updated_date", ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
+                        data.add(dataMap);
                     }
-                    List<Map<String, Object>> data = new ArrayList<>();
-                    Map<String, Object> dataMap = new TreeMap<>();
-                    dataMap.put("1", messageList);
-                    data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -197,10 +183,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("select 資源忙碌，請重試");
-                List<Object> messageList = List.of(
-                        "查詢，資源忙碌，請重試"
-                );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("ex", "查詢，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -248,20 +231,17 @@ public class ProductsServiceImpl implements ProductsService {
                     if (cnt == 0) {
                         throw new ResourceNotFoundException(productId + " - 更改商品不存在");
                     }
-                    logger.info("Products 商品更改成功");
                     List<Map<String, Object>> productsSelect = getProduct(product);
-                    List<Object> messageList = List.of(
-                            "---------------------------------------",
-                            "商品編號 - " + productId,
-                            "商品名稱 - " + productsSelect.getFirst().get("products_name"),
-                            "價格 - " + productsSelect.getFirst().get("price"),
-                            "庫存量 - " + productsSelect.getFirst().get("stock"),
-                            "描述 - " + productsSelect.getFirst().get("description"),
-                            "更改日期 - " + ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()),
-                            "---------------------------------------");
                     List<Map<String, Object>> data = new ArrayList<>();
                     Map<String, Object> dataMap = new TreeMap<>();
-                    dataMap.put("1", messageList);
+                    dataMap.put("remark", "商品更改成功");
+                    dataMap.put("product_id", productsSelect.getFirst().get("product_id").toString());
+                    dataMap.put("products_name", productsSelect.getFirst().get("products_name").toString());
+                    dataMap.put("price", productsSelect.getFirst().get("price").toString());
+                    dataMap.put("stock", productsSelect.getFirst().get("stock").toString());
+                    dataMap.put("description", productsSelect.getFirst().get("description").toString());
+                    dataMap.put("created_date", ConvertFormat.time(productsSelect.getFirst().get("created_date").toString()));
+                    dataMap.put("updated_date", ConvertFormat.time(productsSelect.getFirst().get("updated_date").toString()));
                     data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
@@ -312,15 +292,10 @@ public class ProductsServiceImpl implements ProductsService {
                     if (cnt == 0) {
                         throw new ResourceNotFoundException(productId + " - 刪除商品不存在");
                     }
-                    List<Object> messageList = List.of(
-                            "---------------------------------------",
-                            "商品編號 - " + productId,
-                            "刪除日期" + LocalDateTime.now(),
-                            "---------------------------------------");
-                    logger.info("Products 商品刪除成功");
                     List<Map<String, Object>> data = new ArrayList<>();
                     Map<String, Object> dataMap = new TreeMap<>();
-                    dataMap.put("1", messageList);
+                    dataMap.put("remark", "商品刪除成功");
+                    dataMap.put("product_id", productId);
                     data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
@@ -336,10 +311,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("delete 資源忙碌，請重試");
-                List<Object> messageList = List.of(
-                        "刪除，資源忙碌，請重試"
-                );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("ex", "刪除，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
