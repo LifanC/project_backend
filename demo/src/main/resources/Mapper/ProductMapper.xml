@@ -26,7 +26,10 @@
         from "interviewworks_schema"."products" p
         <where>
             <if test="product_id != null and product_id != ''">
-                product_id = #{product_id}
+                and product_id = #{product_id}
+            </if>
+            <if test="product_id_quantity != null and product_id_quantity > 0">
+                or (product_id between #{product_id} and #{product_id} + #{product_id_quantity})
             </if>
         </where>
         order by p.product_id desc
@@ -38,10 +41,10 @@
             <if test="products_name != null and products_name != ''">
                 products_name = #{products_name},
             </if>
-            <if test="price != null and price != ''">
+            <if test="price != null and price > 0">
                 price = #{price},
             </if>
-            <if test="stock != null and stock != ''">
+            <if test="stock != null and stock > 0">
                 stock = #{stock},
             </if>
             <if test="description != null and description != ''">

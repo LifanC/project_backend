@@ -111,7 +111,8 @@ public class UserServiceImpl implements UserService {
         logger.info("user/testLogin: User is working!");
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("1", List.of("User is working!"));
+        dataMap.put("status_name", "狀態");
+        dataMap.put("status", "User is working!");
         data.add(dataMap);
         HttpStatus status = HttpStatus.OK;
         return ResponseEntity
@@ -211,23 +212,20 @@ public class UserServiceImpl implements UserService {
                         throw new IllegalStateException(username + " - Token 已經存在");
                     }
                     logger.info("{} : (Token 取得)成功", username);
-                    List<Object> messageList = List.of(
-                            "帳號 - " + username,
-                            "權限 - " + permissions,
-                            username + " - Token 取得成功",
-                            ConvertFormat.time("")
-                    );
                     List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
+                    Map<String, Object> dataMap = new TreeMap<>();
+                    dataMap.put("username", username);
+                    dataMap.put("permissions", permissions);
+                    dataMap.put("remark", "Token 取得成功");
+                    dataMap.put("created_date", ConvertFormat.time(""));
+                    data.add(dataMap);
+                    HttpStatus status = HttpStatus.OK;
+                    return ResponseEntity
+                            .status(status)
+                            .body(ApiResponse.api(
+                                    status,
+                                    data
+                            ));
                 } finally {
                     lock.unlock();
                 }
@@ -239,7 +237,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 取Token，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -368,17 +366,14 @@ public class UserServiceImpl implements UserService {
                             logger.info("{} : (Token驗證)不存在", usernameJwt);
                         }
                         logger.info("{} : (Token驗證)成功", usernameJwt);
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + permissions,
-                                username + " - Token 驗證成功",
-                                ConvertFormat.time("")
-                        );
                         List<Map<String, Object>> data = new ArrayList<>();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        dataMap.put("2", accessToken);
+                        dataMap.put("username", username);
+                        dataMap.put("permissions", permissions);
+                        dataMap.put("remark", "Token 驗證成功");
+                        dataMap.put("created_date", ConvertFormat.time(""));
                         data.add(dataMap);
+                        data.add(Map.of("token", accessToken));
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -402,7 +397,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - Token驗證，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -503,17 +498,14 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 登出 Token 帳號不存在");
                         }
                         String permissions = userSelect.get("permissions").toString();
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + permissions,
-                                username + " - Token 已登出",
-                                ConvertFormat.time("")
-                        );
                         List<Map<String, Object>> data = new ArrayList<>();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        dataMap.put("2", "");
+                        dataMap.put("username", username);
+                        dataMap.put("permissions", permissions);
+                        dataMap.put("remark", "Token 已登出");
+                        dataMap.put("created_date", ConvertFormat.time(""));
                         data.add(dataMap);
+                        data.add(Map.of("token", ""));
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -537,7 +529,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - Token登出，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -615,6 +607,7 @@ public class UserServiceImpl implements UserService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String product_id = request.getProduct_id().trim();
+        final String[] product_ids = request.getProduct_ids();
         boolean isNumber = false;
         if (StringUtils.hasText(product_id)) {
             isNumber = product_id.matches("^\\d+$");
@@ -676,24 +669,38 @@ public class UserServiceImpl implements UserService {
                         }
                         Product product = new Product();
                         if (isNumber) {
-                            product.setProduct_id(new BigDecimal(product_id));
+                            BigDecimal product_idNum = new BigDecimal(product_id);
+                            product.setProduct_id(product_idNum);
+
+                            BigDecimal quantity = null;
+                            if (product_ids != null && product_ids.length == 2 &&
+                                    StringUtils.hasText(product_ids[0]) &&
+                                    StringUtils.hasText(product_ids[1])) {
+
+                                BigDecimal A = new BigDecimal(product_ids[0]);
+                                BigDecimal B = new BigDecimal(product_ids[1]);
+
+                                if (A.compareTo(B) < 0) {
+                                    quantity = B.subtract(A);
+                                }
+                            }
+                            product.setProduct_id_quantity(quantity);
                         }
+
                         List<Map<String, Object>> productsCarSelect = getProduct(product);
-                        logger.info("User 商品查詢成功");
-                        List<Object> messageList = new ArrayList<>();
-                        for (Map<String, Object> map : productsCarSelect) {
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("---------------------------------------");
-                            messageGroup.add("商品編號 - " + map.get("product_id").toString());
-                            messageGroup.add("商品名稱 - " + map.get("products_name").toString());
-                            messageGroup.add("描述 - " + map.get("description").toString());
-                            messageGroup.add("---------------------------------------");
-                            messageList.add(messageGroup);
+                        if (productsCarSelect.isEmpty()) {
+                            throw new ResourceNotFoundException("商品不存在");
                         }
+                        logger.info("User 商品查詢成功");
                         List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
+                        for (Map<String, Object> map : productsCarSelect) {
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "商品查詢成功");
+                            dataMap.put("product_id", map.get("product_id").toString());
+                            dataMap.put("products_name", map.get("products_name").toString());
+                            dataMap.put("description", map.get("description").toString());
+                            data.add(dataMap);
+                        }
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -906,7 +913,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 新增購物車，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1047,7 +1054,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 查詢購物車，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1218,7 +1225,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 更改購物車，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1387,7 +1394,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 購物車刪除，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1510,7 +1517,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 確認訂單，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1647,7 +1654,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 報價單，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1800,7 +1807,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 報價單，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -1976,7 +1983,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 接受，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -2112,7 +2119,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 拒絕，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -2345,7 +2352,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 查詢出貨資訊，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -2513,7 +2520,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 查詢付款資訊，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -2718,7 +2725,7 @@ public class UserServiceImpl implements UserService {
                         "帳號-" + username,
                         username + " - 付款，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)

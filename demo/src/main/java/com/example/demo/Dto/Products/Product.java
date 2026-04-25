@@ -9,6 +9,7 @@ public class Product {
     private BigDecimal price;
     private BigDecimal stock;
     private String description;
+    private BigDecimal product_id_quantity;
 
     public Product() {
     }
@@ -64,4 +65,11 @@ public class Product {
         this.description = description;
     }
 
+    public BigDecimal getProduct_id_quantity() {
+        return product_id_quantity;
+    }
+
+    public void setProduct_id_quantity(BigDecimal product_id_quantity) {
+        this.product_id_quantity = product_id_quantity;
+    }
 }

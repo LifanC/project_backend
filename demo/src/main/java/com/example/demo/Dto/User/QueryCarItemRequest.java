@@ -8,6 +8,8 @@ public class QueryCarItemRequest implements OrderRequest {
 
     private String product_id;
 
+    private String[] product_ids;
+
     @Override
     public String getUsername() {
         return username;
@@ -27,5 +29,9 @@ public class QueryCarItemRequest implements OrderRequest {
 
     public String getProduct_id() {
         return product_id;
+    }
+
+    public String[] getProduct_ids() {
+        return product_ids;
     }
 }

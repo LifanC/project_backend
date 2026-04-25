@@ -73,6 +73,60 @@ testLogin()
 async function testLogin() {
     const res = await api.get('orderbackend/testLogin', null);
     show_user(res);
+    starTableFormat(res);
+}
+
+function starTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "</tr>";
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</thead>";
+    document.getElementById('user_code').innerHTML = htmlHead;
+
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    Object.keys(res.data[0]).forEach(key => {
+        if (key.includes("_name")) {
+            html += `<th>${res.data[0][key]}</th>`;
+        }
+    });
+    html += "</tr></thead>";
+    // 表身
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+        Object.keys(row).forEach(key => {
+            if (!key.includes("_name")) {
+                html += `<td>${row[key]}</td>`;
+            }
+        });
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('user_table', html);
+    document.getElementById('user_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+function getTableById(id, html) {
+    document.getElementById(id).innerHTML = html;
+}
+
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 moveFocus('form');
@@ -97,65 +151,65 @@ function show_user(log = {}) {
     document.getElementById('user_result').innerHTML = JSON.stringify(messageLog, null, 2);
 }
 
-function show_quotations(log = {}) {
-    const {
-        code = undefined,
-        status = undefined,
-        data = undefined,
-        error = undefined,
-        path = undefined,
-        timestamp = undefined,
-    } = log;
-    const messageLog = {
-        code,
-        status,
-        data,
-        error,
-        path,
-        timestamp,
-    }
-    document.getElementById('quotations_result').innerHTML = JSON.stringify(messageLog, null, 2);
-}
+// function show_quotations(log = {}) {
+//     const {
+//         code = undefined,
+//         status = undefined,
+//         data = undefined,
+//         error = undefined,
+//         path = undefined,
+//         timestamp = undefined,
+//     } = log;
+//     const messageLog = {
+//         code,
+//         status,
+//         data,
+//         error,
+//         path,
+//         timestamp,
+//     }
+//     document.getElementById('quotations_result').innerHTML = JSON.stringify(messageLog, null, 2);
+// }
 
-function show_orders(log = {}) {
-    const {
-        code = undefined,
-        status = undefined,
-        data = undefined,
-        error = undefined,
-        path = undefined,
-        timestamp = undefined,
-    } = log;
-    const messageLog = {
-        code,
-        status,
-        data,
-        error,
-        path,
-        timestamp,
-    }
-    document.getElementById('orders_result').innerHTML = JSON.stringify(messageLog, null, 2);
-}
+// function show_orders(log = {}) {
+//     const {
+//         code = undefined,
+//         status = undefined,
+//         data = undefined,
+//         error = undefined,
+//         path = undefined,
+//         timestamp = undefined,
+//     } = log;
+//     const messageLog = {
+//         code,
+//         status,
+//         data,
+//         error,
+//         path,
+//         timestamp,
+//     }
+//     document.getElementById('orders_result').innerHTML = JSON.stringify(messageLog, null, 2);
+// }
 
-function show_Shipments(log = {}) {
-    const {
-        code = undefined,
-        status = undefined,
-        data = undefined,
-        error = undefined,
-        path = undefined,
-        timestamp = undefined,
-    } = log;
-    const messageLog = {
-        code,
-        status,
-        data,
-        error,
-        path,
-        timestamp,
-    }
-    document.getElementById('shipments_result').innerHTML = JSON.stringify(messageLog, null, 2);
-}
+// function show_Shipments(log = {}) {
+//     const {
+//         code = undefined,
+//         status = undefined,
+//         data = undefined,
+//         error = undefined,
+//         path = undefined,
+//         timestamp = undefined,
+//     } = log;
+//     const messageLog = {
+//         code,
+//         status,
+//         data,
+//         error,
+//         path,
+//         timestamp,
+//     }
+//     document.getElementById('shipments_result').innerHTML = JSON.stringify(messageLog, null, 2);
+// }
 
 // POST JSON helper
 async function postJSON(url, data, token) {
@@ -246,6 +300,90 @@ function setInputValue(inputId, value) {
     input.value = value;
 }
 
+function tableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('user_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "日期"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+            "created_date",
+        ];
+        html += "<tbody>";
+        for (let index = 0; index < res.data.length; index++) {
+            const row = res.data[index];
+            html += "<tr>";
+            if (index == 0) {
+                fields.forEach(key => {
+                    html += `<td>${row[key] ?? ""}</td>`;
+                });
+            } else {
+                if (row.token) {
+                    // 不加
+                }
+            }
+            html += "</tr>";
+        };
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    html += `<td>${err.username ?? ""}<br/>${err.password ?? ""}</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('user_table', html);
+    document.getElementById('user_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // 取得 Token
@@ -257,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('orderbackend/takeToken', data);
             show_user(res);
+            tableFormat(res);
         } catch (err) {
             show_user(err);
         }
@@ -270,10 +409,13 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('orderbackend/validate', data);
             show_user(res);
-            if (res.message.token) {
-                let token = res.message.token["1"];
-                if (token) {
-                    setInputValue('token', token);
+            tableFormat(res);
+            if (res.data.length > 1) {
+                if (res.data[1].token) {
+                    let token = res.data[1].token;
+                    if (token) {
+                        setInputValue('token', token);
+                    }
                 }
             }
         } catch (err) {
@@ -290,227 +432,228 @@ document.addEventListener('DOMContentLoaded', () => {
             let token = document.getElementById('token').value
             const res = await api.post('orderbackend/logout', data, token);
             show_user(res);
+            tableFormat(res);
         } catch (err) {
             show_user(err);
         }
         setInputValue('token', "");
     });
 
-    // 查用戶
-    document.getElementById('btnQueryUser').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/queryUser', data, token);
-            show_quotations(res);
-        } catch (err) {
-            show_quotations(err);
-        }
-    });
+    // // 查用戶
+    // document.getElementById('btnQueryUser').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/queryUser', data, token);
+    //         show_quotations(res);
+    //     } catch (err) {
+    //         show_quotations(err);
+    //     }
+    // });
 
-    // 用戶商品報價
-    document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotations').value,
-            userPercent: document.getElementById('userPercent').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/quotationsProductItem', data, token);
-            show_quotations(res);
-        } catch (err) {
-            show_quotations(err);
-        }
-    });
+    // // 用戶商品報價
+    // document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserQuotations').value,
+    //         userPercent: document.getElementById('userPercent').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/quotationsProductItem', data, token);
+    //         show_quotations(res);
+    //     } catch (err) {
+    //         show_quotations(err);
+    //     }
+    // });
     
-    // 確認報價單
-    document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotations').value,
-            userPercent: document.getElementById('userPercent').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/confirmQuotationsProductItem', data, token);
-            show_quotations(res);
-        } catch (err) {
-            show_quotations(err);
-        }
-    });
+    // // 確認報價單
+    // document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserQuotations').value,
+    //         userPercent: document.getElementById('userPercent').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/confirmQuotationsProductItem', data, token);
+    //         show_quotations(res);
+    //     } catch (err) {
+    //         show_quotations(err);
+    //     }
+    // });
     
-    // 刪除報價單
-    document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotations').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/deleteQuotationsProduct', data, token);
-            show_quotations(res);
-        } catch (err) {
-            show_quotations(err);
-        }
-    });
+    // // 刪除報價單
+    // document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserQuotations').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/deleteQuotationsProduct', data, token);
+    //         show_quotations(res);
+    //     } catch (err) {
+    //         show_quotations(err);
+    //     }
+    // });
 
-    // 查詢報價單
-    document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotations').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/queryQuotationsProduct', data, token);
-            show_quotations(res);
-        } catch (err) {
-            show_quotations(err);
-        }
-    });
+    // // 查詢報價單
+    // document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserQuotations').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/queryQuotationsProduct', data, token);
+    //         show_quotations(res);
+    //     } catch (err) {
+    //         show_quotations(err);
+    //     }
+    // });
 
-    // 送出報價單
-    document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotationsSend').value,
-            userUserQuotationsId: document.getElementById('userUserQuotationsId').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/sendQuotationsProduct', data, token);
-            show_quotations(res);
-        } catch (err) {
-            show_quotations(err);
-        }
-    });
+    // // 送出報價單
+    // document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserQuotationsSend').value,
+    //         userUserQuotationsId: document.getElementById('userUserQuotationsId').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/sendQuotationsProduct', data, token);
+    //         show_quotations(res);
+    //     } catch (err) {
+    //         show_quotations(err);
+    //     }
+    // });
 
-    // 查詢用戶訂單名單
-    document.getElementById('btnOrdersUser').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersUser', data, token);
-            show_orders(res);
-        } catch (err) {
-            show_orders(err);
-        }
-    });
+    // // 查詢用戶訂單名單
+    // document.getElementById('btnOrdersUser').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/ordersUser', data, token);
+    //         show_orders(res);
+    //     } catch (err) {
+    //         show_orders(err);
+    //     }
+    // });
 
-    // 查詢訂單
-    document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserOrders').value,
-            orderId: document.getElementById('userOrderId').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersProduct', data, token);
-            show_orders(res);
-        } catch (err) {
-            show_orders(err);
-        }
-    });
+    // // 查詢訂單
+    // document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserOrders').value,
+    //         orderId: document.getElementById('userOrderId').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/ordersProduct', data, token);
+    //         show_orders(res);
+    //     } catch (err) {
+    //         show_orders(err);
+    //     }
+    // });
 
-    // 確認訂單
-    document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserOrders').value,
-            orderId: document.getElementById('userOrderId').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersConfirmed', data, token);
-            show_orders(res);
-        } catch (err) {
-            show_orders(err);
-        }
-    });
+    // // 確認訂單
+    // document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserOrders').value,
+    //         orderId: document.getElementById('userOrderId').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/ordersConfirmed', data, token);
+    //         show_orders(res);
+    //     } catch (err) {
+    //         show_orders(err);
+    //     }
+    // });
 
-    // 取消訂單
-    document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserOrders').value,
-            orderId: document.getElementById('userOrderId').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersCancelled', data, token);
-            show_orders(res);
-        } catch (err) {
-            show_orders(err);
-        }
-    });
+    // // 取消訂單
+    // document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserOrders').value,
+    //         orderId: document.getElementById('userOrderId').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/ordersCancelled', data, token);
+    //         show_orders(res);
+    //     } catch (err) {
+    //         show_orders(err);
+    //     }
+    // });
 
-    // 查詢用戶出貨名單
-    document.getElementById('btnShipmentsUser').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserShipments').value,
-            orderId: document.getElementById('userUserShipmentsId').value,
-            trackingNumber: document.getElementById('userShipmentsTrackingNumber').value,
-            datePart: document.getElementById('userShipmentsDatePart').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsTrackingNumber', data, token);
-            show_Shipments(res);
-        } catch (err) {
-            show_Shipments(err);
-        }
-    });
+    // // 查詢用戶出貨名單
+    // document.getElementById('btnShipmentsUser').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         useruser: document.getElementById('userUserShipments').value,
+    //         orderId: document.getElementById('userUserShipmentsId').value,
+    //         trackingNumber: document.getElementById('userShipmentsTrackingNumber').value,
+    //         datePart: document.getElementById('userShipmentsDatePart').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/shipmentsTrackingNumber', data, token);
+    //         show_Shipments(res);
+    //     } catch (err) {
+    //         show_Shipments(err);
+    //     }
+    // });
 
-    // 已出貨
-    document.getElementById('btnShipmentsShipped').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            trackingNumber: document.getElementById('userTrackingNumber').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsShipped', data, token);
-            show_Shipments(res);
-        } catch (err) {
-            show_Shipments(err);
-        }
-    });
+    // // 已出貨
+    // document.getElementById('btnShipmentsShipped').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         trackingNumber: document.getElementById('userTrackingNumber').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/shipmentsShipped', data, token);
+    //         show_Shipments(res);
+    //     } catch (err) {
+    //         show_Shipments(err);
+    //     }
+    // });
 
-    // 已送達
-    document.getElementById('btnShipmentsDelivered').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            trackingNumber: document.getElementById('userTrackingNumber').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsDelivered', data, token);
-            show_Shipments(res);
-        } catch (err) {
-            show_Shipments(err);
-        }
-    });
+    // // 已送達
+    // document.getElementById('btnShipmentsDelivered').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         trackingNumber: document.getElementById('userTrackingNumber').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/shipmentsDelivered', data, token);
+    //         show_Shipments(res);
+    //     } catch (err) {
+    //         show_Shipments(err);
+    //     }
+    // });
     
-    // 恢復狀態
-    document.getElementById('btnShipmentsRollback').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            trackingNumber: document.getElementById('userTrackingNumber').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsRollback', data, token);
-            show_Shipments(res);
-        } catch (err) {
-            show_Shipments(err);
-        }
-    });
+    // // 恢復狀態
+    // document.getElementById('btnShipmentsRollback').addEventListener('click', async () => {
+    //     const data = {
+    //         username: document.getElementById('loginUser').value,
+    //         trackingNumber: document.getElementById('userTrackingNumber').value
+    //     };
+    //     try {
+    //         let token = document.getElementById('token').value
+    //         const res = await api.post('orderbackend/shipmentsRollback', data, token);
+    //         show_Shipments(res);
+    //     } catch (err) {
+    //         show_Shipments(err);
+    //     }
+    // });
 
 });

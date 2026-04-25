@@ -37,7 +37,7 @@ public class GlobalExceptionHandler {
 
         List<Map<String, Object>> data = msg("參數驗證失敗");
         Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("error", List.of(fieldErrors));
+        dataMap.put("error", fieldErrors);
         data.add(dataMap);
         HttpStatus status = HttpStatus.BAD_REQUEST;
         return ResponseEntity

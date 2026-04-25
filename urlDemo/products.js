@@ -290,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tableFormat(res);
         } catch (err) {
             show(err);
-            tableFormat(res);
         }
     });
 
@@ -305,7 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tableFormat(res);
         } catch (err) {
             show(err);
-            tableFormat(err);
         }
     });
 
@@ -324,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tableFormat(res);
         } catch (err) {
             show(err);
-            tableFormat(res);
         }
     });
 
@@ -339,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tableFormat(res);
         } catch (err) {
             show(err);
-            tableFormat(res);
         }
     });
 
