@@ -111,7 +111,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : insert 資源忙碌，請重試", products_name);
-				List<Map<String, Object>> data = List.of(Map.of("ex", "新增，資源忙碌，請重試"));
+				List<Map<String, Object>> data = List.of(Map.of("remark", "新增，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -183,7 +183,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("select 資源忙碌，請重試");
-                List<Map<String, Object>> data = List.of(Map.of("ex", "查詢，資源忙碌，請重試"));
+                List<Map<String, Object>> data = List.of(Map.of("remark", "查詢，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -311,7 +311,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("delete 資源忙碌，請重試");
-                List<Map<String, Object>> data = List.of(Map.of("ex", "刪除，資源忙碌，請重試"));
+                List<Map<String, Object>> data = List.of(Map.of("remark", "刪除，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)

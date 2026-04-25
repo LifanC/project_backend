@@ -325,14 +325,14 @@ CREATE TRIGGER trigger_update_updated_date
 -- 確保 sequence 從 1 開始（清空表格並重置）
 ALTER SEQUENCE interviewworks_schema.products_product_id_seq RESTART WITH 1;
 
--- 插入假資料範例（50筆）
+-- 插入假資料範例（10筆）
 INSERT INTO interviewworks_schema.products (products_name, price, stock, description)
 SELECT
     CONCAT('測試', n) AS products_name,
-    FLOOR(100 + RANDOM() * 900) AS price,   -- 價格 100~1000
+    FLOOR(500 + RANDOM() * 1000) AS price,   -- 價格 500~1500
     FLOOR(RANDOM() * 100) AS stock,          -- 庫存 0~99
     CONCAT('描述', n) AS description
-FROM generate_series(1,50) AS s(n);
+FROM generate_series(1,10) AS s(n);
 
 
 

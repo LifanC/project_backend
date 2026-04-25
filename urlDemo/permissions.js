@@ -73,6 +73,60 @@ testLogin()
 async function testLogin() {
     const res = await api.get('permissions/testLogin', null);
     show(res);
+    starTableFormat(res)
+}
+
+function starTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "</tr>";
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</thead>";
+    document.getElementById('permissions_code').innerHTML = htmlHead;
+
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    Object.keys(res.data[0]).forEach(key => {
+        if (key.includes("_name")) {
+            html += `<th>${res.data[0][key]}</th>`;
+        }
+    });
+    html += "</tr></thead>";
+    // 表身
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+        Object.keys(row).forEach(key => {
+            if (!key.includes("_name")) {
+                html += `<td>${row[key]}</td>`;
+            }
+        });
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('permissions_table', html);
+    document.getElementById('permissions_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+function getTableById(id, html) {
+    document.getElementById(id).innerHTML = html;
+}
+
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 moveFocus('form');
@@ -172,6 +226,52 @@ async function deleteJSON(url, params) {
     }
 }
 
+function tableFormat(res) {
+    console.log(res)
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('permissions_code').innerHTML = htmlHead;
+
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    let names = ["備註", "帳號", "權限", "新增日期", "更改日期"];
+    names.forEach(key => {
+        html += `<th>${key}</th>`;
+    });
+    html += "</tr></thead>";
+    // 表身
+    const fields = [
+        "remark",
+        "username",
+        "permissions",
+        "created_date",
+        "updated_date"
+    ];
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+
+        fields.forEach(key => {
+            html += `<td>${row[key] ?? ""}</td>`;
+        });
+
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('permissions_table', html);
+    document.getElementById('permissions_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // 註冊
@@ -184,8 +284,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.post('permissions/register', data);
             show(res);
+            tableFormat(res)
         } catch (err) {
             show(err);
+            tableFormat(err)
         }
     });
 
@@ -194,8 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.get('permissions/query', null);
             show(res);
+            tableFormat(res)
         } catch (err) {
             show(err);
+            tableFormat(err)
         }
     });
 
@@ -209,8 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.put('permissions/update', data);
             show(res);
+            tableFormat(res)
         } catch (err) {
             show(err);
+            tableFormat(err)
         }
     });
 
@@ -223,8 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await api.delete('permissions/delete', data);
             show(res);
+            tableFormat(res)
         } catch (err) {
             show(err);
+            tableFormat(err)
         }
     });
 

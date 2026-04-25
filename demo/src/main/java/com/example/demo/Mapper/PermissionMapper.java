@@ -19,5 +19,5 @@ public interface PermissionMapper {
 
     void delete(Permission permission);
 
-    List<String> selectAll();
+    List<Map<String, Object>> selectAll();
 }

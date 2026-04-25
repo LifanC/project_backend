@@ -23,6 +23,14 @@ public class ConvertFormat {
                     .optionalEnd()
                     .toFormatter();
 
+    private static final DateTimeFormatter ERROR =
+            new DateTimeFormatterBuilder()
+                    .appendPattern("uuuu-MM-dd HH:mm:ss")
+                    .optionalStart()
+                    .appendPattern(".SSS")
+                    .optionalEnd()
+                    .toFormatter();
+
     public static String time(String str) {
         try {
 
@@ -46,7 +54,8 @@ public class ConvertFormat {
             return ldt.format(OUT);
 
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid datetime: " + str, e);
+            LocalDateTime ldt = LocalDateTime.parse(str, ERROR);
+            return ldt.format(OUT);
         }
     }
 

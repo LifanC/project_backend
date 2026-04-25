@@ -36,10 +36,12 @@
         where username = #{username}
     </delete>
 
-    <select id="selectAll" resultType="java.lang.String">
-        select concat(
-                       username, ' - ',
-                       use_permissions)
+    <select id="selectAll" resultType="java.util.Map">
+        select
+            username,
+            use_permissions as permissions,
+            created_date,
+            updated_date
         from "interviewworks_schema"."permissionsdata" pd
         order by pd.updated_date desc
     </select>

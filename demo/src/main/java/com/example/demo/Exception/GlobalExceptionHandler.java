@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
     private List<Map<String, Object>> msg(String ex) {
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("ex", ex);
+        dataMap.put("remark", ex);
         data.add(dataMap);
         return data;
     }

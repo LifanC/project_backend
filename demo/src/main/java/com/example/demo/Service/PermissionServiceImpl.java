@@ -94,7 +94,8 @@ public class PermissionServiceImpl implements PermissionService {
         logger.info("permissions/testLogin: Permissions is working!");
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("1", List.of("Permissions is working!"));
+        dataMap.put("status_name", "狀態");
+        dataMap.put("status", "Permissions is working!");
         data.add(dataMap);
         HttpStatus status = HttpStatus.OK;
         return ResponseEntity
@@ -137,15 +138,13 @@ public class PermissionServiceImpl implements PermissionService {
                         roleMapper.createUserRole(username, getRoleId().get(permissions));
 
                         Map<String, Object> permissionsSelect = getPermission(permission);
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + permissions,
-                                username + " - 註冊權限帳號成功",
-                                "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString())
-                        );
                         List<Map<String, Object>> data = new ArrayList<>();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
+                        dataMap.put("remark", "註冊權限帳號成功");
+                        dataMap.put("username", username);
+                        dataMap.put("permissions", permissions);
+                        dataMap.put("created_date", ConvertFormat.time(permissionsSelect.get("created_date").toString()));
+                        dataMap.put("updated_date", "");
                         data.add(dataMap);
                         HttpStatus status = HttpStatus.CREATED;
                         return ResponseEntity
@@ -176,7 +175,7 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 註冊，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -202,12 +201,13 @@ public class PermissionServiceImpl implements PermissionService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Permission query 拿鎖");
                 try {
-                    List<String> permissionsSelect;
+                    List<Map<String, Object>> permissionsSelect;
                     String permissionsAllKey =
                             RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
                     String json = stringRedisTemplate.opsForValue().get(permissionsAllKey);
                     if (json != null) {
-                        permissionsSelect = objectMapper.readValue(json, new TypeReference<>() {});
+                        permissionsSelect = objectMapper.readValue(json, new TypeReference<>() {
+                        });
                     } else {
                         permissionsSelect = permissionMapper.selectAll();
                         String jsonMap = objectMapper.writeValueAsString(permissionsSelect);
@@ -217,15 +217,16 @@ public class PermissionServiceImpl implements PermissionService {
                     if (permissionsSelect.isEmpty()) {
                         throw new ResourceNotFoundException("查詢帳號不存在");
                     }
-                    logger.info("Permission 帳號查詢成功");
-                    List<Object> messageList = List.of(
-                            "帳號查詢成功",
-                            permissionsSelect
-                    );
                     List<Map<String, Object>> data = new ArrayList<>();
-                    Map<String, Object> dataMap = new TreeMap<>();
-                    dataMap.put("1", messageList);
-                    data.add(dataMap);
+                    for (Map<String, Object> permission : permissionsSelect) {
+                        Map<String, Object> dataMap = new TreeMap<>();
+                        dataMap.put("remark", "帳號查詢成功");
+                        dataMap.put("username", permission.get("username"));
+                        dataMap.put("permissions", permission.get("permissions"));
+                        dataMap.put("created_date", ConvertFormat.time(permission.get("created_date").toString()));
+                        dataMap.put("updated_date", ConvertFormat.time(permission.get("updated_date").toString()));
+                        data.add(dataMap);
+                    }
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
                             .status(status)
@@ -295,16 +296,13 @@ public class PermissionServiceImpl implements PermissionService {
                     Integer roleIdOld = Integer.parseInt(userRole.get("role_id").toString());
                     roleMapper.updateUserRole(username, roleIdOld, roleId.get(permissions));
                     permissionsSelect = getPermission(permission);
-                    List<Object> messageList = List.of(
-                            "帳號 - " + username,
-                            "權限 - " + permissions,
-                            username + " - 已更改權限",
-                            "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString()),
-                            "更改日期 - " + ConvertFormat.time(permissionsSelect.get("updated_date").toString())
-                    );
                     List<Map<String, Object>> data = new ArrayList<>();
                     Map<String, Object> dataMap = new TreeMap<>();
-                    dataMap.put("1", messageList);
+                    dataMap.put("remark", "已更改權限");
+                    dataMap.put("username", permissionsSelect.get("username"));
+                    dataMap.put("permissions", permissionsSelect.get("permissions"));
+                    dataMap.put("created_date", ConvertFormat.time(permissionsSelect.get("created_date").toString()));
+                    dataMap.put("updated_date", ConvertFormat.time(permissionsSelect.get("updated_date").toString()));
                     data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity
@@ -325,7 +323,7 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 更改權限，資源忙碌，請重試"
                 );
-				List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -374,18 +372,13 @@ public class PermissionServiceImpl implements PermissionService {
                     userMapper.deleteUserdataDetail(userdataDetails);
                     roleMapper.deleteUserRole(username);
 
-                    logger.info("Permission 帳號已刪除");
-                    String permissions = permissionsSelect.get("permissions").toString();
-                    List<Object> messageList = List.of(
-                            "帳號 - " + username,
-                            "權限 - " + permissions,
-                            username + " - 帳號已刪除",
-                            "新增日期 - " + ConvertFormat.time(permissionsSelect.get("created_date").toString()),
-                            "更改日期 - " + ConvertFormat.time(permissionsSelect.get("updated_date").toString())
-                    );
                     List<Map<String, Object>> data = new ArrayList<>();
                     Map<String, Object> dataMap = new TreeMap<>();
-                    dataMap.put("1", messageList);
+                    dataMap.put("remark", "帳號已刪除");
+                    dataMap.put("username", permissionsSelect.get("username"));
+                    dataMap.put("permissions", permissionsSelect.get("permissions"));
+                    dataMap.put("created_date", ConvertFormat.time(permissionsSelect.get("created_date").toString()));
+                    dataMap.put("updated_date", ConvertFormat.time(permissionsSelect.get("updated_date").toString()));
                     data.add(dataMap);
                     HttpStatus status = HttpStatus.OK;
                     return ResponseEntity

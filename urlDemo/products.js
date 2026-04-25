@@ -242,7 +242,7 @@ function tableFormat(res) {
     let html = "";
     // 表頭
     html += "<thead><tr>";
-    let names = ["備註", "編號", "名稱", "價錢", "庫存量", "描述", "新增時間", "更改時間"];
+    let names = ["備註", "編號", "名稱", "價錢", "庫存量", "描述", "新增日期", "更改日期"];
     names.forEach(key => {
         html += `<th>${key}</th>`;
     });
