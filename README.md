@@ -57,10 +57,6 @@
 - GET <key_name>
 - TTL <key_name> *查看 TTL (剩餘時間)*
 ## 4. API 使用流程
-![image](https://github.com/LifanC/project_backend/blob/master/permissions.jpeg)
-![image](https://github.com/LifanC/project_backend/blob/master/products.jpeg)
-![image](https://github.com/LifanC/project_backend/blob/master/user.jpeg)
-![image](https://github.com/LifanC/project_backend/blob/master/orderbackend.jpeg)
 ## 5. 目錄說明 / 層架構說明
 ```
 project_backend/

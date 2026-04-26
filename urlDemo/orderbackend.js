@@ -151,66 +151,6 @@ function show_user(log = {}) {
     document.getElementById('user_result').innerHTML = JSON.stringify(messageLog, null, 2);
 }
 
-// function show_quotations(log = {}) {
-//     const {
-//         code = undefined,
-//         status = undefined,
-//         data = undefined,
-//         error = undefined,
-//         path = undefined,
-//         timestamp = undefined,
-//     } = log;
-//     const messageLog = {
-//         code,
-//         status,
-//         data,
-//         error,
-//         path,
-//         timestamp,
-//     }
-//     document.getElementById('quotations_result').innerHTML = JSON.stringify(messageLog, null, 2);
-// }
-
-// function show_orders(log = {}) {
-//     const {
-//         code = undefined,
-//         status = undefined,
-//         data = undefined,
-//         error = undefined,
-//         path = undefined,
-//         timestamp = undefined,
-//     } = log;
-//     const messageLog = {
-//         code,
-//         status,
-//         data,
-//         error,
-//         path,
-//         timestamp,
-//     }
-//     document.getElementById('orders_result').innerHTML = JSON.stringify(messageLog, null, 2);
-// }
-
-// function show_Shipments(log = {}) {
-//     const {
-//         code = undefined,
-//         status = undefined,
-//         data = undefined,
-//         error = undefined,
-//         path = undefined,
-//         timestamp = undefined,
-//     } = log;
-//     const messageLog = {
-//         code,
-//         status,
-//         data,
-//         error,
-//         path,
-//         timestamp,
-//     }
-//     document.getElementById('shipments_result').innerHTML = JSON.stringify(messageLog, null, 2);
-// }
-
 // POST JSON helper
 async function postJSON(url, data, token) {
     const authHeader = `Bearer ${token}`;
@@ -370,7 +310,12 @@ function tableFormat(res) {
             } else {
                 if (row.error) {
                     const err = row.error;
-                    html += `<td>${err.username ?? ""}<br/>${err.password ?? ""}</td>`;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
                 } else {
                     html += `<td></td>`;
                 }
@@ -382,6 +327,315 @@ function tableFormat(res) {
 
     getTableById('user_table', html);
     document.getElementById('user_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 報價-查詢用戶名單
+function tableFormatQueryUser(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('quotations_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "使用者名單"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            result.forEach(key => {
+                html += `${row[key] ?? ""}<br/>`
+            });
+            html += `</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('quotations_table', html);
+    document.getElementById('quotations_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 報價-用戶商品報價單
+function tableFormatQuotationsProduct(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('quotations_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 100px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 200px;">
+                    <col style="width: 140px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "使用者", "商品報價"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+            "user",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            html += "<table>";
+            html += "<tbody>";
+            result.forEach(key => {
+                row[key].forEach(details => {
+                    html += "<tr>";
+                    html += `<td>${details ?? ""}</td>`;
+                    html += "</tr>";
+                });
+            });
+            html += "</tbody>";
+            html += "</table>";
+            html += `</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('quotations_table', html);
+    document.getElementById('quotations_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 報價-確認、刪除、查詢、送出
+function tableFormatConfirmQuotationsProduct(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('quotations_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 220px;">
+                    <col style="width: 60px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "用戶編號", "報價單編號", "庫存量", "細項", "狀態"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "useruser",
+            "quotationsId",
+            "stock",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            html += "<table>";
+            html += "<tbody>";
+            result.forEach(key => {
+                console.log('key', key)
+                row[key].forEach(details => {
+                    html += "<tr>";
+                    html += `<td>${details ?? ""}</td>`;
+                    html += "</tr>";
+                });
+            });
+            html += "</tbody>";
+            html += "</table>";
+            html += `</td>`;
+
+            html += `<td>${row["state"] ?? ""}</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('quotations_table', html);
+    document.getElementById('quotations_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -439,97 +693,103 @@ document.addEventListener('DOMContentLoaded', () => {
         setInputValue('token', "");
     });
 
-    // // 查用戶
-    // document.getElementById('btnQueryUser').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/queryUser', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 查用戶
+    document.getElementById('btnQueryUser').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/queryUser', data, token);
+            show_user(res);
+            tableFormatQueryUser(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 用戶商品報價
-    // document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserQuotations').value,
-    //         userPercent: document.getElementById('userPercent').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/quotationsProductItem', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
-    
-    // // 確認報價單
-    // document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserQuotations').value,
-    //         userPercent: document.getElementById('userPercent').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/confirmQuotationsProductItem', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
-    
-    // // 刪除報價單
-    // document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserQuotations').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/deleteQuotationsProduct', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 用戶商品報價
+    document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value,
+            userPercent: document.getElementById('userPercent').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/quotationsProductItem', data, token);
+            show_user(res);
+            tableFormatQuotationsProduct(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 查詢報價單
-    // document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserQuotations').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/queryQuotationsProduct', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 確認報價單
+    document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value,
+            userPercent: document.getElementById('userPercent').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/confirmQuotationsProductItem', data, token);
+            show_user(res);
+            tableFormatConfirmQuotationsProduct(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 送出報價單
-    // document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserQuotationsSend').value,
-    //         userUserQuotationsId: document.getElementById('userUserQuotationsId').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/sendQuotationsProduct', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 刪除報價單
+    document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/deleteQuotationsProduct', data, token);
+            show_user(res);
+            tableFormatConfirmQuotationsProduct(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
+
+    // 查詢報價單
+    document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotations').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/queryQuotationsProduct', data, token);
+            show_user(res);
+            tableFormatConfirmQuotationsProduct(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
+
+    // 送出報價單
+    document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserQuotationsSend').value,
+            userUserQuotationsId: document.getElementById('userUserQuotationsId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/sendQuotationsProduct', data, token);
+            show_user(res);
+            tableFormatConfirmQuotationsProduct(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
     // // 查詢用戶訂單名單
     // document.getElementById('btnOrdersUser').addEventListener('click', async () => {
@@ -640,7 +900,7 @@ document.addEventListener('DOMContentLoaded', () => {
     //         show_Shipments(err);
     //     }
     // });
-    
+
     // // 恢復狀態
     // document.getElementById('btnShipmentsRollback').addEventListener('click', async () => {
     //     const data = {

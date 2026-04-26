@@ -672,18 +672,18 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(username + " - 查使用者帳號不存在");
                         }
                         String permissions = userSelect.get("permissions").toString();
-                        List<String> isUserName = userMapper.queryUserName();
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + permissions,
-                                username + " - 查詢使用者名單",
-                                isUserName,
-                                "新增日期 - " + ConvertFormat.time(userSelect.get("created_date").toString()),
-                                "更改日期 - " + ConvertFormat.time(userSelect.get("updated_date").toString())
-                        );
                         List<Map<String, Object>> data = new ArrayList<>();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
+                        dataMap.put("remark", "查詢使用者名單");
+                        dataMap.put("username", username);
+                        dataMap.put("permissions", permissions);
+                        List<String> isUserName = userMapper.queryUserName();
+                        for (int i = 0; i < isUserName.size(); i++) {
+                            String isUser = isUserName.get(i);
+                            StringBuilder details = new StringBuilder();
+                            details.append(isUser);
+                            dataMap.put("details" + (i + 1), details);
+                        }
                         data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
@@ -823,54 +823,59 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (用戶商品報價) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         UserUser userUser = new UserUser(useruser);
                         List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
                         if (getUserUser.isEmpty()) {
                             logger.error("{} : (用戶商品報價) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
+                        String permissions = userSelect.get("permissions").toString();
+                        List<Map<String, Object>> data = new ArrayList<>();
                         for (Map<String, Object> user : getUserUser) {
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("訂單明細 - 帳號 - " + user.get("username").toString());
                             String order_item = user.get("order_item").toString();
                             String[] order_items = order_item.split(",");
-                            for (String item : order_items) {
+                            for (int i = 0; i < order_items.length; i++) {
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "查詢訂單明細");
+                                dataMap.put("username", username);
+                                dataMap.put("permissions", permissions);
+                                String item = order_items[i];
                                 String[] arr = item.split(":");
                                 List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                                messageGroup.add("---------------------------------------");
-                                messageGroup.add("商品編號 - " + arr[0]);
-                                messageGroup.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
+                                List<String> list = new ArrayList<>();
+                                String detail1 = String.format("商品編號:%s", arr[0]);
+                                String detail2 = String.format("商品名稱:%s", productsSelect.getFirst().get("products_name").toString());
                                 BigDecimal A = new BigDecimal(arr[1]);
                                 BigDecimal B = new BigDecimal(productsSelect.getFirst().get("stock").toString());
                                 BigDecimal C = B.subtract(A);
-                                messageGroup.add(C.compareTo(BigDecimal.ZERO) < 0 ? "庫存不夠" + C.abs() + "筆" : "庫存足夠");
+                                String detail3 = String.format("%s",
+                                        C.compareTo(BigDecimal.ZERO) < 0
+                                                ? "庫存不夠" + C.abs() + "筆"
+                                                : "庫存足夠");
+                                String detail4 = String.format("訂購數量:%s", A);
+                                String detail5 = String.format("商品庫存量:%s", B);
                                 BigDecimal price = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                                messageGroup.add("訂購數量 - " + A);
-                                messageGroup.add("商品庫存量: " + B);
-                                messageGroup.add("價格 - " + price);
-                                String num = userPercent;
-                                Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
-                                messageGroup.add("┌-----" + num + "% -----┐");
-                                messageGroup.add("|售價: " + queryQuotationsMap.get("sellingPrice").toString());
-                                messageGroup.add("|利潤: " + queryQuotationsMap.get("profit").toString());
-                                messageGroup.add("|利潤率: " + queryQuotationsMap.get("margin").toString() + "%");
-                                messageGroup.add("└-----" + num + "% -----┘");
-                                messageGroup.add("描述 - " + productsSelect.getFirst().get("description").toString());
-                                messageGroup.add("---------------------------------------");
+                                String detail6 = String.format("價格:%s", price);
+                                Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, userPercent);
+                                String detail7 = String.format("售價:%s", queryQuotationsMap.get("sellingPrice").toString());
+                                String detail8 = String.format("利潤:%s", queryQuotationsMap.get("profit").toString());
+                                String detail9 = String.format("利潤率:%s", queryQuotationsMap.get("margin").toString());
+                                String detail10 = String.format("描述:%s", productsSelect.getFirst().get("description").toString());
+                                list.add(detail1);
+                                list.add(detail2);
+                                list.add(detail3);
+                                list.add(detail4);
+                                list.add(detail5);
+                                list.add(detail6);
+                                list.add(detail7);
+                                list.add(detail8);
+                                list.add(detail9);
+                                list.add(detail10);
+                                dataMap.put("user", "訂單帳號 - " + user.get("username").toString());
+                                dataMap.put("details" + (i + 1), list);
+                                data.add(dataMap);
                             }
-                            productsList.add(messageGroup);
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "用戶商品報價",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -981,46 +986,44 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (確認報價) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
+                        List<Map<String, Object>> data = new ArrayList<>();
+
                         UserData userDataDetails = new UserData(useruser);
-                        List<Object> productsList = new ArrayList<>();
                         Map<String, Object> detailsData = getDetailsData(userDataDetails);
-                        logger.info("用戶編號: {}", useruser);
-                        logger.info("銷售 % 數: {}", userPercent);
-                        productsList.add("用戶編號: " + useruser);
-                        productsList.add("銷售 % 數: " + userPercent);
                         String order_item = detailsData.get("order_item").toString();
                         String[] order_items = order_item.split(",");
                         Integer quotationsMax = orderbackendMapper.selectQuotationsMax();
                         BigDecimal decimal = new BigDecimal(String.valueOf(quotationsMax + 1));
 
                         List<Boolean> atLastJudgesList = new ArrayList<>();
-                        List<Object> msg = new ArrayList<>();
                         for (int i = 0; i < order_items.length; i++) {
                             String item = order_items[i];
                             String[] arr = item.split(":");
                             String userUserProductsId = arr[0];
                             List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(userUserProductsId)));
-                            BigDecimal product_id = new BigDecimal(productsSelect.getFirst().get("product_id").toString());
-                            String products_name = productsSelect.getFirst().get("products_name").toString();
                             BigDecimal stock = new BigDecimal(productsSelect.getFirst().get("stock").toString());
                             boolean judge = stock.subtract(new BigDecimal(arr[1])).compareTo(BigDecimal.ZERO) < 0;
-                            if (judge) {
-                                logger.info("{}:{}:庫存量不夠", product_id, products_name);
-                                msg.add(product_id + ":" + products_name + ":庫存量不夠");
-                            } else {
-                                logger.info("{}:{}:庫存量足夠", product_id, products_name);
-                                msg.add(product_id + ":" + products_name + ":庫存量足夠");
-                            }
                             atLastJudgesList.add(i, judge);
                         }
                         // 只要其中有一項庫存量不足就不存入DB
                         boolean hasTrue = atLastJudgesList.stream().anyMatch(Boolean.TRUE::equals);
                         if (hasTrue) {
-                            productsList.add(msg);
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "確認報價單");
+                            dataMap.put("useruser", useruser);
+                            dataMap.put("quotationsId", decimal);
+                            dataMap.put("stock", "庫存量不夠");
+                            data.add(dataMap);
                         } else {
                             try {
                                 BigDecimal totalPrice = BigDecimal.ZERO;
+                                String state = Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend();
                                 for (int i = 0; i < order_items.length; i++) {
+                                    Map<String, Object> dataMap = new TreeMap<>();
+                                    dataMap.put("remark", "確認完成");
+                                    dataMap.put("useruser", useruser);
+                                    dataMap.put("quotationsId", decimal);
+                                    dataMap.put("stock", "庫存量足夠");
                                     String item = order_items[i];
                                     String[] arr = item.split(":");
                                     String userUserProductsId = arr[0];
@@ -1029,36 +1032,29 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                     List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(userUserProductsId)));
                                     BigDecimal product_id = new BigDecimal(productsSelect.getFirst().get("product_id").toString());
                                     BigDecimal price = new BigDecimal(productsSelect.getFirst().get("price").toString());
-                                    String num = userPercent;
-                                    Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, num);
+                                    Map<String, BigDecimal> queryQuotationsMap = calculateByMargin(price, userPercent);
                                     BigDecimal sellingPrice = new BigDecimal(queryQuotationsMap.get("sellingPrice").toString());
                                     BigDecimal total = sellingPrice.multiply(quantity);
                                     totalPrice = totalPrice.add(total);
-                                    logger.info("用戶訂單: {}", item);
-                                    logger.info("用戶商品編號: {}", userUserProductsId);
-                                    logger.info("用戶商品數量: {}", userUserQuantity);
-                                    logger.info("用戶商品銷售價格: {}", sellingPrice);
-                                    logger.info("用戶商品價格: {}", price);
-                                    logger.info("用戶商品銷售合計: {}", total);
-                                    logger.info("用戶商品單品價格: {}", price);
-                                    List<Object> messageGroup = new ArrayList<>();
-                                    messageGroup.add("┌----------第" + (i + 1) + "筆----------┐");
-                                    messageGroup.add("用戶商品數量: " + userUserQuantity);
-                                    messageGroup.add("用戶商品單品價格: " + price);
-                                    messageGroup.add("用戶商品銷售單品價格: " + sellingPrice);
-                                    messageGroup.add("用戶商品銷售合計: " + total);
-                                    messageGroup.add("└----------第" + (i + 1) + "筆----------┘");
-                                    productsList.add(messageGroup);
+                                    List<String> list = new ArrayList<>();
+                                    list.add("商品編號: " + product_id);
+                                    list.add("商品數量: " + quantity);
+                                    list.add("商品單品價格: " + price);
+                                    list.add("商品銷售單品價格: " + sellingPrice);
+                                    list.add("商品銷售合計: " + total);
+                                    dataMap.put("details" + (i + 1), list);
                                     QuotationItems quotationItems = new QuotationItems(decimal, product_id);
                                     quotationItems.setQuantity(quantity);
                                     quotationItems.setPrice(sellingPrice);
                                     quotationItems.setUnit_percent(new BigDecimal(userPercent));
                                     quotationItems.setUnit_price(price);
                                     orderbackendMapper.createQuotationItems(quotationItems);
+                                    dataMap.put("state", StatusKey.quotationsStatusKey.get(state));
+                                    data.add(dataMap);
                                 }
                                 Quotations quotations = new Quotations(decimal);
                                 quotations.setUsername(useruser);
-                                quotations.setStatus(Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend());
+                                quotations.setStatus(state);
                                 quotations.setTotal_price(totalPrice);
                                 orderbackendMapper.createQuotations(quotations);
                             } catch (DataIntegrityViolationException e) {
@@ -1069,16 +1065,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 throw new DBException(username + " - 系統錯誤，請稍後再試", e);
                             }
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "確認報價單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -1188,38 +1174,35 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (刪除報價) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         UserData userDataDetails = new UserData(useruser);
                         List<Map<String, Object>> quotationsData = getQuotationsData(userDataDetails);
-                        productsList.add("報價單");
-                        for (Map<String, Object> quotationData : quotationsData) {
+                        List<Map<String, Object>> data = new ArrayList<>();
+                        for (int i = 0; i < quotationsData.size(); i++) {
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "刪除完成");
+                            dataMap.put("useruser", useruser);
+                            Map<String, Object> quotationData = quotationsData.get(i);
                             BigDecimal quotation_idDel = new BigDecimal(quotationData.get("quotation_id").toString());
                             String usernameDel = quotationData.get("username").toString();
                             String statusDel = quotationData.get("status").toString();
                             StringBuilder msg = new StringBuilder();
-                            msg.append("編號").append(quotation_idDel).append(":用戶帳號:").append(usernameDel);
                             if (Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend().equals(statusDel)) {
                                 QuotationItems quotationItems = new QuotationItems(quotation_idDel, null);
                                 orderbackendMapper.delQuotationItems(quotationItems);
                                 Quotations quotations = new Quotations(quotation_idDel);
                                 quotations.setUsername(usernameDel);
                                 orderbackendMapper.delQuotations(quotations);
-                                msg.append(":報價單刪除成功");
+                                msg.append("報價單刪除成功");
                             } else {
-                                msg.append(":報價已送出無法刪除");
+                                msg.append("報價已送出無法刪除");
                             }
-                            productsList.add(msg);
+                            dataMap.put("quotationsId", quotation_idDel);
+                            List<String> list = new ArrayList<>();
+                            list.add(msg.toString());
+                            dataMap.put("details" + (i + 1), list);
+                            dataMap.put("state", StatusKey.quotationsStatusKey.get(statusDel));
+                            data.add(dataMap);
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "刪除報價單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -1329,10 +1312,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (查詢報價單) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         UserData userDataDetails = new UserData(useruser);
-                        List<Map<String, Object>> quotationsData =
-                                orderbackendMapper.quotationsItemsProductsData(userDataDetails);
+                        List<Map<String, Object>> quotationsData = orderbackendMapper.quotationsItemsProductsData(userDataDetails);
                         Map<String, List<Map<String, Object>>> groupListAll = new TreeMap<>();
                         for (Map<String, Object> quotationData : quotationsData) {
                             String quotationId = quotationData.get("quotation_id").toString();
@@ -1349,42 +1330,35 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                         (e1, e2) -> e1,
                                         LinkedHashMap::new
                                 ));
+                        List<Map<String, Object>> data = new ArrayList<>();
                         for (Map.Entry<String, List<Map<String, Object>>> entry : sorte.entrySet()) {
                             String key = entry.getKey();
-                            List<Map<String, Object>> list = entry.getValue();
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("報價單編號: " + key);
-                            for (int i = 0; i < list.size(); i++) {
-                                Map<String, Object> quotationData = list.get(i);
+                            List<Map<String, Object>> lists = entry.getValue();
+                            for (int i = 0; i < lists.size(); i++) {
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "查詢報價單");
+                                dataMap.put("useruser", useruser);
+                                dataMap.put("quotationsId", key);
+                                dataMap.put("stock", "庫存量足夠");
+                                Map<String, Object> quotationData = lists.get(i);
                                 String statusQuery = quotationData.get("status").toString();
                                 BigDecimal quantityQuery = new BigDecimal(quotationData.get("quantity").toString());
                                 BigDecimal priceQuery = new BigDecimal(quotationData.get("price").toString());
                                 BigDecimal sumPriceQuery = new BigDecimal(quotationData.get("sum_price").toString());
                                 String productsNameQuery = quotationData.get("products_name").toString();
                                 String descriptionQuery = quotationData.get("description").toString();
-                                messageGroup.add("|-----第" + (i + 1) + "筆-----|");
-                                messageGroup.add("|報價單:商品");
-                                messageGroup.add("|用戶名稱: " + useruser);
                                 // estimate（預估） / sent（已送出） / accepted（客戶接受） / rejected（拒絕）
-                                messageGroup.add("|狀態: " + StatusKey.quotationsStatusKey.get(statusQuery));
-                                messageGroup.add("|數量: " + quantityQuery);
-                                messageGroup.add("|價格: " + priceQuery);
-                                messageGroup.add("|合計: " + sumPriceQuery);
-                                messageGroup.add("|名稱: " + productsNameQuery);
-                                messageGroup.add("|敘述: " + descriptionQuery);
+                                List<String> list = new ArrayList<>();
+                                list.add("數量: " + quantityQuery);
+                                list.add("價格: " + priceQuery);
+                                list.add("合計: " + sumPriceQuery);
+                                list.add("名稱: " + productsNameQuery);
+                                list.add("描述: " + descriptionQuery);
+                                dataMap.put("details" + (i + 1), list);
+                                dataMap.put("state", StatusKey.quotationsStatusKey.get(statusQuery));
+                                data.add(dataMap);
                             }
-                            productsList.add(messageGroup);
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "查詢報價單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -1500,33 +1474,33 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (送出報價單) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         UserDataSend userDataDetails = new UserDataSend(useruser);
                         String send = Backend.STATUS_QUOTATIONS_SENT.getBackend();
                         userDataDetails.setStatus(send);
                         userDataDetails.setQuotation_id(new BigDecimal(userUserQuotationsId));
                         Map<String, Object> quotationsDataSend = getQuotationsDataSend(userDataDetails);
+                        List<Map<String, Object>> data = new ArrayList<>();
+                        Map<String, Object> dataMap = new TreeMap<>();
+                        dataMap.put("remark", "送出報價單");
+                        dataMap.put("useruser", useruser);
+                        dataMap.put("quotationsId", userUserQuotationsId);
+                        dataMap.put("stock", "庫存量足夠");
+                        List<String> list = new ArrayList<>();
                         if (quotationsDataSend == null) {
-                            productsList.add("報價單編號:" + userUserQuotationsId + ":送出失敗，無此報價單");
+                            list.add("送出失敗，無此報價單");
+                            dataMap.put("details" + (1), list);
                         } else {
                             String statusSend = quotationsDataSend.get("status").toString();
                             if (Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend().equals(statusSend)) {
                                 orderbackendMapper.updateQuotations(userDataDetails);
-                                productsList.add("報價單編號:" + userUserQuotationsId + ":送出成功");
-                                productsList.add("報價單狀態:" + StatusKey.quotationsStatusKey.get(send));
+                                list.add("送出成功");
+                                dataMap.put("details" + (1), list);
+                                dataMap.put("state", StatusKey.quotationsStatusKey.get(send));
                             } else {
-                                productsList.add("報價單編號:" + userUserQuotationsId + ":已送出，勿重複送單");
+                                list.add("已送出，勿重複送單");
+                                dataMap.put("details" + (1), list);
                             }
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "送出報價單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
                         data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
