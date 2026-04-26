@@ -310,7 +310,12 @@ function tableFormat(res) {
             } else {
                 if (row.error) {
                     const err = row.error;
-                    html += `<td>${err.username ?? ""}<br/>${err.password ?? ""}</td>`;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
                 } else {
                     html += `<td></td>`;
                 }
@@ -324,6 +329,7 @@ function tableFormat(res) {
     document.getElementById('user_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
+// 商品
 function tableFormatProduct(res) {
     let htmlHead = "";
     htmlHead += "<thead>";
@@ -388,7 +394,12 @@ function tableFormatProduct(res) {
             } else {
                 if (row.error) {
                     const err = row.error;
-                    html += `<td>${err.username ?? ""}<br/>${err.password ?? ""}</td>`;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
                 } else {
                     html += `<td></td>`;
                 }
@@ -400,6 +411,189 @@ function tableFormatProduct(res) {
 
     getTableById('product_table', html);
     document.getElementById('product_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 購物車
+function tableFormatCar(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('car_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "商品編號", "商品名稱", "數量", "描述", "新增日期", "更改日期"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "product_id",
+            "products_name",
+            "product_quantity",
+            "description",
+            "created_date",
+            "updated_date",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('car_table', html);
+    document.getElementById('car_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 查詢購物車
+function tableFormatQueryCar(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('car_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 100px;">
+                    <col style="width: 100px;">
+                    <col style="width: 400px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "購物車明細"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            result.forEach(key => {
+                html += `${row[key] ?? ""}<br/>`
+            });
+            html += `</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('car_table', html);
+    document.getElementById('car_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -477,80 +671,85 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // // 新增購物車
-    // document.getElementById('btnCreateCar').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         product_id: document.getElementById('product_id_CreateCar').value,
-    //         product_quantity: document.getElementById('product_quantity_CreateCar').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/createCarItem', data, token);
-    //         show_car(res);
-    //     } catch (err) {
-    //         show_car(err);
-    //     }
-    // });
+    // 新增購物車
+    document.getElementById('btnCreateCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_CreateCar').value,
+            product_quantity: document.getElementById('product_quantity_CreateCar').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/createCarItem', data, token);
+            show_user(res);
+            tableFormatCar(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 查詢購物車
-    // document.getElementById('btnQueryCar').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/queryCarItem', data, token);
-    //         show_car(res);
-    //     } catch (err) {
-    //         show_car(err);
-    //     }
-    // });
+    // 查詢購物車
+    document.getElementById('btnQueryCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/queryCarItem', data, token);
+            show_user(res);
+            tableFormatQueryCar(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 更改購物車
-    // document.getElementById('btnUpdateCar').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         product_id: document.getElementById('product_id_UpdateCar').value,
-    //         product_quantity: document.getElementById('product_quantity_UpdateCar').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/updateCarItem', data, token);
-    //         show_car(res);
-    //     } catch (err) {
-    //         show_car(err);
-    //     }
-    // });
+    // 更改購物車
+    document.getElementById('btnUpdateCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_UpdateCar').value,
+            product_quantity: document.getElementById('product_quantity_UpdateCar').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/updateCarItem', data, token);
+            show_user(res);
+            tableFormatCar(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 刪除購物車
-    // document.getElementById('btnDeleteCar').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         product_id: document.getElementById('product_id_DeleteCar').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/deleteCarItem', data, token);
-    //         show_car(res);
-    //     } catch (err) {
-    //         show_car(err);
-    //     }
-    // });
+    // 刪除購物車
+    document.getElementById('btnDeleteCar').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            product_id: document.getElementById('product_id_DeleteCar').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/deleteCarItem', data, token);
+            show_user(res);
+            tableFormatQueryCar(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 確認訂單
-    // document.getElementById('btnConfirm').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/confirmItem', data, token);
-    //         show_car(res);
-    //     } catch (err) {
-    //         show_car(err);
-    //     }
-    // });
+    // 確認訂單
+    document.getElementById('btnConfirm').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/confirmItem', data, token);
+            show_user(res);
+            tableFormatQueryCar(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
     // // 報價單編號
     // document.getElementById('quotationsProductId').addEventListener('click', async () => {

@@ -816,25 +816,15 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         try {
-                            String msg;
-                            List<Object> productsList = new ArrayList<>();
                             List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(product_id)));
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                             if (productsSelect.isEmpty()) {
-                                msg = username + " - " + product_id + " - 商品不存在";
+                                throw new ResourceNotFoundException(product_id + " - 商品不存在");
                             } else {
                                 if (userdataDetailsSelect == null) {
-                                    productsList = List.of(
-                                            "---------------------------------------",
-                                            "商品編號 - " + productsSelect.getFirst().get("product_id").toString(),
-                                            "商品名稱 - " + productsSelect.getFirst().get("products_name").toString(),
-                                            "數量(增加) - " + new BigDecimal(product_quantity),
-                                            "描述 - " + productsSelect.getFirst().get("description").toString(),
-                                            "---------------------------------------"
-                                    );
-
                                     userdataDetails.setOrder_item_str(product_id + ":" + product_quantity);
                                     userMapper.createUserdataDetail(userdataDetails);
+                                    userdataDetailsSelect = getUserDataDetail(userdataDetails);
                                 } else {
                                     String orderItem = userdataDetailsSelect.get("order_item").toString();
                                     if (StringUtils.hasText(orderItem)) {
@@ -849,17 +839,6 @@ public class UserServiceImpl implements UserService {
                                                 .map(e -> e.getKey() + ":" + e.getValue())
                                                 .toList();
 
-                                        for (String item : list) {
-                                            String[] arr = item.split(":");
-                                            productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                                            productsList.add("---------------------------------------");
-                                            productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
-                                            productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                            productsList.add("數量(增加) - " + new BigDecimal(arr[1]));
-                                            productsList.add("描述 - " + productsSelect.getFirst().get("description").toString());
-                                            productsList.add("---------------------------------------");
-                                        }
-
                                         String result = list.stream()
                                                 .map(String::valueOf)
                                                 .collect(Collectors.joining(","));
@@ -868,28 +847,34 @@ public class UserServiceImpl implements UserService {
                                         userdataDetails.setOrder_item_str(product_id + ":" + product_quantity);
                                     }
                                     userMapper.updateUserdataDetail(userdataDetails);
+                                    userdataDetailsSelect = getUserDataDetail(userdataDetails);
                                 }
-                                msg = username + " - 商品編號(" + product_id + ") - 新增商品成功";
+                                List<Map<String, Object>> data = new ArrayList<>();
+                                String orderItem = userdataDetailsSelect.get("order_item").toString();
+                                for (String item : orderItem.split(",")) {
+                                    String[] arr = item.split(":");
+                                    productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
+                                    Map<String, Object> dataMap = new TreeMap<>();
+                                    dataMap.put("remark", "新增商品成功");
+                                    dataMap.put("username", userdataDetailsSelect.get("username"));
+                                    dataMap.put("product_id", productsSelect.getFirst().get("product_id").toString());
+                                    dataMap.put("products_name", productsSelect.getFirst().get("products_name").toString());
+                                    dataMap.put("product_quantity", new BigDecimal(arr[1]));
+                                    dataMap.put("description", productsSelect.getFirst().get("description").toString());
+                                    String created_date = userdataDetailsSelect.get("created_date").toString();
+                                    String updated_date = userdataDetailsSelect.get("updated_date").toString();
+                                    dataMap.put("created_date", ConvertFormat.time(created_date));
+                                    dataMap.put("updated_date", ConvertFormat.time(updated_date));
+                                    data.add(dataMap);
+                                }
+                                HttpStatus status = HttpStatus.OK;
+                                return ResponseEntity
+                                        .status(status)
+                                        .body(ApiResponse.api(
+                                                status,
+                                                data
+                                        ));
                             }
-
-                            List<Object> messageList = List.of(
-                                    "帳號 - " + username,
-                                    "權限 - " + userSelect.get("permissions").toString(),
-                                    msg,
-                                    productsList,
-                                    "新增日期" + ConvertFormat.time("")
-                            );
-                            List<Map<String, Object>> data = new ArrayList<>();
-                            Map<String, Object> dataMap = new TreeMap<>();
-                            dataMap.put("1", messageList);
-                            data.add(dataMap);
-                            HttpStatus status = HttpStatus.OK;
-                            return ResponseEntity
-                                    .status(status)
-                                    .body(ApiResponse.api(
-                                            status,
-                                            data
-                                    ));
                         } catch (DataIntegrityViolationException e) {
                             logger.warn("新增購物車資料不合法，username={}", usernameAccessJwt);
                             throw new IsViolationException(username + " - 新增購物車資料不合法", e);
@@ -992,44 +977,36 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (查詢購物車) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        String permissions = userSelect.get("permissions").toString();
-                        List<Object> messageList = new ArrayList<>();
-                        messageList.add("帳號 - " + username);
-                        messageList.add("權限 - " + permissions);
                         UserdataDetails userdataDetails = new UserdataDetails(username);
                         Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                         if (userdataDetailsSelect == null) {
                             logger.error("{} : (查詢購物車) 訂單不存在", username);
                             throw new ResourceNotFoundException(username + " - 訂單不存在");
                         }
-                        String orderItem = userdataDetailsSelect.get("order_item").toString();
-                        logger.info("(查詢購物車){}", orderItem);
-                        String[] list = orderItem.split(",");
-                        int listLength = 0;
-                        if (StringUtils.hasText(orderItem)) {
-                            listLength = list.length;
-                            messageList.add(username + " - 查詢購物車成功");
-                        } else {
-                            messageList.add(username + " - 新增商品至購物車");
-                        }
-                        List<Object> productsList = new ArrayList<>();
-                        for (int i = 0; i < listLength; i++) {
-                            final int num = i + 1;
-                            String[] arr = list[i].split(":");
-                            List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                            productsList.add("---------------------------------------");
-                            productsList.add("第" + num + "筆");
-                            productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
-                            productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                            productsList.add("數量 - " + new BigDecimal(arr[1]));
-                            productsList.add("---------------------------------------");
-                        }
-                        messageList.add(productsList);
-                        messageList.add("新增訂單日期 - " + ConvertFormat.time(userdataDetailsSelect.get("created_date").toString()));
-                        messageList.add("更改訂單日期 - " + ConvertFormat.time(userdataDetailsSelect.get("updated_date").toString()));
                         List<Map<String, Object>> data = new ArrayList<>();
+                        String orderItem = userdataDetailsSelect.get("order_item").toString();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
+                        String remark = "新增商品至購物車";
+                        if (StringUtils.hasText(orderItem)) {
+                            remark = "查詢購物車成功";
+                            String[] list = orderItem.split(",");
+                            for (int i = 0; i < list.length; i++) {
+                                String[] arr = list[i].split(":");
+                                List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
+                                String productId = productsSelect.getFirst().get("product_id").toString();
+                                String productsName = productsSelect.getFirst().get("products_name").toString();
+                                BigDecimal productQuantity = new BigDecimal(arr[1]);
+                                String description = productsSelect.getFirst().get("description").toString();
+                                StringBuilder details = new StringBuilder();
+                                details.append(String.format(
+                                        "商品編號(%s) 商品名稱(%s) 數量(%s) 描述(%s)",
+                                        productId, productsName, productQuantity, description
+                                ));
+                                dataMap.put("details" + (i + 1), details);
+                            }
+                        }
+                        dataMap.put("remark", remark);
+                        dataMap.put("username", username);
                         data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
@@ -1142,66 +1119,61 @@ public class UserServiceImpl implements UserService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         try {
+                            List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(product_id)));
                             Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
-                            if (userdataDetailsSelect == null) {
-                                logger.error("{} : (更改購物車) 訂單不存在", username);
-                                throw new ResourceNotFoundException(username + " - 訂單不存在");
-                            }
+                            if (productsSelect.isEmpty()) {
+                                throw new ResourceNotFoundException(product_id + " - 商品不存在");
+                            } else {
+                                if (userdataDetailsSelect == null) {
+                                    logger.error("{} : (更改購物車) 訂單不存在", username);
+                                    throw new ResourceNotFoundException(username + " - 訂單不存在");
+                                }
+                                String orderItem = userdataDetailsSelect.get("order_item").toString();
+                                if (StringUtils.hasText(orderItem)) {
+                                    Map<String, Integer> map = new TreeMap<>();
+                                    for (String item : orderItem.split(",")) {
+                                        String[] arr = item.split(":");
+                                        map.put(arr[0], Integer.parseInt(arr[1]));
+                                    }
+                                    int qty = Integer.parseInt(product_quantity);
+                                    map.put(product_id, Math.max(1, map.getOrDefault(product_id, 0) - qty));
+                                    List<String> list = map.entrySet().stream()
+                                            .map(e -> e.getKey() + ":" + e.getValue())
+                                            .toList();
 
-                            String orderItem = userdataDetailsSelect.get("order_item").toString();
-                            logger.info("(更改購物車){}", orderItem);
-                            List<Object> productsList = new ArrayList<>();
-                            String msg;
-                            if (StringUtils.hasText(orderItem)) {
-                                Map<String, Integer> map = new TreeMap<>();
+                                    String result = list.stream()
+                                            .map(String::valueOf)
+                                            .collect(Collectors.joining(","));
+                                    userdataDetails.setOrder_item_str(result);
+                                    userMapper.updateUserdataDetail(userdataDetails);
+                                    userdataDetailsSelect = getUserDataDetail(userdataDetails);
+                                }
+                                List<Map<String, Object>> data = new ArrayList<>();
+                                orderItem = userdataDetailsSelect.get("order_item").toString();
                                 for (String item : orderItem.split(",")) {
                                     String[] arr = item.split(":");
-                                    map.put(arr[0], Integer.parseInt(arr[1]));
+                                    productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
+                                    Map<String, Object> dataMap = new TreeMap<>();
+                                    dataMap.put("remark", "更改商品成功");
+                                    dataMap.put("username", userdataDetailsSelect.get("username"));
+                                    dataMap.put("product_id", productsSelect.getFirst().get("product_id").toString());
+                                    dataMap.put("products_name", productsSelect.getFirst().get("products_name").toString());
+                                    dataMap.put("product_quantity", new BigDecimal(arr[1]));
+                                    dataMap.put("description", productsSelect.getFirst().get("description").toString());
+                                    String created_date = userdataDetailsSelect.get("created_date").toString();
+                                    String updated_date = userdataDetailsSelect.get("updated_date").toString();
+                                    dataMap.put("created_date", ConvertFormat.time(created_date));
+                                    dataMap.put("updated_date", ConvertFormat.time(updated_date));
+                                    data.add(dataMap);
                                 }
-                                int qty = Integer.parseInt(product_quantity);
-                                map.put(product_id, Math.max(1, map.getOrDefault(product_id, 0) - qty));
-                                List<String> list = map.entrySet().stream()
-                                        .map(e -> e.getKey() + ":" + e.getValue())
-                                        .toList();
-
-                                for (String item : list) {
-                                    String[] arr = item.split(":");
-                                    List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
-                                    productsList.add("---------------------------------------");
-                                    productsList.add("商品編號 - " + productsSelect.getFirst().get("product_id").toString());
-                                    productsList.add("商品名稱 - " + productsSelect.getFirst().get("products_name").toString());
-                                    productsList.add("數量(減少) - " + new BigDecimal(arr[1]));
-                                    productsList.add("描述 - " + productsSelect.getFirst().get("description").toString());
-                                    productsList.add("---------------------------------------");
-                                }
-
-                                String result = list.stream()
-                                        .map(String::valueOf)
-                                        .collect(Collectors.joining(","));
-                                userdataDetails.setOrder_item_str(result);
-                                userMapper.updateUserdataDetail(userdataDetails);
-                                msg = username + " - 商品編號(" + product_id + ") - 更改商品成功";
-                            } else {
-                                msg = username + " - 新增商品至購物車";
+                                HttpStatus status = HttpStatus.OK;
+                                return ResponseEntity
+                                        .status(status)
+                                        .body(ApiResponse.api(
+                                                status,
+                                                data
+                                        ));
                             }
-                            List<Object> messageList = List.of(
-                                    "帳號 - " + username,
-                                    "權限 - " + userSelect.get("permissions").toString(),
-                                    msg,
-                                    productsList,
-                                    "更改日期" + ConvertFormat.time("")
-                            );
-                            List<Map<String, Object>> data = new ArrayList<>();
-                            Map<String, Object> dataMap = new TreeMap<>();
-                            dataMap.put("1", messageList);
-                            data.add(dataMap);
-                            HttpStatus status = HttpStatus.OK;
-                            return ResponseEntity
-                                    .status(status)
-                                    .body(ApiResponse.api(
-                                            status,
-                                            data
-                                    ));
                         } catch (DataIntegrityViolationException e) {
                             logger.warn("更改購物車資料不合法，username={}", usernameAccessJwt);
                             throw new IsViolationException(username + " - 更改購物車資料不合法", e);
@@ -1319,7 +1291,6 @@ public class UserServiceImpl implements UserService {
                                 throw new ResourceNotFoundException(username + " - 訂單不存在");
                             }
                             String orderItem = userdataDetailsSelect.get("order_item").toString();
-                            logger.info("(刪除購物車){}", orderItem);
                             List<String> hasNotSameList = new ArrayList<>();
                             List<String> hasNotSameListUpdateDb = new ArrayList<>();
                             List<String> tempList = new ArrayList<>();
@@ -1333,40 +1304,46 @@ public class UserServiceImpl implements UserService {
                                     tempList.add(arr[0]);
                                 }
                             }
-                            List<Object> productsList = new ArrayList<>();
+                            List<Map<String, Object>> data = new ArrayList<>();
                             if (!tempList.isEmpty()) {
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "刪除商品成功");
+                                dataMap.put("username",  username);
                                 List<Map<String, Object>> productsSelect;
-                                for (String temp : tempList) {
-                                    productsSelect = getProduct(new Product(new BigDecimal(temp)));
-                                    String delProduct_id = productsSelect.getFirst().get("product_id").toString();
-                                    String delProduct_name = productsSelect.getFirst().get("products_name").toString();
-                                    productsList.add("刪除 - 商品編號(" + delProduct_id + ") - " + delProduct_name);
-                                }
-                                productsList.add("---------------------------------------");
+                                int cnt = 0;
                                 for (String hasNotSame : hasNotSameList) {
                                     productsSelect = getProduct(new Product(new BigDecimal(hasNotSame)));
                                     String hasNotProduct_id = productsSelect.getFirst().get("product_id").toString();
                                     String hasNotProduct_name = productsSelect.getFirst().get("products_name").toString();
-                                    productsList.add("商品編號(" + hasNotProduct_id + ") - " + hasNotProduct_name);
+                                    StringBuilder details = new StringBuilder();
+                                    details.append(String.format(
+                                            "商品編號(%s) 商品名稱(%s)",
+                                            hasNotProduct_id, hasNotProduct_name
+                                    ));
+                                    cnt++;
+                                    dataMap.put("details" + cnt, details);
                                 }
+                                for (String temp : tempList) {
+                                    productsSelect = getProduct(new Product(new BigDecimal(temp)));
+                                    String delProduct_id = productsSelect.getFirst().get("product_id").toString();
+                                    String delProduct_name = productsSelect.getFirst().get("products_name").toString();
+                                    StringBuilder details = new StringBuilder();
+                                    details.append(String.format(
+                                            "刪除 - 商品編號(%s) 商品名稱(%s)",
+                                            delProduct_id, delProduct_name
+                                    ));
+                                    cnt++;
+                                    dataMap.put("details" + cnt, details);
+                                }
+                                data.add(dataMap);
                                 String result = hasNotSameListUpdateDb.stream()
                                         .map(String::valueOf)
                                         .collect(Collectors.joining(","));
                                 userdataDetails.setOrder_item_str(result);
                                 userMapper.updateUserdataDetail(userdataDetails);
                             } else {
-                                productsList = List.of(username + " - 商品編號(" + product_id + ") - 無此商品");
+                                throw new ResourceNotFoundException(username + " - 無此商品");
                             }
-                            List<Object> messageList = List.of(
-                                    "帳號 - " + username,
-                                    "權限 - " + userSelect.get("permissions").toString(),
-                                    productsList,
-                                    "刪除日期" + ConvertFormat.time("")
-                            );
-                            List<Map<String, Object>> data = new ArrayList<>();
-                            Map<String, Object> dataMap = new TreeMap<>();
-                            dataMap.put("1", messageList);
-                            data.add(dataMap);
                             HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
                                     .status(status)
@@ -1473,26 +1450,38 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (確認訂單) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> messageList = new ArrayList<>();
-                        messageList.add("帳號 - " + username);
-                        messageList.add("權限 - " + userSelect.get("permissions").toString());
                         UserdataDetails userdataDetails = new UserdataDetails(username);
                         Map<String, Object> userdataDetailsSelect = getUserDataDetail(userdataDetails);
                         if (userdataDetailsSelect == null) {
                             logger.error("{} : (確認訂單) 訂單不存在", username);
                             throw new ResourceNotFoundException(username + " - 訂單不存在");
                         }
-                        String orderItem = userdataDetailsSelect.get("order_item").toString();
-                        logger.info("(確認訂單){}", orderItem);
-                        if (StringUtils.hasText(orderItem)) {
-                            userMapper.updateUserdataDetailIsActive(username);
-                            messageList.add(username + " - 商品下單成功");
-                        } else {
-                            messageList.add(username + " - 新增商品至購物車");
-                        }
                         List<Map<String, Object>> data = new ArrayList<>();
                         Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
+                        String orderItem = userdataDetailsSelect.get("order_item").toString();
+                        logger.info("(確認訂單){}", orderItem);
+                        String remark = "新增商品至購物車";
+                        if (StringUtils.hasText(orderItem)) {
+                            userMapper.updateUserdataDetailIsActive(username);
+                            remark = "商品下單成功";
+                            String[] list = orderItem.split(",");
+                            for (int i = 0; i < list.length; i++) {
+                                String[] arr = list[i].split(":");
+                                List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
+                                String productId = productsSelect.getFirst().get("product_id").toString();
+                                String productsName = productsSelect.getFirst().get("products_name").toString();
+                                BigDecimal productQuantity = new BigDecimal(arr[1]);
+                                String description = productsSelect.getFirst().get("description").toString();
+                                StringBuilder details = new StringBuilder();
+                                details.append(String.format(
+                                        "商品編號(%s) 商品名稱(%s) 數量(%s) 描述(%s)",
+                                        productId, productsName, productQuantity, description
+                                ));
+                                dataMap.put("details" + (i + 1), details);
+                            }
+                        }
+                        dataMap.put("remark", remark);
+                        dataMap.put("username", username);
                         data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity

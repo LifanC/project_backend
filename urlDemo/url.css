@@ -42,7 +42,7 @@
   .form {
       display: flex;
       flex-direction: column;
-      width: 450px;
+      width: 600px;
   }
 
   .form input,
@@ -65,16 +65,12 @@
   .url-table {
       border-collapse: separate;
       border: 1px solid black;
-      width: 450px;
+      width: 600px;
   }
 
   .url-table td,
   .url-table th {
       border: 1px solid black;
-  }
-
-  .url-table th {
-      width: 200px;
   }
 
   .radio-group {
