@@ -1585,7 +1585,6 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (報價單編號) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         QuotationsProduct quotationsProduct = new QuotationsProduct();
                         quotationsProduct.setUsername(username);
                         quotationsProduct.setStatuss(
@@ -1597,36 +1596,32 @@ public class UserServiceImpl implements UserService {
                         );
                         List<Map<String, Object>> quotationsIdData = userMapper.userdataDetailsDataId(quotationsProduct);
                         if (quotationsIdData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
-                            List<Object> messageGroup = new ArrayList<>();
+                            List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < quotationsIdData.size(); i++) {
                                 String quotation_id = quotationsIdData.get(i).get("quotation_id").toString();
                                 String status = quotationsIdData.get(i).get("status").toString();
-                                messageGroup.add("第" + (i + 1) + "筆 - " +
-                                        "編號:" + quotation_id + ":" +
-                                        "狀態:" + StatusKey.quotationsStatusKey.get(status));
+                                BigDecimal total_price = new BigDecimal(quotationsIdData.get(i).get("total_price").toString());
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "報價單編號");
+                                dataMap.put("username", username);
+                                dataMap.put("permissions", userSelect.get("permissions").toString());
+                                dataMap.put("quotation_id", quotation_id);
+                                dataMap.put("state", StatusKey.quotationsStatusKey.get(status));
+                                List<String> list = new ArrayList<>();
+                                list.add(String.format("總金額(%s)", total_price));
+                                dataMap.put("details" + (i + 1), list);
+                                data.add(dataMap);
                             }
-                            productsList.add(messageGroup);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "報價單編號",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (報價單編號)無效的 JWT token", username);

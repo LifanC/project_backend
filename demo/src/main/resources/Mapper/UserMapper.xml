@@ -95,7 +95,8 @@
         select distinct
             quotations.quotation_id,
             quotations.status,
-            userdata_details.username
+            userdata_details.username,
+            quotations.total_price
         from
             "interviewworks_schema"."userdata_details" userdata_details
                 inner join "interviewworks_schema"."quotations" quotations
