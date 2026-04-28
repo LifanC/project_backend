@@ -877,50 +877,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // // 報價單
-    // document.getElementById('quotationsProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         quotation_id: document.getElementById('user_quotationsProduct').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/quotationsProduct', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 報價單
+    document.getElementById('quotationsProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            quotation_id: document.getElementById('user_quotationsProduct').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/quotationsProduct', data, token);
+            show_user(res);
+            tableFormatQuotationsProductId(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 接受
-    // document.getElementById('user_accepted').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         quotation_id: document.getElementById('user_quotationsProduct').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/userAccepted', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 接受
+    document.getElementById('user_accepted').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            quotation_id: document.getElementById('user_quotationsProduct').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userAccepted', data, token);
+            show_user(res);
+            tableFormatQuotationsProductId(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 拒絕
-    // document.getElementById('user_rejected').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         quotation_id: document.getElementById('user_quotationsProduct').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/userRejected', data, token);
-    //         show_quotations(res);
-    //     } catch (err) {
-    //         show_quotations(err);
-    //     }
-    // });
+    // 拒絕
+    document.getElementById('user_rejected').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            quotation_id: document.getElementById('user_quotationsProduct').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userRejected', data, token);
+            show_user(res);
+            tableFormatQuotationsProductId(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
     // // 查詢出貨資訊
     // document.getElementById('user_shipments').addEventListener('click', async () => {

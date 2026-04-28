@@ -1735,11 +1735,9 @@ public class UserServiceImpl implements UserService {
                         );
                         List<Map<String, Object>> quotationsData = userMapper.userdataDetailsData(quotationsProduct);
                         if (quotationsData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("報價單編號: " + quotation_id);
+                            List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < quotationsData.size(); i++) {
                                 String status = quotationsData.get(i).get("status").toString();
                                 BigDecimal quantity = new BigDecimal(quotationsData.get(i).get("quantity").toString());
@@ -1747,34 +1745,27 @@ public class UserServiceImpl implements UserService {
                                 BigDecimal sumPrice = new BigDecimal(quotationsData.get(i).get("sum_price").toString());
                                 String productsName = quotationsData.get(i).get("products_name").toString();
                                 String description = quotationsData.get(i).get("description").toString();
-                                messageGroup.add("┌-------第" + (i + 1) + "筆-------┐");
-                                messageGroup.add("|數量:" + quantity);
-                                messageGroup.add("|價格:" + price);
-                                messageGroup.add("|合計:" + sumPrice);
-                                messageGroup.add("|名稱:" + productsName);
-                                messageGroup.add("|描述:" + description);
-                                messageGroup.add("|狀態:" + StatusKey.quotationsStatusKey.get(status));
-                                messageGroup.add("└------------------┘");
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "報價單");
+                                dataMap.put("username", username);
+                                dataMap.put("permissions", userSelect.get("permissions").toString());
+                                dataMap.put("quotation_id", quotation_id);
+                                List<String> list = new ArrayList<>();
+                                list.add("數量 X 價格 = 合計");
+                                list.add(String.format("%s X %s = %s", quantity, price, sumPrice));
+                                list.add(String.format("名稱(%s)描述(%s)", productsName, description));
+                                dataMap.put("details" + (i + 1), list);
+                                dataMap.put("state", StatusKey.quotationsStatusKey.get(status));
+                                data.add(dataMap);
                             }
-                            productsList.add(messageGroup);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "報價單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (報價單)無效的 JWT token", username);
@@ -1876,18 +1867,16 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (接受) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Quotations quotations = new Quotations(new BigDecimal(quotation_id));
                         quotations.setUsername(username);
                         Map<String, Object> quotationsDetails = userMapper.selectQuotations(quotations).get(username);
                         if (quotationsDetails == null) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
                             String quotationDetails_id = quotationsDetails.get("quotation_id").toString();
-                            String status = quotationsDetails.get("status").toString();
+                            String statusDetails = quotationsDetails.get("status").toString();
                             String send = Backend.STATUS_QUOTATIONS_SENT.getBackend();
-                            if (status.equals(send)) {
+                            if (statusDetails.equals(send)) {
                                 UserDataSend userDataDetails = new UserDataSend(username);
                                 String accepted = Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend();
                                 userDataDetails.setStatus(accepted);
@@ -1903,54 +1892,34 @@ public class UserServiceImpl implements UserService {
                                 order.setTotal_price(total_price);
                                 userMapper.createOrders(order);
                                 List<Map<String, Object>> getOrders = userMapper.getOrdersQuotations(quotations);
-                                List<Object> messageOrdersGroup = new ArrayList<>();
+                                List<Map<String, Object>> data = new ArrayList<>();
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "接受");
+                                dataMap.put("username", username);
+                                dataMap.put("permissions", userSelect.get("permissions").toString());
+                                dataMap.put("quotation_id", quotation_id);
                                 for (int i = 0; i < getOrders.size(); i++) {
                                     Map<String, Object> getOrder = getOrders.get(i);
-                                    BigDecimal quantity = new BigDecimal(getOrder.get("quantity").toString());
-                                    BigDecimal price = new BigDecimal(getOrder.get("price").toString());
-                                    BigDecimal sumPrice = new BigDecimal(getOrder.get("sum_price").toString());
                                     String productsName = getOrder.get("products_name").toString();
                                     String description = getOrder.get("description").toString();
-                                    messageOrdersGroup.add("┌----訂單-第" + (i + 1) + "筆-----┐");
-                                    messageOrdersGroup.add("|數量:" + quantity);
-                                    messageOrdersGroup.add("|價格:" + price);
-                                    messageOrdersGroup.add("|合計:" + sumPrice);
-                                    messageOrdersGroup.add("|名稱:" + productsName);
-                                    messageOrdersGroup.add("|描述:" + description);
-                                    messageOrdersGroup.add("|狀態:" + StatusKey.ordersStatusKey.get(pending));
-                                    messageOrdersGroup.add("└------------------┘");
+                                    List<String> list = new ArrayList<>();
+                                    list.add(String.format("名稱(%s)描述(%s)", productsName, description));
+                                    list.add(String.format("狀態(%s)", StatusKey.ordersStatusKey.get(pending)));
+                                    dataMap.put("details" + (i + 1), list);
                                 }
-                                List<Object> messageGroup = List.of(
-                                        "┌---------商品---------┐",
-                                        "|報價單編號: " + quotation_id,
-                                        "|總價格:" + total_price,
-                                        "|狀態:" + StatusKey.quotationsStatusKey.get(accepted),
-                                        messageOrdersGroup,
-                                        "└---------商品---------┘"
-                                );
-                                productsList.add(messageGroup);
+                                dataMap.put("state", StatusKey.quotationsStatusKey.get(accepted));
+                                data.add(dataMap);
+                                HttpStatus status = HttpStatus.OK;
+                                return ResponseEntity
+                                        .status(status)
+                                        .body(ApiResponse.api(
+                                                status,
+                                                data
+                                        ));
                             } else {
-                                List<Object> messageGroup = List.of("空");
-                                productsList = List.of(messageGroup);
+                                throw new ResourceNotFoundException(username + " - 空");
                             }
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "接受",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (接受)無效的 JWT token", username);
@@ -2040,53 +2009,39 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (拒絕) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Quotations quotations = new Quotations(new BigDecimal(quotation_id));
                         quotations.setUsername(username);
                         Map<String, Object> quotationsDetails = userMapper.selectQuotations(quotations).get(username);
                         if (quotationsDetails == null) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
-                            String status = quotationsDetails.get("status").toString();
+                            String statusDetails = quotationsDetails.get("status").toString();
                             String send = Backend.STATUS_QUOTATIONS_SENT.getBackend();
-                            if (status.equals(send)) {
+                            if (statusDetails.equals(send)) {
                                 UserDataSend userDataDetails = new UserDataSend(username);
                                 String rejected = Backend.STATUS_QUOTATIONS_REJECTED.getBackend();
                                 userDataDetails.setStatus(rejected);
                                 userDataDetails.setQuotation_id(new BigDecimal(quotation_id));
                                 userMapper.updateQuotations(userDataDetails);
-                                BigDecimal total_price = new BigDecimal(quotationsDetails.get("total_price").toString());
-                                List<Object> messageGroup = List.of(
-                                        "┌---------商品---------┐",
-                                        "|報價單編號: " + quotation_id,
-                                        "|總價格:" + total_price,
-                                        "|狀態:" + StatusKey.quotationsStatusKey.get(rejected),
-                                        "└---------商品---------┘"
-                                );
-                                productsList.add(messageGroup);
+                                List<Map<String, Object>> data = new ArrayList<>();
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "拒絕");
+                                dataMap.put("username", username);
+                                dataMap.put("permissions", userSelect.get("permissions").toString());
+                                dataMap.put("quotation_id", quotation_id);
+                                dataMap.put("state", StatusKey.quotationsStatusKey.get(rejected));
+                                data.add(dataMap);
+                                HttpStatus status = HttpStatus.OK;
+                                return ResponseEntity
+                                        .status(status)
+                                        .body(ApiResponse.api(
+                                                status,
+                                                data
+                                        ));
                             } else {
-                                List<Object> messageGroup = List.of("空");
-                                productsList = List.of(messageGroup);
+                                throw new ResourceNotFoundException(username + " - 空");
                             }
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "拒絕",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (拒絕)無效的 JWT token", username);
