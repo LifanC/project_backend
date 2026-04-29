@@ -1604,7 +1604,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (查詢用戶訂單名單) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Orders orders = new Orders();
                         orders.setQuotationsStatuss(
                                 List.of(
@@ -1620,39 +1619,30 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
+                            List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < ordersData.size(); i++) {
                                 String order_id = ordersData.get(i).get("order_id").toString();
                                 String quotation_id = ordersData.get(i).get("quotation_id").toString();
                                 String status = ordersData.get(i).get("status").toString();
                                 String quotationsUsername = ordersData.get(i).get("username").toString();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
-                                messageGroup.add("訂單編號:" + order_id + ":用戶:" + quotationsUsername);
-                                messageGroup.add("報價單編號:" + quotation_id);
-                                messageGroup.add("狀態:" + StatusKey.ordersStatusKey.get(status));
-                                productsList.add(messageGroup);
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "查詢用戶");
+                                dataMap.put("useruser", quotationsUsername);
+                                dataMap.put("orderId", order_id);
+                                dataMap.put("quotationsId", quotation_id);
+                                dataMap.put("state", StatusKey.ordersStatusKey.get(status));
+                                data.add(dataMap);
                             }
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "查詢用戶訂單名單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (查詢用戶訂單名單)無效的 JWT token", username);
@@ -1763,7 +1753,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (訂單) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Orders orders = new Orders(StringUtils.hasText(orderId) ? new BigDecimal(orderId) : null);
                         orders.setUsername(useruser);
                         orders.setQuotationsStatuss(
@@ -1780,39 +1769,30 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
+                            List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < ordersData.size(); i++) {
                                 String order_id = ordersData.get(i).get("order_id").toString();
                                 String quotation_id = ordersData.get(i).get("quotation_id").toString();
                                 String status = ordersData.get(i).get("status").toString();
                                 String quotationsUsername = ordersData.get(i).get("username").toString();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
-                                messageGroup.add("訂單編號:" + order_id + ":用戶:" + quotationsUsername);
-                                messageGroup.add("報價單編號:" + quotation_id);
-                                messageGroup.add("狀態:" + StatusKey.ordersStatusKey.get(status));
-                                productsList.add(messageGroup);
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "訂單");
+                                dataMap.put("useruser", quotationsUsername);
+                                dataMap.put("orderId", order_id);
+                                dataMap.put("quotationsId", quotation_id);
+                                dataMap.put("state", StatusKey.ordersStatusKey.get(status));
+                                data.add(dataMap);
                             }
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "訂單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (訂單)無效的 JWT token", username);
@@ -1921,25 +1901,28 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (確認訂單) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Orders orders = new Orders(new BigDecimal(orderId));
                         orders.setUsername(useruser);
                         orders.setQuotationsStatuss(List.of(Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()));
                         orders.setStatuss(List.of(Backend.STATUS_ORDERS_PENDING.getBackend()));
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
                             String confirmed = Backend.STATUS_ORDERS_CONFIRMED.getBackend();
+                            List<Map<String, Object>> data = new ArrayList<>();
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "確認訂單");
                             for (int i = 0; i < ordersData.size(); i++) {
                                 String order_id = ordersData.get(i).get("order_id").toString();
+                                String quotation_id = ordersData.get(i).get("quotation_id").toString();
                                 String quotationsUsername = ordersData.get(i).get("username").toString();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + quotationsUsername);
-                                messageGroup.add("狀態:" + StatusKey.ordersStatusKey.get(confirmed));
-                                productsList.add(messageGroup);
+                                dataMap.put("useruser", quotationsUsername);
+                                dataMap.put("orderId", order_id);
+                                dataMap.put("quotationsId", quotation_id);
+                                List<String> list = new ArrayList<>();
+                                list.add("訂單狀態:" + StatusKey.ordersStatusKey.get(confirmed));
+                                dataMap.put("details" + (i + 1), list);
                             }
                             orders.setStatus(confirmed);
                             orderbackendMapper.updateOrders(orders);
@@ -1965,7 +1948,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String trackingNumber = prefix + datePart + serial;
                             shipments.setTracking_number(trackingNumber);
                             orderbackendMapper.createShipments(shipments);
-                            productsList.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
+                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(preparing));
 
                             // *付款（payments）
                             Payments payments = new Payments(new BigDecimal(orderId));
@@ -1975,24 +1958,16 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             payments.setStatus(unpaid);
                             payments.setPayments_method(cash);
                             orderbackendMapper.createPayments(payments);
+                            data.add(dataMap);
+
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "確認訂單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (確認訂單)無效的 JWT token", username);
@@ -2101,46 +2076,40 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (取消訂單) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Orders orders = new Orders(new BigDecimal(orderId));
                         orders.setUsername(useruser);
                         orders.setQuotationsStatuss(List.of(Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()));
                         orders.setStatuss(List.of(Backend.STATUS_ORDERS_PENDING.getBackend()));
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
                             String cancelled = Backend.STATUS_ORDERS_CANCELLED.getBackend();
-                            orders.setStatus(cancelled);
-                            orderbackendMapper.updateOrders(orders);
+                            List<Map<String, Object>> data = new ArrayList<>();
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "取消訂單");
                             for (int i = 0; i < ordersData.size(); i++) {
                                 String order_id = ordersData.get(i).get("order_id").toString();
+                                String quotation_id = ordersData.get(i).get("quotation_id").toString();
                                 String quotationsUsername = ordersData.get(i).get("username").toString();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("第" + (i + 1) + "筆");
-                                messageGroup.add("編號:" + order_id + ":用戶:" + quotationsUsername);
-                                messageGroup.add("狀態:" + StatusKey.ordersStatusKey.get(cancelled));
-                                productsList.add(messageGroup);
+                                dataMap.put("useruser", quotationsUsername);
+                                dataMap.put("orderId", order_id);
+                                dataMap.put("quotationsId", quotation_id);
+                                List<String> list = new ArrayList<>();
+                                list.add("訂單狀態:" + StatusKey.ordersStatusKey.get(cancelled));
+                                dataMap.put("details" + (i + 1), list);
                             }
+                            data.add(dataMap);
+                            orders.setStatus(cancelled);
+                            orderbackendMapper.updateOrders(orders);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "取消訂單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (取消訂單)無效的 JWT token", username);

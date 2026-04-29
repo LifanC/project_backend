@@ -581,7 +581,6 @@ function tableFormatConfirmQuotationsProduct(res) {
             html += "<table>";
             html += "<tbody>";
             result.forEach(key => {
-                console.log('key', key)
                 row[key].forEach(details => {
                     html += "<tr>";
                     html += `<td>${details ?? ""}</td>`;
@@ -636,6 +635,116 @@ function tableFormatConfirmQuotationsProduct(res) {
 
     getTableById('quotations_table', html);
     document.getElementById('quotations_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 訂單
+function tableFormatOrdersUser(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('order_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 220px;">
+                    <col style="width: 60px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "用戶編號", "訂單編號", "報價單編號", "細項", "狀態"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "useruser",
+            "orderId",
+            "quotationsId",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            html += "<table>";
+            html += "<tbody>";
+            result.forEach(key => {
+                row[key].forEach(details => {
+                    html += "<tr>";
+                    html += `<td>${details ?? ""}</td>`;
+                    html += "</tr>";
+                });
+            });
+            html += "</tbody>";
+            html += "</table>";
+            html += `</td>`;
+
+            html += `<td>${row["state"] ?? ""}</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('order_table', html);
+    document.getElementById('order_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -791,67 +900,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // // 查詢用戶訂單名單
-    // document.getElementById('btnOrdersUser').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/ordersUser', data, token);
-    //         show_orders(res);
-    //     } catch (err) {
-    //         show_orders(err);
-    //     }
-    // });
+    // 查詢用戶訂單名單
+    document.getElementById('btnOrdersUser').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersUser', data, token);
+            show_user(res);
+            tableFormatOrdersUser(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 查詢訂單
-    // document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserOrders').value,
-    //         orderId: document.getElementById('userOrderId').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/ordersProduct', data, token);
-    //         show_orders(res);
-    //     } catch (err) {
-    //         show_orders(err);
-    //     }
-    // });
+    // 查詢訂單
+    document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserOrders').value,
+            orderId: document.getElementById('userOrderId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersProduct', data, token);
+            show_user(res);
+            tableFormatOrdersUser(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 確認訂單
-    // document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserOrders').value,
-    //         orderId: document.getElementById('userOrderId').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/ordersConfirmed', data, token);
-    //         show_orders(res);
-    //     } catch (err) {
-    //         show_orders(err);
-    //     }
-    // });
+    // 確認訂單
+    document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserOrders').value,
+            orderId: document.getElementById('userOrderId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersConfirmed', data, token);
+            show_user(res);
+            tableFormatOrdersUser(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 取消訂單
-    // document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         useruser: document.getElementById('userUserOrders').value,
-    //         orderId: document.getElementById('userOrderId').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('orderbackend/ordersCancelled', data, token);
-    //         show_orders(res);
-    //     } catch (err) {
-    //         show_orders(err);
-    //     }
-    // });
+    // 取消訂單
+    document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            useruser: document.getElementById('userUserOrders').value,
+            orderId: document.getElementById('userOrderId').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('orderbackend/ordersCancelled', data, token);
+            show_user(res);
+            tableFormatOrdersUser(res);
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
     // // 查詢用戶出貨名單
     // document.getElementById('btnShipmentsUser').addEventListener('click', async () => {
