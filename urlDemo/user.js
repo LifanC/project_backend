@@ -707,6 +707,230 @@ function tableFormatQuotationsProductId(res) {
     document.getElementById('quotations_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
+// 出貨
+function tableFormatShipments(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('shipments_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 220px;">
+                    <col style="width: 60px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "訂單編號", "細項", "狀態"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+            "orderId",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            html += "<table>";
+            html += "<tbody>";
+            result.forEach(key => {
+                console.log('key', key)
+                row[key].forEach(details => {
+                    html += "<tr>";
+                    html += `<td>${details ?? ""}</td>`;
+                    html += "</tr>";
+                });
+            });
+            html += "</tbody>";
+            html += "</table>";
+            html += `</td>`;
+
+            html += `<td>${row["state"] ?? ""}</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('shipments_table', html);
+    document.getElementById('shipments_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+// 付款
+function tableFormatPayments(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('payments_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 80px;">
+                    <col style="width: 190px;">
+                    <col style="width: 45px;">
+                    <col style="width: 45px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "訂單編號", "細項", "狀態", "方法"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+            "orderId",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            html += "<table>";
+            html += "<tbody>";
+            result.forEach(key => {
+                console.log('key', key)
+                row[key].forEach(details => {
+                    html += "<tr>";
+                    html += `<td>${details ?? ""}</td>`;
+                    html += "</tr>";
+                });
+            });
+            html += "</tbody>";
+            html += "</table>";
+            html += `</td>`;
+
+            html += `<td>${row["state"] ?? ""}</td>`;
+            html += `<td>${row["method"] ?? ""}</td>`;
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('payments_table', html);
+    document.getElementById('payments_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // 取得 Token
@@ -925,56 +1149,59 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // // 查詢出貨資訊
-    // document.getElementById('user_shipments').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         orderId: document.getElementById('user_shipmentsId').value,
-    //         trackingNumber: document.getElementById('user_shipmentsTrackingNumber').value,
-    //         datePart: document.getElementById('user_shipmentsDatePart').value,
-    //         shipmentsStatus: document.getElementById('user_shipmentsStatus').value,
-    //         paymentsStatus: document.getElementById('user_paymentsStatus').value,
-    //         paymentsMethod: document.getElementById('user_paymentsMethod').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/userShipments', data, token);
-    //         show_Shipments(res);
-    //     } catch (err) {
-    //         show_Shipments(err);
-    //     }
-    // });
+    // 查詢出貨資訊
+    document.getElementById('user_shipments').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            orderId: document.getElementById('user_shipmentsId').value,
+            trackingNumber: document.getElementById('user_shipmentsTrackingNumber').value,
+            datePart: document.getElementById('user_shipmentsDatePart').value,
+            shipmentsStatus: document.getElementById('user_shipmentsStatus').value,
+            paymentsStatus: document.getElementById('user_paymentsStatus').value,
+            paymentsMethod: document.getElementById('user_paymentsMethod').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userShipments', data, token);
+            show_user(res);
+            tableFormatShipments(res)
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 查詢付款資訊
-    // document.getElementById('user_payments').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         trackingNumber: document.getElementById('user_paymentsTrackingNumber').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/userPayments', data, token);
-    //         show_Shipments(res);
-    //     } catch (err) {
-    //         show_Shipments(err);
-    //     }
-    // });
+    // 查詢付款資訊
+    document.getElementById('user_payments').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('user_paymentsTrackingNumber').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userPayments', data, token);
+            show_user(res);
+            tableFormatPayments(res)
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
-    // // 付款
-    // document.getElementById('user_payMoney').addEventListener('click', async () => {
-    //     const data = {
-    //         username: document.getElementById('loginUser').value,
-    //         trackingNumber: document.getElementById('user_paymentsTrackingNumber').value,
-    //         amount: document.getElementById('user_paymentsAmount').value,
-    //         paymentsMethod: document.getElementById('user_paymentsPaymentsMethod').value
-    //     };
-    //     try {
-    //         let token = document.getElementById('token').value
-    //         const res = await api.post('user/userPayMoney', data, token);
-    //         show_Shipments(res);
-    //     } catch (err) {
-    //         show_Shipments(err);
-    //     }
-    // });
+    // 付款
+    document.getElementById('user_payMoney').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            trackingNumber: document.getElementById('user_paymentsTrackingNumber').value,
+            amount: document.getElementById('user_paymentsAmount').value,
+            paymentsMethod: document.getElementById('user_paymentsPaymentsMethod').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('user/userPayMoney', data, token);
+            show_user(res);
+            tableFormatPayments(res)
+        } catch (err) {
+            show_user(err);
+        }
+    });
 
 });

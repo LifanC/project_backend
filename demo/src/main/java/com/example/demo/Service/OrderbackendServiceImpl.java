@@ -1619,7 +1619,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            throw new ResourceNotFoundException(username + " - 空");
+                            throw new ResourceNotFoundException("空");
                         } else {
                             List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < ordersData.size(); i++) {
@@ -1769,7 +1769,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            throw new ResourceNotFoundException(username + " - 空");
+                            throw new ResourceNotFoundException("空");
                         } else {
                             List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < ordersData.size(); i++) {
@@ -1907,7 +1907,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         orders.setStatuss(List.of(Backend.STATUS_ORDERS_PENDING.getBackend()));
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            throw new ResourceNotFoundException(username + " - 空");
+                            throw new ResourceNotFoundException("空");
                         } else {
                             String confirmed = Backend.STATUS_ORDERS_CONFIRMED.getBackend();
                             List<Map<String, Object>> data = new ArrayList<>();
@@ -2082,7 +2082,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         orders.setStatuss(List.of(Backend.STATUS_ORDERS_PENDING.getBackend()));
                         List<Map<String, Object>> ordersData = orderbackendMapper.selectOrdersData(orders);
                         if (ordersData.isEmpty()) {
-                            throw new ResourceNotFoundException(username + " - 空");
+                            throw new ResourceNotFoundException("空");
                         } else {
                             String cancelled = Backend.STATUS_ORDERS_CANCELLED.getBackend();
                             List<Map<String, Object>> data = new ArrayList<>();
@@ -2241,7 +2241,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 throw new BadRequestException("(查詢用戶出貨名單)日期範圍(YYYYMM)格式錯誤 - " + datePart, e);
                             }
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments(ordersIdBigDecimal);
                         shipments.setUsername(useruser);
                         shipments.setTracking_number(trackingNumber);
@@ -2278,8 +2277,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 )
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        List<Map<String, Object>> data = new ArrayList<>();
                         for (int i = 0; i < shipmentsData.size(); i++) {
                             String order_id = shipmentsData.get(i).get("order_id").toString();
+                            String quotation_id = shipmentsData.get(i).get("quotation_id").toString();
                             String shipmentsUsername = shipmentsData.get(i).get("username").toString();
                             String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
                             String status = shipmentsData.get(i).get("status").toString();
@@ -2287,29 +2288,24 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String paymentsMethod = shipmentsData.get(i).get("payments_method").toString();
                             String paymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
                             String ordersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("----------第" + (i + 1) + "筆----------");
-                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                            messageGroup.add("追蹤號碼:" + tracking_number);
-                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(status));
-                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                            messageGroup.add("已付金額:" + paymentsAmount);
-                            messageGroup.add("需付款金額:" + ordersTotalPrice);
-                            messageGroup.add("應付款金額:" +
-                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
-                            productsList.add(messageGroup);
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "查詢用戶出貨名單");
+                            dataMap.put("useruser", shipmentsUsername);
+                            dataMap.put("orderId", order_id);
+                            dataMap.put("quotationsId", quotation_id);
+                            List<String> list = new ArrayList<>();
+                            list.add("追蹤號碼:" + tracking_number);
+                            list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            list.add("已付金額:" + paymentsAmount);
+                            list.add("需付款金額:" + ordersTotalPrice);
+                            BigDecimal A = new BigDecimal(ordersTotalPrice);
+                            BigDecimal B = new BigDecimal(paymentsAmount);
+                            list.add("應付款金額:" + A.subtract(B));
+                            dataMap.put("details" + (i + 1), list);
+                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(status));
+                            data.add(dataMap);
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "查詢用戶出貨名單",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -2413,7 +2409,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (已出貨) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments();
                         shipments.setTracking_number(trackingNumber);
                         shipments.setQuotationsStatuss(
@@ -2428,7 +2423,8 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         shipments.setShipmentsStatuss(
                                 List.of(
-                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend()
+                                        Backend.STATUS_SHIPMENTS_PENDING.getBackend(),
+                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend()
                                 )
                         );
                         shipments.setPaymentsStatuss(
@@ -2446,10 +2442,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         if (shipmentsData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException("空");
                         } else {
                             String order_id = shipmentsData.getFirst().get("order_id").toString();
+                            String quotation_id = shipmentsData.getFirst().get("quotation_id").toString();
                             String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
                             String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
                             String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
@@ -2459,39 +2455,36 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
                             shipments.setStatus(shipped);
                             orderbackendMapper.updateShipments(shipments);
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                            messageGroup.add("追蹤號碼:" + tracking_number);
-                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(shipped));
-                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                            messageGroup.add("已付金額:" + paymentsAmount);
-                            messageGroup.add("需付款金額:" + ordersTotalPrice);
-                            messageGroup.add("應付款金額:" +
-                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
+                            List<Map<String, Object>> data = new ArrayList<>();
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "已出貨");
+                            dataMap.put("useruser", shipmentsUsername);
+                            dataMap.put("orderId", order_id);
+                            dataMap.put("quotationsId", quotation_id);
+                            List<String> list = new ArrayList<>();
+                            list.add("追蹤號碼:" + tracking_number);
+                            list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            list.add("已付金額:" + paymentsAmount);
+                            list.add("需付款金額:" + ordersTotalPrice);
+                            BigDecimal A = new BigDecimal(ordersTotalPrice);
+                            BigDecimal B = new BigDecimal(paymentsAmount);
+                            list.add("應付款金額:" + A.subtract(B));
                             String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
-                            messageGroup.add(partial.equals(paymentsStatus)
-                                    ? "----------未繳清金額----------"
-                                    : "----------已繳清金額----------");
-                            productsList.add(messageGroup);
+                            list.add(partial.equals(paymentsStatus)
+                                    ? "--------未繳清金額--------"
+                                    : "--------已繳清金額--------");
+                            dataMap.put("details" + (1), list);
+                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(shipped));
+                            data.add(dataMap);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "已出貨",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (已出貨)無效的 JWT token", username);
@@ -2588,7 +2581,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (已送達) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments();
                         shipments.setTracking_number(trackingNumber);
                         shipments.setQuotationsStatuss(
@@ -2620,10 +2612,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         if (shipmentsData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException("空");
                         } else {
                             String order_id = shipmentsData.getFirst().get("order_id").toString();
+                            String quotation_id = shipmentsData.getFirst().get("quotation_id").toString();
                             String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
                             String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
                             String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
@@ -2633,35 +2625,32 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
                             shipments.setStatus(delivered);
                             orderbackendMapper.updateShipments(shipments);
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                            messageGroup.add("追蹤號碼:" + tracking_number);
-                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(delivered));
-                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                            messageGroup.add("已付金額:" + paymentsAmount);
-                            messageGroup.add("需付款金額:" + ordersTotalPrice);
-                            messageGroup.add("應付款金額:" +
-                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
-                            productsList.add(messageGroup);
+                            List<Map<String, Object>> data = new ArrayList<>();
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "已送達");
+                            dataMap.put("useruser", shipmentsUsername);
+                            dataMap.put("orderId", order_id);
+                            dataMap.put("quotationsId", quotation_id);
+                            List<String> list = new ArrayList<>();
+                            list.add("追蹤號碼:" + tracking_number);
+                            list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            list.add("已付金額:" + paymentsAmount);
+                            list.add("需付款金額:" + ordersTotalPrice);
+                            BigDecimal A = new BigDecimal(ordersTotalPrice);
+                            BigDecimal B = new BigDecimal(paymentsAmount);
+                            list.add("應付款金額:" + A.subtract(B));
+                            dataMap.put("details" + (1), list);
+                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(delivered));
+                            data.add(dataMap);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "已送達",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (已送達)無效的 JWT token", username);
@@ -2746,7 +2735,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             logger.error("{} : (恢復狀態) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments();
                         shipments.setTracking_number(trackingNumber);
                         shipments.setQuotationsStatuss(
@@ -2779,10 +2767,10 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         if (shipmentsData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException("空");
                         } else {
                             String order_id = shipmentsData.getFirst().get("order_id").toString();
+                            String quotation_id = shipmentsData.getFirst().get("quotation_id").toString();
                             String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
                             String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
                             String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
@@ -2792,35 +2780,33 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
                             shipments.setStatus(preparing);
                             orderbackendMapper.updateShipments(shipments);
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                            messageGroup.add("追蹤號碼:" + tracking_number);
-                            messageGroup.add("狀態:" + StatusKey.shipmentsStatusKey.get(preparing));
-                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                            messageGroup.add("已付金額:" + paymentsAmount);
-                            messageGroup.add("需付款金額:" + ordersTotalPrice);
-                            messageGroup.add("應付款金額:" +
-                                    new BigDecimal(ordersTotalPrice).subtract(new BigDecimal(paymentsAmount)));
-                            productsList.add(messageGroup);
+                            List<Map<String, Object>> data = new ArrayList<>();
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "恢復狀態");
+                            dataMap.put("useruser", shipmentsUsername);
+                            dataMap.put("orderId", order_id);
+                            dataMap.put("quotationsId", quotation_id);
+                            List<String> list = new ArrayList<>();
+                            list.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
+                            list.add("追蹤號碼:" + tracking_number);
+                            list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
+                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
+                            list.add("已付金額:" + paymentsAmount);
+                            list.add("需付款金額:" + ordersTotalPrice);
+                            BigDecimal A = new BigDecimal(ordersTotalPrice);
+                            BigDecimal B = new BigDecimal(paymentsAmount);
+                            list.add("應付款金額:" + A.subtract(B));
+                            dataMap.put("details" + (1), list);
+                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(preparing));
+                            data.add(dataMap);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "恢復狀態",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (恢復狀態)無效的 JWT token", username);

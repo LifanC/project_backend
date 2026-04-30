@@ -2166,7 +2166,6 @@ public class UserServiceImpl implements UserService {
                                 throw new BadRequestException("(查詢出貨資訊)日期範圍(YYYYMM)格式錯誤 - " + datePart, e);
                             }
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments(ordersIdBigDecimal);
                         shipments.setUsername(username);
                         shipments.setTracking_number(trackingNumber);
@@ -2229,9 +2228,9 @@ public class UserServiceImpl implements UserService {
                             shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         }
                         if (otherBoolean || shipmentsData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
+                            List<Map<String, Object>> data = new ArrayList<>();
                             for (int i = 0; i < shipmentsData.size(); i++) {
                                 String order_id = shipmentsData.get(i).get("order_id").toString();
                                 String shipmentsUsername = shipmentsData.get(i).get("username").toString();
@@ -2242,39 +2241,35 @@ public class UserServiceImpl implements UserService {
                                 String userPaymentsMethod = shipmentsData.get(i).get("payments_method").toString();
                                 String userPaymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
                                 String userOrdersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
-                                List<Object> messageGroup = new ArrayList<>();
-                                messageGroup.add("----------第" + (i + 1) + "筆----------");
-                                messageGroup.add("訂單編號:" + order_id);
-                                messageGroup.add("用戶:" + shipmentsUsername);
-                                messageGroup.add("出貨日期:" + date);
-                                messageGroup.add("追蹤號碼:" + tracking_number);
-                                messageGroup.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(userStatus));
-                                messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
-                                messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(userPaymentsMethod));
-                                messageGroup.add("已付金額:" + userPaymentsAmount);
-                                messageGroup.add("需付款金額:" + userOrdersTotalPrice);
-                                messageGroup.add("應付款金額:" +
-                                        new BigDecimal(userOrdersTotalPrice).subtract(new BigDecimal(userPaymentsAmount)));
-                                productsList.add(messageGroup);
+                                Map<String, Object> dataMap = new TreeMap<>();
+                                dataMap.put("remark", "查詢出貨資訊");
+                                dataMap.put("username", username);
+                                dataMap.put("permissions", userSelect.get("permissions").toString());
+                                dataMap.put("orderId", order_id);
+                                List<String> list = new ArrayList<>();
+                                list.add("訂單編號:" + order_id);
+                                list.add("用戶:" + shipmentsUsername);
+                                list.add("出貨日期:" + date);
+                                list.add("追蹤號碼:" + tracking_number);
+                                list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
+                                list.add("付款方法:" + StatusKey.paymentsMethodKey.get(userPaymentsMethod));
+                                list.add("已付金額:" + userPaymentsAmount);
+                                list.add("需付款金額:" + userOrdersTotalPrice);
+                                BigDecimal A = new BigDecimal(userOrdersTotalPrice);
+                                BigDecimal B = new BigDecimal(userPaymentsAmount);
+                                list.add("應付款金額:" + A.subtract(B));
+                                dataMap.put("details" + (i + 1), list);
+                                dataMap.put("state", StatusKey.shipmentsStatusKey.get(userStatus));
+                                data.add(dataMap);
                             }
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "查詢出貨資訊",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (查詢出貨資訊)無效的 JWT token", username);
@@ -2367,7 +2362,6 @@ public class UserServiceImpl implements UserService {
                                 throw new BadRequestException("(查詢付款資訊)追蹤號碼格式需為2碼英文+11碼數字（共13碼） - " + trackingNumber);
                             }
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments();
                         shipments.setUsername(username);
                         shipments.setTracking_number(trackingNumber);
@@ -2401,9 +2395,9 @@ public class UserServiceImpl implements UserService {
                                 )
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        List<Map<String, Object>> data = new ArrayList<>();
                         for (int i = 0; i < shipmentsData.size(); i++) {
                             String order_id = shipmentsData.get(i).get("order_id").toString();
-                            String shipmentsUsername = shipmentsData.get(i).get("username").toString();
                             String date = shipmentsData.get(i).get("date_part").toString();
                             String tracking_number = shipmentsData.get(i).get("tracking_number").toString();
                             String userStatus = shipmentsData.get(i).get("status").toString();
@@ -2411,31 +2405,26 @@ public class UserServiceImpl implements UserService {
                             String userPaymentsMethod = shipmentsData.get(i).get("payments_method").toString();
                             String userPaymentsAmount = shipmentsData.get(i).get("payments_amount").toString();
                             String userOrdersTotalPrice = shipmentsData.get(i).get("orders_total_price").toString();
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("----------第" + (i + 1) + "筆----------");
-                            messageGroup.add("訂單編號:" + order_id);
-                            messageGroup.add("用戶:" + shipmentsUsername);
-                            messageGroup.add("出貨日期:" + date);
-                            messageGroup.add("追蹤號碼:" + tracking_number);
-                            messageGroup.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(userStatus));
-                            messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
-                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(userPaymentsMethod));
-                            messageGroup.add("已付金額:" + userPaymentsAmount);
-                            messageGroup.add("需付款金額:" + userOrdersTotalPrice);
-                            messageGroup.add("應付款金額:" +
-                                    new BigDecimal(userOrdersTotalPrice).subtract(new BigDecimal(userPaymentsAmount)));
-                            productsList.add(messageGroup);
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "查詢付款資訊");
+                            dataMap.put("username", username);
+                            dataMap.put("permissions", userSelect.get("permissions").toString());
+                            dataMap.put("orderId", order_id);
+                            List<String> list = new ArrayList<>();
+                            list.add("訂單編號:" + order_id);
+                            list.add("出貨日期:" + date);
+                            list.add("追蹤號碼:" + tracking_number);
+                            list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
+                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(userPaymentsMethod));
+                            list.add("已付金額:" + userPaymentsAmount);
+                            list.add("需付款金額:" + userOrdersTotalPrice);
+                            BigDecimal A = new BigDecimal(userOrdersTotalPrice);
+                            BigDecimal B = new BigDecimal(userPaymentsAmount);
+                            list.add("應付款金額:" + A.subtract(B));
+                            dataMap.put("details" + (i + 1), list);
+                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(userStatus));
+                            data.add(dataMap);
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "查詢付款資訊",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity
                                 .status(status)
@@ -2529,14 +2518,14 @@ public class UserServiceImpl implements UserService {
                             logger.error("{} : (付款) 使用者不存在", username);
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
-                        List<Object> productsList = new ArrayList<>();
                         Shipments shipments = new Shipments();
                         shipments.setUsername(username);
                         shipments.setTracking_number(trackingNumber);
                         shipments.setQuotationsStatuss(List.of(Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()));
                         shipments.setOrdersStatuss(List.of(Backend.STATUS_ORDERS_CONFIRMED.getBackend()));
                         List<String> shipmentsStatusList = List.of(
-                                Backend.STATUS_SHIPMENTS_PENDING.getBackend()
+                                Backend.STATUS_SHIPMENTS_PENDING.getBackend(),
+                                Backend.STATUS_SHIPMENTS_SHIPPED.getBackend()
                         );
                         List<String> paymentsStatusList = List.of(
                                 Backend.STATUS_PAYMENTS_UNPAID.getBackend(),
@@ -2564,8 +2553,7 @@ public class UserServiceImpl implements UserService {
                             shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
                         }
                         if (otherBoolean || shipmentsData.isEmpty()) {
-                            List<Object> messageGroup = List.of("空");
-                            productsList = List.of(messageGroup);
+                            throw new ResourceNotFoundException(username + " - 空");
                         } else {
                             String order_id = shipmentsData.getFirst().get("order_id").toString();
                             String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
@@ -2576,13 +2564,18 @@ public class UserServiceImpl implements UserService {
                             String userPaymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
                             String userPaymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
                             String userOrdersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
-
-                            List<Object> messageGroup = new ArrayList<>();
-                            messageGroup.add("訂單編號:" + order_id);
-                            messageGroup.add("用戶:" + shipmentsUsername);
-                            messageGroup.add("出貨日期:" + shipmentsDate);
-                            messageGroup.add("追蹤號碼:" + shipmentsTrackingNumber);
-                            messageGroup.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(userStatus));
+                            List<Map<String, Object>> data = new ArrayList<>();
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            dataMap.put("remark", "付款");
+                            dataMap.put("username", username);
+                            dataMap.put("permissions", userSelect.get("permissions").toString());
+                            dataMap.put("orderId", order_id);
+                            List<String> list = new ArrayList<>();
+                            list.add("訂單編號:" + order_id);
+                            list.add("用戶:" + shipmentsUsername);
+                            list.add("出貨日期:" + shipmentsDate);
+                            list.add("追蹤號碼:" + shipmentsTrackingNumber);
+                            list.add("出貨狀態:" + StatusKey.shipmentsStatusKey.get(userStatus));
                             Payments payments = new Payments(new BigDecimal(order_id));
                             BigDecimal A = new BigDecimal(userOrdersTotalPrice);
                             BigDecimal B = new BigDecimal(userPaymentsAmount);
@@ -2596,15 +2589,15 @@ public class UserServiceImpl implements UserService {
                             }
                             if (!doNotChange) {
                                 if (C.compareTo(BigDecimal.ZERO) < 0) {
-                                    messageGroup.add("----------金額多繳:" + C.abs() + ":----------");
-                                    messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
+                                    list.add("金額多繳:" + C.abs());
+                                    list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
                                 } else if (C.compareTo(BigDecimal.ZERO) > 0) {
                                     payments.setAmount(sumAmount);
                                     String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
                                     payments.setStatus(partial);
                                     payments.setPayments_method(paymentsMethod);
                                     orderbackendMapper.updatePayments(payments);
-                                    messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
+                                    list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(userPaymentsStatus));
                                     shipments.setPaymentsStatuss(List.of(partial));
                                 } else {
                                     payments.setAmount(sumAmount);
@@ -2612,7 +2605,7 @@ public class UserServiceImpl implements UserService {
                                     payments.setStatus(paid);
                                     payments.setPayments_method(paymentsMethod);
                                     orderbackendMapper.updatePayments(payments);
-                                    messageGroup.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paid));
+                                    list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paid));
                                     shipments.setPaymentsStatuss(List.of(paid));
                                 }
                                 shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
@@ -2620,34 +2613,30 @@ public class UserServiceImpl implements UserService {
                                 userPaymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
                                 userOrdersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
                             }
-                            messageGroup.add("付款方法:" + StatusKey.paymentsMethodKey.get(userPaymentsMethod));
+                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(userPaymentsMethod));
                             if (doNotChange) {
-                                messageGroup.add("----------請勿更改(" +
-                                        StatusKey.paymentsMethodKey.get(paymentsMethod) + ")付款方式----------");
+                                list.add("請勿更改(" + StatusKey.paymentsMethodKey.get(paymentsMethod) + ")付款方式");
                             }
-                            messageGroup.add("已付金額:" + userPaymentsAmount);
-                            messageGroup.add("需付款金額:" + userOrdersTotalPrice);
-                            messageGroup.add("應付款金額:" +
-                                    new BigDecimal(userOrdersTotalPrice).subtract(new BigDecimal(userPaymentsAmount)));
-                            productsList.add(messageGroup);
+                            list.add("已付金額:" + userPaymentsAmount);
+                            list.add("需付款金額:" + userOrdersTotalPrice);
+                            BigDecimal A1 = new BigDecimal(userOrdersTotalPrice);
+                            BigDecimal B1 = new BigDecimal(userPaymentsAmount);
+                            list.add("應付款金額:" + A1.subtract(B1));
+                            dataMap.put("details" + (1), list);
+                            shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                            userPaymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
+                            userPaymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
+                            dataMap.put("state", StatusKey.paymentsStatusKey.get(userPaymentsStatus));
+                            dataMap.put("method", StatusKey.paymentsMethodKey.get(userPaymentsMethod));
+                            data.add(dataMap);
+                            HttpStatus status = HttpStatus.OK;
+                            return ResponseEntity
+                                    .status(status)
+                                    .body(ApiResponse.api(
+                                            status,
+                                            data
+                                    ));
                         }
-                        List<Object> messageList = List.of(
-                                "帳號 - " + username,
-                                "權限 - " + userSelect.get("permissions").toString(),
-                                "付款",
-                                productsList
-                        );
-                        List<Map<String, Object>> data = new ArrayList<>();
-                        Map<String, Object> dataMap = new TreeMap<>();
-                        dataMap.put("1", messageList);
-                        data.add(dataMap);
-                        HttpStatus status = HttpStatus.OK;
-                        return ResponseEntity
-                                .status(status)
-                                .body(ApiResponse.api(
-                                        status,
-                                        data
-                                ));
                     } catch (JwtException e) {
                         // JWT 不合法
                         logger.error("{} : (付款)無效的 JWT token", username);

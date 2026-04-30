@@ -219,6 +219,7 @@
 
     <select id="selectShipmentsData" resultType="java.util.Map">
         select shipments.order_id,
+               orders.quotation_id,
                shipments.status,
                shipments.date_part,
                shipments.tracking_number,
