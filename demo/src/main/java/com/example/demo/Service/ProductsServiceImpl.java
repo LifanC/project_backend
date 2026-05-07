@@ -1,6 +1,7 @@
 package com.example.demo.Service;
 
 import com.example.demo.Common.ConvertFormat;
+import com.example.demo.Common.RedisKey;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.Products.ProductsRequest;
@@ -10,14 +11,18 @@ import com.example.demo.Exception.*;
 import com.example.demo.Mapper.ProductMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -30,10 +35,31 @@ public class ProductsServiceImpl implements ProductsService {
 
     private final Logger logger = LoggerFactory.getLogger(ProductsServiceImpl.class);
 
-    private final ProductMapper productMapper;
+    // ? redis 到期時間 Seconds
+    @Value("${jwt.expirationSeconds}")
+    private long expirationSeconds;
 
-    public ProductsServiceImpl(ProductMapper productMapper) {
+    private final ProductMapper productMapper;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
+
+    public ProductsServiceImpl(
+            ProductMapper productMapper,
+            StringRedisTemplate stringRedisTemplate,
+            ObjectMapper objectMapper) {
         this.productMapper = productMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
+        this.objectMapper = objectMapper;
+    }
+
+    /*
+     * 防 Cache Stampede（雪崩）
+     * 問題：* 大量 key 同時過期 → DB 被打爆
+     * */
+    private int expirationSecondsAddRndomNumber() {
+        int min = 1;
+        int max = 60;
+        return Math.toIntExact(expirationSeconds + (new Random().nextInt((max - min) + 1) + min));
     }
 
     // 單次回源鎖
@@ -58,6 +84,15 @@ public class ProductsServiceImpl implements ProductsService {
                         status,
                         data
                 ));
+    }
+
+    private List<Map<String, Object>> getRedisMethodList(String key) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String json = stringRedisTemplate.opsForValue().get(key);
+        if (json != null) {
+            list = objectMapper.readValue(json, new TypeReference<>() {});
+        }
+        return list;
     }
 
     @Override
@@ -146,12 +181,24 @@ public class ProductsServiceImpl implements ProductsService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Products select 拿鎖");
                 try {
-                    List<Map<String, Object>> productsSelect = getProduct(product);
+
+                    String key = RedisKey.redisProductsKey.get("productsAll").replace("{1}", "*");
+                    if (StringUtils.hasText(productId)) {
+                        key = RedisKey.redisProductsKey.get("productsOnly").replace("{1}", productId);
+                    }
+                    List<Map<String, Object>> productsSelect = getRedisMethodList(key);
+                    if (productsSelect.isEmpty()) {
+                        productsSelect = getProduct(product);
+                        String jsonMap = objectMapper.writeValueAsString(productsSelect);
+                        stringRedisTemplate.opsForValue().set(
+                                key, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
+                    }
+
                     if (productsSelect.isEmpty()) {
                         throw new ResourceNotFoundException("查詢商品不存在");
                     }
-                    logger.info("Products 商品查詢成功");
 
+                    logger.info("Products 商品查詢成功");
                     List<Map<String, Object>> data = new ArrayList<>();
                     for (Map<String, Object> map : productsSelect) {
                         String product_id = map.get("product_id").toString();
@@ -227,11 +274,25 @@ public class ProductsServiceImpl implements ProductsService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Products update 拿鎖");
                 try {
-                    int cnt = productMapper.update(product);
-                    if (cnt == 0) {
-                        throw new ResourceNotFoundException(productId + " - 更改商品不存在");
+
+                    String productsOnly = RedisKey.redisProductsKey.get("productsOnly").replace("{1}", productId);
+                    List<Map<String, Object>> productsSelect = getRedisMethodList(productsOnly);
+                    if (productsSelect.isEmpty()) {
+                        productsSelect = getProduct(product);
+                        String jsonMap = objectMapper.writeValueAsString(productsSelect);
+                        stringRedisTemplate.opsForValue().set(
+                                productsOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     }
-                    List<Map<String, Object>> productsSelect = getProduct(product);
+
+                    if (productsSelect.isEmpty()) {
+                        throw new ResourceNotFoundException("更改商品不存在");
+                    }
+
+                    productMapper.update(product);
+                    productsSelect = getProduct(product);
+                    String jsonMap = objectMapper.writeValueAsString(productsSelect);
+                    stringRedisTemplate.opsForValue().set(
+                            productsOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     List<Map<String, Object>> data = new ArrayList<>();
                     Map<String, Object> dataMap = new TreeMap<>();
                     dataMap.put("remark", "商品更改成功");
@@ -288,10 +349,22 @@ public class ProductsServiceImpl implements ProductsService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Products delete 拿鎖");
                 try {
-                    int cnt = productMapper.delete(product);
-                    if (cnt == 0) {
-                        throw new ResourceNotFoundException(productId + " - 刪除商品不存在");
+
+                    String productsOnly = RedisKey.redisProductsKey.get("productsOnly").replace("{1}", productId);
+                    List<Map<String, Object>> productsSelect = getRedisMethodList(productsOnly);
+                    if (productsSelect.isEmpty()) {
+                        productsSelect = getProduct(product);
+                        String jsonMap = objectMapper.writeValueAsString(productsSelect);
+                        stringRedisTemplate.opsForValue().set(
+                                productsOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
                     }
+
+                    if (productsSelect.isEmpty()) {
+                        throw new ResourceNotFoundException("更改商品不存在");
+                    }
+
+                    productMapper.delete(product);
+                    stringRedisTemplate.delete(productsOnly);
                     List<Map<String, Object>> data = new ArrayList<>();
                     Map<String, Object> dataMap = new TreeMap<>();
                     dataMap.put("remark", "商品刪除成功");

@@ -28,4 +28,10 @@ public class RedisKey {
             "userRole", "commonAspect:list:role:{1}"
     );
 
+    // <App>:<Domain>:<Purpose>:<ID>
+    public static final Map<String, String> redisProductsKey = Map.of(
+            "productsOnly", "products:map:only:{1}",
+            "productsAll", "products:map:All:{1}"
+    );
+
 }

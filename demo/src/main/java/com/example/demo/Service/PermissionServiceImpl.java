@@ -206,8 +206,7 @@ public class PermissionServiceImpl implements PermissionService {
                             RedisKey.redisPermissionsKey.get("permissionsAll").replace("{1}", "*");
                     String json = stringRedisTemplate.opsForValue().get(permissionsAllKey);
                     if (json != null) {
-                        permissionsSelect = objectMapper.readValue(json, new TypeReference<>() {
-                        });
+                        permissionsSelect = objectMapper.readValue(json, new TypeReference<>() {});
                     } else {
                         permissionsSelect = permissionMapper.selectAll();
                         String jsonMap = objectMapper.writeValueAsString(permissionsSelect);
