@@ -208,15 +208,15 @@ async function putJSON(url, data) {
 }
 
 // DELETE JSON helper
-async function deleteJSON(url, params) {
-    const del = params ? '?' + new URLSearchParams(params) : '';
+async function deleteJSON(url, data) {
     try {
-        const res = await fetch(url + del, {
+        const res = await fetch(url, {
             method: 'DELETE',
             headers: {
+                'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(params)
+            body: JSON.stringify(data)
         });
         const json = await res.json();
         if (!res.ok) throw json;
@@ -239,36 +239,85 @@ function tableFormat(res) {
     htmlHead += "</tr></thead>";
     document.getElementById('products_code').innerHTML = htmlHead;
 
+    let statuss = [200];
     let html = "";
-    // 表頭
-    html += "<thead><tr>";
-    let names = ["備註", "編號", "名稱", "價錢", "庫存量", "描述", "新增日期", "更改日期"];
-    names.forEach(key => {
-        html += `<th>${key}</th>`;
-    });
-    html += "</tr></thead>";
-    // 表身
-    const fields = [
-        "remark",
-        "product_id",
-        "products_name",
-        "price",
-        "stock",
-        "description",
-        "created_date",
-        "updated_date"
-    ];
-    html += "<tbody>";
-    res.data.forEach(row => {
-        html += "<tr>";
-
-        fields.forEach(key => {
-            html += `<td>${row[key] ?? ""}</td>`;
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                <col style="width: 80px;">
+                <col style="width: 40px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+            </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "編號", "名稱", "價錢", "庫存量", "描述", "新增日期", "更改日期"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
         });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "product_id",
+            "products_name",
+            "price",
+            "stock",
+            "description",
+            "created_date",
+            "updated_date"
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
 
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
         html += "</tr>";
-    });
-    html += "</tbody>";
+        html += "</tbody>";
+    }
 
     getTableById('products_table', html);
     document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;

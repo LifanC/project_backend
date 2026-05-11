@@ -1,5 +1,6 @@
 package com.example.demo.Service;
 
+import com.example.demo.Dto.Products.DeleteProductsRequest;
 import com.example.demo.Dto.Products.ProductsRequest;
 import com.example.demo.Dto.Products.QueryProductsRequest;
 import com.example.demo.Dto.Products.UpdateProductsRequest;
@@ -15,5 +16,5 @@ public interface ProductsService {
 
     ResponseEntity<?> update(@Valid UpdateProductsRequest request);
 
-    ResponseEntity<?> delete(String productId);
+    ResponseEntity<?> delete(@Valid DeleteProductsRequest request);
 }

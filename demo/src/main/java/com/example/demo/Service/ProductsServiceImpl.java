@@ -3,10 +3,7 @@ package com.example.demo.Service;
 import com.example.demo.Common.ConvertFormat;
 import com.example.demo.Common.RedisKey;
 import com.example.demo.Dto.ApiResponse;
-import com.example.demo.Dto.Products.Product;
-import com.example.demo.Dto.Products.ProductsRequest;
-import com.example.demo.Dto.Products.QueryProductsRequest;
-import com.example.demo.Dto.Products.UpdateProductsRequest;
+import com.example.demo.Dto.Products.*;
 import com.example.demo.Exception.*;
 import com.example.demo.Mapper.ProductMapper;
 import org.slf4j.Logger;
@@ -341,9 +338,10 @@ public class ProductsServiceImpl implements ProductsService {
     }
 
     @Override
-    public ResponseEntity<?> delete(String productId) {
+    public ResponseEntity<?> delete(DeleteProductsRequest request) {
+        String productId = request.getProduct_id().trim();
         Product product = new Product();
-        product.setProduct_id(new BigDecimal(productId.trim()));
+        product.setProduct_id(new BigDecimal(productId));
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {

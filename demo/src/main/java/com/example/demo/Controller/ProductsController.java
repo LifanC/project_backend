@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import com.example.demo.Dto.Products.DeleteProductsRequest;
 import com.example.demo.Dto.Products.ProductsRequest;
 import com.example.demo.Dto.Products.QueryProductsRequest;
 import com.example.demo.Dto.Products.UpdateProductsRequest;
@@ -54,14 +55,10 @@ public class ProductsController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(
-            @RequestParam
-            @NotBlank(message = "商品編號不能為空")
-            @Pattern(
-                    regexp = "^\\d+$",
-                    message = "商品編號不可包含英文、中文與小數"
-            )
-            String product_id) {
-        return productsService.delete(product_id);
+            @Valid
+            @RequestBody
+            DeleteProductsRequest request) {
+        return productsService.delete(request);
     }
 
 }
