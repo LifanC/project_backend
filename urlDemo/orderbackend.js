@@ -1019,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 用戶商品報價
+    // 查詢用戶商品報價
     document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
@@ -1219,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 恢復狀態
+    // 恢復出貨狀態
     document.getElementById('btnShipmentsRollback').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,

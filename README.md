@@ -37,256 +37,260 @@
 
 ## 5. API清單
   <table border="1">
+  Permissions
       <tr>
           <th>Method</th>
           <th>Path</th>
           <th>說明</th>
       </tr>
       <tr>
-          <td> GET </td>
-          <td> /v1/permissions/testLogin </td>
-          <td> PermissionsController#testLogin </td>
+          <td>GET</td>
+          <td>/v1/permissions/testLogin</td>
+          <td>testLogin</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/permissions/register </td>
-          <td> PermissionsController#register </td>
+          <td>POST</td>
+          <td>/v1/permissions/register</td>
+          <td>register</td>
       </tr>
       <tr>
-          <td> GET </td>
-          <td> /v1/permissions/query </td>
-          <td> PermissionsController#query </td>
+          <td>GET</td>
+          <td>/v1/permissions/query</td>
+          <td>query</td>
       </tr>
       <tr>
-          <td> PUT </td>
-          <td> /v1/permissions/update </td>
-          <td> PermissionsController#update </td>
+          <td>PUT</td>
+          <td>/v1/permissions/update</td>
+          <td>update</td>
       </tr>
       <tr>
-          <td> DELETE </td>
-          <td> /v1/permissions/delete </td>
-          <td> PermissionsController#delete </td>
+          <td>DELETE</td>
+          <td>/v1/permissions/delete</td>
+          <td>delete</td>
       </tr>
   </table>
   <table border="1">
+  User
       <tr>
           <th>Method</th>
           <th>Path</th>
           <th>說明</th>
       </tr>
       <tr>
-          <td> GET </td>
-          <td> /v1/user/testLogin </td>
-          <td> UsersController#testLogin </td>
+          <td>GET</td>
+          <td>/v1/user/testLogin</td>
+          <td>testLogin</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/takeToken </td>
-          <td> UsersController#takeToken </td>
+          <td>POST</td>
+          <td>/v1/user/takeToken</td>
+          <td>takeToken</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/validate </td>
-          <td> UsersController#validate </td>
+          <td>POST</td>
+          <td>/v1/user/validate</td>
+          <td>validate</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/logout </td>
-          <td> UsersController#logout </td>
+          <td>POST</td>
+          <td>/v1/user/logout</td>
+          <td>logout</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/productsCarSelect </td>
-          <td> UsersController#productsCarSelect </td>
+          <td>POST</td>
+          <td>/v1/user/productsCarSelect</td>
+          <td>查詢商品</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/createCarItem </td>
-          <td> UsersController#createCarItem </td>
+          <td>POST</td>
+          <td>/v1/user/createCarItem</td>
+          <td>新增購物車</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/queryCarItem </td>
-          <td> UsersController#queryCarItem </td>
+          <td>POST</td>
+          <td>/v1/user/queryCarItem</td>
+          <td>查詢購物車</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/updateCarItem </td>
-          <td> UsersController#updateCarItem </td>
+          <td>POST</td>
+          <td>/v1/user/updateCarItem</td>
+          <td>更改購物車</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/deleteCarItem </td>
-          <td> UsersController#deleteCarItem </td>
+          <td>POST</td>
+          <td>/v1/user/deleteCarItem</td>
+          <td>刪除購物車</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/confirmItem </td>
-          <td> UsersController#confirmItem </td>
+          <td>POST</td>
+          <td>/v1/user/confirmItem</td>
+          <td>確認訂單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/quotationsProductId </td>
-          <td> UsersController#quotationsProductId </td>
+          <td>POST</td>
+          <td>/v1/user/quotationsProductId</td>
+          <td>查詢報價單編號</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/quotationsProduct </td>
-          <td> UsersController#quotationsProduct </td>
+          <td>POST</td>
+          <td>/v1/user/quotationsProduct</td>
+          <td>查詢報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/userAccepted </td>
-          <td> UsersController#userAccepted </td>
+          <td>POST</td>
+          <td>/v1/user/userAccepted</td>
+          <td>接受報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/userRejected </td>
-          <td> UsersController#userRejected </td>
+          <td>POST</td>
+          <td>/v1/user/userRejected</td>
+          <td>拒絕報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/userShipments </td>
-          <td> UsersController#userShipments </td>
+          <td>POST</td>
+          <td>/v1/user/userShipments</td>
+          <td>查詢出貨資訊</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/userPayments </td>
-          <td> UsersController#userPayments </td>
+          <td>POST</td>
+          <td>/v1/user/userPayments</td>
+          <td>查詢付款資訊</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/user/userPayMoney </td>
-          <td> UsersController#userPayMoney </td>
+          <td>POST</td>
+          <td>/v1/user/userPayMoney</td>
+          <td>付款</td>
       </tr>
   </table>
   <table border="1">
+  Orderbackend
       <tr>
           <th>Method</th>
           <th>Path</th>
           <th>說明</th>
       </tr>
       <tr>
-          <td> GET </td>
-          <td> /v1/orderbackend/testLogin </td>
-          <td> OrderbackendController#testLogin </td>
+          <td>GET</td>
+          <td>/v1/orderbackend/testLogin</td>
+          <td>testLogin</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/takeToken </td>
-          <td> OrderbackendController#takeToken </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/takeToken</td>
+          <td>takeToken</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/validate </td>
-          <td> OrderbackendController#validate </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/validate</td>
+          <td>validate</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/logout </td>
-          <td> OrderbackendController#logout </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/logout</td>
+          <td>logout</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/queryUser </td>
-          <td> OrderbackendController#queryUser </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/queryUser</td>
+          <td>查用戶</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/quotationsProductItem </td>
-          <td> OrderbackendController#quotationsProductItem </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/quotationsProductItem</td>
+          <td>查詢用戶商品報價</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/confirmQuotationsProductItem </td>
-          <td> OrderbackendController#confirmQuotationsProductItem </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/confirmQuotationsProductItem</td>
+          <td>確認報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/deleteQuotationsProduct </td>
-          <td> OrderbackendController#deleteQuotationsProduct </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/deleteQuotationsProduct</td>
+          <td>刪除報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/queryQuotationsProduct </td>
-          <td> OrderbackendController#queryQuotationsProduct </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/queryQuotationsProduct</td>
+          <td>查詢報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/sendQuotationsProduct </td>
-          <td> OrderbackendController#sendQuotationsProduct </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/sendQuotationsProduct</td>
+          <td>送出報價單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/ordersUser </td>
-          <td> OrderbackendController#ordersUser </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/ordersUser</td>
+          <td>查詢用戶訂單名單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/ordersProduct </td>
-          <td> OrderbackendController#ordersProduct </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/ordersProduct</td>
+          <td>查詢訂單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/ordersConfirmed </td>
-          <td> OrderbackendController#ordersConfirmed </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/ordersConfirmed</td>
+          <td>確認訂單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/ordersCancelled </td>
-          <td> OrderbackendController#ordersCancelled </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/ordersCancelled</td>
+          <td>取消訂單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/shipmentsTrackingNumber </td>
-          <td> OrderbackendController#shipmentsTrackingNumber </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/shipmentsTrackingNumber</td>
+          <td>查詢用戶出貨名單</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/shipmentsShipped </td>
-          <td> OrderbackendController#shipmentsShipped </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/shipmentsShipped</td>
+          <td>已出貨</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/shipmentsDelivered </td>
-          <td> OrderbackendController#shipmentsDelivered </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/shipmentsDelivered</td>
+          <td>已送達</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/orderbackend/shipmentsRollback </td>
-          <td> OrderbackendController#shipmentsRollback </td>
+          <td>POST</td>
+          <td>/v1/orderbackend/shipmentsRollback</td>
+          <td>恢復出貨狀態</td>
       </tr>
   </table>
   <table border="1">
+  Products
       <tr>
           <th>Method</th>
           <th>Path</th>
           <th>說明</th>
       </tr>
       <tr>
-          <td> GET </td>
-          <td> /v1/products/testLogin </td>
-          <td> ProductsController#testLogin </td>
+          <td>GET</td>
+          <td>/v1/products/testLogin</td>
+          <td>testLogin</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/products/insert </td>
-          <td> ProductsController#insert </td>
+          <td>POST</td>
+          <td>/v1/products/insert</td>
+          <td>insert</td>
       </tr>
       <tr>
-          <td> POST </td>
-          <td> /v1/products/select </td>
-          <td> ProductsController#select </td>
+          <td>POST</td>
+          <td>/v1/products/select</td>
+          <td>select</td>
       </tr>
       <tr>
-          <td> PUT </td>
-          <td> /v1/products/update </td>
-          <td> ProductsController#update </td>
+          <td>PUT</td>
+          <td>/v1/products/update</td>
+          <td>update</td>
       </tr>
       <tr>
-          <td> DELETE </td>
-          <td> /v1/products/delete </td>
-          <td> ProductsController#delete </td>
+          <td>DELETE</td>
+          <td>/v1/products/delete</td>
+          <td>delete</td>
       </tr>
   </table>
 

@@ -1087,7 +1087,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInputValue('token', "");
     });
 
-    // 查詢
+    // 查詢商品
     document.getElementById('productsCarSelect').addEventListener('click', async () => {
         let product_id_SelectCar1 = document.getElementById('product_id_SelectCar1').value;
         let product_id_SelectCar2 = document.getElementById('product_id_SelectCar2').value;
@@ -1187,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 報價單編號
+    // 查詢報價單編號
     document.getElementById('quotationsProductId').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value
@@ -1202,7 +1202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 報價單
+    // 查詢報價單
     document.getElementById('quotationsProduct').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
@@ -1218,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 接受
+    // 接受報價單
     document.getElementById('user_accepted').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
@@ -1234,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 拒絕
+    // 拒絕報價單
     document.getElementById('user_rejected').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
