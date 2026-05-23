@@ -253,7 +253,7 @@ CREATE TABLE interviewworks_schema.orders (
                                               total_price int8 NULL DEFAULT 0,
                                               created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                               updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                                              CONSTRAINT orders_pk PRIMARY KEY (quotation_id),
+                                              CONSTRAINT orders_pk PRIMARY KEY (order_id),
                                               CONSTRAINT orders_status_check CHECK (
                                                 status IN ('pending', 'confirmed', 'cancelled')
                                               )
