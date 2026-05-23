@@ -1,13 +1,381 @@
 # API 功能 Demo 文件
+
 ## 1. 專案概述
-- 這是一個基於 Spring Boot 的 REST API 伺服器
+- 這是一個基於 Spring Boot 的 REST API
 - 實作 Spring Security + JWT + Refresh Token 身份驗證 + 黑名單
 - 使用 Redis 作為快取
 - 使用 PostgreSQL 作為主資料庫
 - 專案為示範用的 API 系統，整合使用者身分驗證與權限控管機制。
-系統採用 JWT 搭配 Refresh Token 的驗證架構，以確保 API 存取的安全性與可擴充性。
 在系統架構上，使用 Redis 作為快取層，提升驗證與授權流程的效能；並以 PostgreSQL 作為主要資料庫，負責核心業務資料的持久化儲存。
-## 2. 技術架構圖（Spring Boot → Redis → PostgreSQL）
+
+## 2. 系統功能
+1. 使用者註冊
+2. 使用者登入
+3. JWT Access Token 驗證
+4. Refresh Token 換發機制
+5. 使用者登出
+6. Token 黑名單管理
+7. 角色權限控管（RBAC）
+8. 使用者資料查詢與修改
+
+## 3. 技術棧
+- Java 21
+- Spring Boot 3.x
+- JDBC
+- JWT
+- Redis
+- PostgreSQL
+- Docker
+
+## 4. 身份驗證流程
+1. 使用者登入
+2. 驗證帳號密碼
+3. 發放 Access Token 與 Refresh Token
+4. Access Token 驗證 API 存取
+5. Access Token 過期後使用 Refresh Token 換發新 Token
+6. 登出時將 Token 加入 Redis 黑名單
+
+## 5. API清單
+  <table border="1">
+      <tr>
+          <th>Method</th>
+          <th>Path</th>
+          <th>說明</th>
+      </tr>
+      <tr>
+          <td> GET </td>
+          <td> /v1/permissions/testLogin </td>
+          <td> PermissionsController#testLogin </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/permissions/register </td>
+          <td> PermissionsController#register </td>
+      </tr>
+      <tr>
+          <td> GET </td>
+          <td> /v1/permissions/query </td>
+          <td> PermissionsController#query </td>
+      </tr>
+      <tr>
+          <td> PUT </td>
+          <td> /v1/permissions/update </td>
+          <td> PermissionsController#update </td>
+      </tr>
+      <tr>
+          <td> DELETE </td>
+          <td> /v1/permissions/delete </td>
+          <td> PermissionsController#delete </td>
+      </tr>
+  </table>
+  <table border="1">
+      <tr>
+          <th>Method</th>
+          <th>Path</th>
+          <th>說明</th>
+      </tr>
+      <tr>
+          <td> GET </td>
+          <td> /v1/user/testLogin </td>
+          <td> UsersController#testLogin </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/takeToken </td>
+          <td> UsersController#takeToken </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/validate </td>
+          <td> UsersController#validate </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/logout </td>
+          <td> UsersController#logout </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/productsCarSelect </td>
+          <td> UsersController#productsCarSelect </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/createCarItem </td>
+          <td> UsersController#createCarItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/queryCarItem </td>
+          <td> UsersController#queryCarItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/updateCarItem </td>
+          <td> UsersController#updateCarItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/deleteCarItem </td>
+          <td> UsersController#deleteCarItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/confirmItem </td>
+          <td> UsersController#confirmItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/quotationsProductId </td>
+          <td> UsersController#quotationsProductId </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/quotationsProduct </td>
+          <td> UsersController#quotationsProduct </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/userAccepted </td>
+          <td> UsersController#userAccepted </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/userRejected </td>
+          <td> UsersController#userRejected </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/userShipments </td>
+          <td> UsersController#userShipments </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/userPayments </td>
+          <td> UsersController#userPayments </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/user/userPayMoney </td>
+          <td> UsersController#userPayMoney </td>
+      </tr>
+  </table>
+  <table border="1">
+      <tr>
+          <th>Method</th>
+          <th>Path</th>
+          <th>說明</th>
+      </tr>
+      <tr>
+          <td> GET </td>
+          <td> /v1/orderbackend/testLogin </td>
+          <td> OrderbackendController#testLogin </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/takeToken </td>
+          <td> OrderbackendController#takeToken </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/validate </td>
+          <td> OrderbackendController#validate </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/logout </td>
+          <td> OrderbackendController#logout </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/queryUser </td>
+          <td> OrderbackendController#queryUser </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/quotationsProductItem </td>
+          <td> OrderbackendController#quotationsProductItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/confirmQuotationsProductItem </td>
+          <td> OrderbackendController#confirmQuotationsProductItem </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/deleteQuotationsProduct </td>
+          <td> OrderbackendController#deleteQuotationsProduct </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/queryQuotationsProduct </td>
+          <td> OrderbackendController#queryQuotationsProduct </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/sendQuotationsProduct </td>
+          <td> OrderbackendController#sendQuotationsProduct </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/ordersUser </td>
+          <td> OrderbackendController#ordersUser </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/ordersProduct </td>
+          <td> OrderbackendController#ordersProduct </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/ordersConfirmed </td>
+          <td> OrderbackendController#ordersConfirmed </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/ordersCancelled </td>
+          <td> OrderbackendController#ordersCancelled </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/shipmentsTrackingNumber </td>
+          <td> OrderbackendController#shipmentsTrackingNumber </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/shipmentsShipped </td>
+          <td> OrderbackendController#shipmentsShipped </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/shipmentsDelivered </td>
+          <td> OrderbackendController#shipmentsDelivered </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/orderbackend/shipmentsRollback </td>
+          <td> OrderbackendController#shipmentsRollback </td>
+      </tr>
+  </table>
+  <table border="1">
+      <tr>
+          <th>Method</th>
+          <th>Path</th>
+          <th>說明</th>
+      </tr>
+      <tr>
+          <td> GET </td>
+          <td> /v1/products/testLogin </td>
+          <td> ProductsController#testLogin </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/products/insert </td>
+          <td> ProductsController#insert </td>
+      </tr>
+      <tr>
+          <td> POST </td>
+          <td> /v1/products/select </td>
+          <td> ProductsController#select </td>
+      </tr>
+      <tr>
+          <td> PUT </td>
+          <td> /v1/products/update </td>
+          <td> ProductsController#update </td>
+      </tr>
+      <tr>
+          <td> DELETE </td>
+          <td> /v1/products/delete </td>
+          <td> ProductsController#delete </td>
+      </tr>
+  </table>
+
+Request：取token
+
+    {
+        "username": "luke1",
+        "password": "qwe123"
+    }
+
+Response：
+
+    {
+      "code": "200 OK",
+      "status": 200,
+      "data": [
+        {
+          "created_date": "2026-05-23 20:24:42",
+          "permissions": "GUEST",
+          "remark": "Token 取得成功",
+          "username": "luke1"
+        }
+      ],
+      "timestamp": "2026-05-23 20:24:42"
+    }
+
+Request：驗證token
+
+    {
+        "username": "luke1"
+    }
+
+Response：
+
+    {
+      "code": "200 OK",
+      "status": 200,
+      "data": [
+        {
+          "created_date": "2026-05-23 20:37:45",
+          "permissions": "GUEST",
+          "remark": "Token 驗證成功",
+          "username": "luke1"
+        },
+        {
+          "token": "..."
+        }
+      ],
+      "timestamp": "2026-05-23 20:37:45"
+    }
+
+Request：登出
+
+    {
+        "username": "luke1"
+    }
+
+Response：
+
+    {
+      "code": "200 OK",
+      "status": 200,
+      "data": [
+        {
+          "created_date": "2026-05-23 20:40:27",
+          "permissions": "GUEST",
+          "remark": "Token 已登出",
+          "username": "luke1"
+        },
+        {
+          "token": ""
+        }
+      ],
+      "timestamp": "2026-05-23 20:40:27"
+    }
+
+## 6. 權限模型
+### GUEST
+- 查詢個人資料
+- 修改個人資料
+### ADMIN
+- 管理所有使用者
+- 查看系統資訊
+
+## 7. Redis 使用場景
+- JWT 黑名單管理
+- Refresh Token 快取
+
+## 8. 技術架構圖（Spring Boot → Redis → PostgreSQL）
 架構說明：
 1. Spring Boot 提供 API
 - 接收前端或其他服務請求，負責業務邏輯處理
@@ -27,10 +395,10 @@
 - 1. 資料持久化存儲
 - 2. 每筆資料都會寫到DB，保證長期保存
 - 3. 讀寫比較慢
-## 3. 系統啟動方式（Run / docker-compose）
-### 3.1 本地運行 (Run)
+## 9. 系統啟動方式（Run / docker-compose）
+### 9.1 本地運行 (Run)
 1. 啟動 Spring Boot
-### 3.2 Docker-Compose (Run)
+### 9.2 Docker-Compose (Run)
 1. 啟動 Docker
 - 停止服務 + 清掉容器（加上 --rmi all 就連 image 也刪）
 - docker compose down --rmi all
@@ -56,44 +424,13 @@
 - KEYS *
 - GET <key_name>
 - TTL <key_name> *查看 TTL (剩餘時間)*
-## 4. API 使用流程
-## 5. 目錄說明 / 層架構說明
-```
-project_backend/
-├─ src/
-│   ├─ main/
-│   │   ├─ java/
-│   │   │   └─ com.example.demo/
-│   │   │       ├─ Aspect/              *放 AOP 切面*
-│   │   │       ├─ Common/              *共用*
-│   │   │       ├─ Config/              *模擬每次都要更新密鑰的方法*
-│   │   │       ├─ Controller/          *API 控制器*
-│   │   │       ├─ Dto/                 *請求、回應*
-│   │   │       ├─ Exception/           *業務例外邏輯 自訂例外訊息*
-│   │   │       ├─ Mapper/              *資料庫操作*
-│   │   │       ├─ security/            *權限相關*
-│   │   │       └─ Service/             *業務邏輯*
-│   │   └─ resources/
-│   │       ├─ application.yml          *配置檔*
-│   │       ├─ application-docker.yml   *Docker 配置檔*
-│   │       ├─ application-render.yml   *Render 配置檔*
-│   │       └─ log4j2.xml               *顯示 log*
-│   └─ test/                            *單元測試*
-├─ docker-compose.yml
-└─ Dockerfile
-```
-## 6. 用到的設計模式與思維
-### 1. 提供使用者身分驗證與權限控管機制，確保僅授權使用者可存取對應的 API 資源。
-- *GUEST（客人）可執行功能：查詢購物車、新增購物車、修改購物車、刪除購物車、檢視購物車歷史紀錄。*
-- *USER（一般使用者）可執行功能：查詢購物車、新增購物車、修改購物車、刪除購物車、檢視購物車歷史紀錄。*
-- *ADMIN（系統管理員）可執行功能：?。* *(可查詢之對象資料：GUEST、USER)*
-- *MANAGER（部門主管）可執行功能：?。* *(可查詢之對象資料：GUEST、USER)*
-### 2. JWT 驗證流程: Token 驗證 → Redis 檢查 → 允許存取
+
+## 10. JWT 驗證流程: Token 驗證 → Redis 檢查 → 允許存取
 - *商業邏輯層 : Controller 只負責接收與回傳，Service 處理業務邏輯*
 - *解析 JWT*
 - *檢查 Redis*
 - *查使用者（DB or Cache）*
-## 7. 額外功能
+## 11. 額外功能
 ### 1. 📄 報價管理
 - *建立報價*
 - *編輯商品*
@@ -116,24 +453,24 @@ project_backend/
 - *6. 付款（Payment）*
 - *流程：Customer → Quotation → Order → Shipment → Payment*
 - *~*
-- *報價（quotations）
-- *status -- estimate（預估） / sent（已送出） / accepted（接受） / rejected（拒絕）
+- *報價（quotations）*
+- *status -- estimate（預估） / sent（已送出） / accepted（接受） / rejected（拒絕）*
 - *~*
-- *訂單（orders）
-- *quotation_id -- 從報價轉來
-- *status -- pending（待處理） / confirmed（已確認） / cancelled（取消）
+- *訂單（orders）*
+- *quotation_id -- 從報價轉來*
+- *status -- pending（待處理） / confirmed（已確認） / cancelled（取消）*
 - *~*
-- *出貨（shipments）
-- *order_id -- 從訂單轉來
-- *status -- preparing（備貨中） / shipped（已出貨） / delivered（已送達）
+- *出貨（shipments）*
+- *order_id -- 從訂單轉來*
+- *status -- preparing（備貨中） / shipped（已出貨） / delivered（已送達）*
 - *~*
-- *付款（payments）
-- *order_id -- 從訂單轉來
-- *status -- unpaid（未付） / partial（部分） / paid（已付）
-- *method -- cash（現金） / credit_card（信用卡） / transfer（轉帳）
+- *付款（payments）*
+- *order_id -- 從訂單轉來*
+- *status -- unpaid（未付） / partial（部分） / paid（已付）*
+- *method -- cash（現金） / credit_card（信用卡） / transfer（轉帳）*
 - *~*
-- *1. 一個 customer → 多個 quotations
-- *2. 一個 quotation → 多個 quotation_items
-- *3. 一個 quotation（accepted）→ 一個 order
-- *4. 一個 order → 多個 shipments
-- *5. 一個 order → 多個 payments
+- *1. 一個 customer → 多個 quotations*
+- *2. 一個 quotation → 多個 quotation_items*
+- *3. 一個 quotation（accepted）→ 一個 order*
+- *4. 一個 order → 多個 shipments*
+- *5. 一個 order → 多個 payments*

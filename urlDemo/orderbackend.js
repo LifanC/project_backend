@@ -1,3 +1,75 @@
+const Cookie = {
+    set(name, value, maxAge = null) {
+        const val =
+            typeof value === "object"
+                ? JSON.stringify(value)
+                : value;
+
+        let cookieStr = `${name}=${encodeURIComponent(val)}; path=/`;
+        // 👇 有設定才變成「持久 cookie」
+        if (maxAge !== null) {
+            cookieStr += `; max-age=${maxAge}`;
+        }
+
+        document.cookie = cookieStr;
+    },
+
+    get(name) {
+        const cookies = document.cookie.split("; ");
+
+        for (const cookie of cookies) {
+            const index = cookie.indexOf("=");
+            const key = cookie.substring(0, index);
+            const value = cookie.substring(index + 1);
+
+            if (key === name) {
+                const decoded = decodeURIComponent(value);
+
+                try {
+                    return JSON.parse(decoded);
+                } catch {
+                    return decoded;
+                }
+            }
+        }
+
+        return null;
+    },
+
+    remove(name) {
+        document.cookie = `${name}=; max-age=0; path=/`;
+    }
+};
+
+let logoutTimer = null;
+
+// 10分鐘自動登出
+function startAutoLogout() {
+    clearTimeout(logoutTimer);
+
+    logoutTimer = setTimeout(() => {
+        const yes = confirm("已自動登出（10分鐘到期）是否繼續?");
+        if (yes) {
+            startAutoLogout();
+        } else {
+            logout();
+        }
+    }, 600000); // 600000ms = 10分鐘
+}
+
+function checkLogin() {
+    const profiletoken = Cookie.get("profiletoken");
+    if (profiletoken) {
+        startAutoLogout();
+    }
+}
+
+function logout() {
+    Cookie.remove("profiletoken");
+    document.getElementById("token").value = ""
+    clearTimeout(logoutTimer);
+}
+
 // http://127.0.0.1:5500/orderbackend.html
 // https://project-frontend-exjf.onrender.com/orderbackend.html
 // http://localhost:8080/api/v1/
@@ -859,6 +931,17 @@ function tableFormatShipments(res) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    checkLogin();
+    const profile = Cookie.get("profile");
+    const profiletoken = Cookie.get("profiletoken");
+    if (profile) {
+        document.getElementById("loginUser").value = profile.username
+        document.getElementById("loginPass").value = profile.password
+    }
+    if (profiletoken) {
+        document.getElementById("token").value = profiletoken.token
+    }
+
     // 取得 Token
     document.getElementById('btnTakeToken').addEventListener('click', async () => {
         const data = {
@@ -869,6 +952,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await api.post('orderbackend/takeToken', data);
             show_user(res);
             tableFormat(res);
+
+            Cookie.set("profile", data);
         } catch (err) {
             show_user(err);
         }
@@ -888,6 +973,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     let token = res.data[1].token;
                     if (token) {
                         setInputValue('token', token);
+
+                        Cookie.set("profiletoken", { token });
+                        startAutoLogout();
                     }
                 }
             }
@@ -906,6 +994,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await api.post('orderbackend/logout', data, token);
             show_user(res);
             tableFormat(res);
+
+            Cookie.remove("profile");
+            Cookie.remove("profiletoken");
+            clearTimeout(logoutTimer);
         } catch (err) {
             show_user(err);
         }

@@ -824,7 +824,6 @@ public class UserServiceImpl implements UserService {
                                 if (userdataDetailsSelect == null) {
                                     userdataDetails.setOrder_item_str(product_id + ":" + product_quantity);
                                     userMapper.createUserdataDetail(userdataDetails);
-                                    userdataDetailsSelect = getUserDataDetail(userdataDetails);
                                 } else {
                                     String orderItem = userdataDetailsSelect.get("order_item").toString();
                                     if (StringUtils.hasText(orderItem)) {
@@ -847,8 +846,8 @@ public class UserServiceImpl implements UserService {
                                         userdataDetails.setOrder_item_str(product_id + ":" + product_quantity);
                                     }
                                     userMapper.updateUserdataDetail(userdataDetails);
-                                    userdataDetailsSelect = getUserDataDetail(userdataDetails);
                                 }
+                                userdataDetailsSelect = getUserDataDetail(userdataDetails);
                                 List<Map<String, Object>> data = new ArrayList<>();
                                 String orderItem = userdataDetailsSelect.get("order_item").toString();
                                 for (String item : orderItem.split(",")) {
@@ -2395,6 +2394,9 @@ public class UserServiceImpl implements UserService {
                                 )
                         );
                         List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        if (shipmentsData.isEmpty()) {
+                            throw new ResourceNotFoundException(username + " - 空");
+                        }
                         List<Map<String, Object>> data = new ArrayList<>();
                         for (int i = 0; i < shipmentsData.size(); i++) {
                             String order_id = shipmentsData.get(i).get("order_id").toString();
