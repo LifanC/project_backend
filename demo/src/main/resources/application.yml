@@ -16,6 +16,8 @@ server:
 # Spring Boot 通用設定
 # -----------------------------
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: demo-app-test
 
@@ -26,13 +28,13 @@ spring:
       port: 6379
       database: 0
       timeout: 2000
-      password: 1234
+      password: ${REDIS_PASSWORD}
 
   # 資料庫本機設定
   datasource:
     url: jdbc:postgresql://localhost:5432/interviewworks?currentSchema=interviewworks_schema
     username: postgres
-    password: 1234
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   # Security 本機預設帳密
@@ -63,3 +65,4 @@ logging:
   level:
     #這個指定你的dao層，也就是mapper文件的所在包
     com.example.demo.Mapper: DEBUG
+    me.paulschwarz: DEBUG

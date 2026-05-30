@@ -4,6 +4,7 @@ WORKDIR /app
 
 # 複製 Maven 設定和程式碼
 COPY pom.xml .
+RUN mvn dependency:go-offline
 COPY src ./src
 
 # Build jar

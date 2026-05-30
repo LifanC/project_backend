@@ -9,6 +9,8 @@ server:
 # Redis 使用 Docker 環境變數
 # -----------------------------
 spring:
+  config:
+    import: optional:file:.env[.properties]
   data:
     redis:
       host: redis

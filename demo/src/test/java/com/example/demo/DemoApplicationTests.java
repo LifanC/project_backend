@@ -54,16 +54,17 @@ class DemoApplicationTests {
                     startLatch.await(); // 等待一起開始
                     logger.info("{} {} - start request", index, Thread.currentThread().getName());
 
-                    String permissionsUrl = String.format("http://localhost:%d/api/permissions/testLogin", port);
-                    String userUrl = String.format("http://localhost:%d/api/user/testLogin", port);
+                    String permissionsUrl = String.format("http://localhost:%d/api/v1/permissions/testLogin", port);
+                    String userUrl = String.format("http://localhost:%d/api/v1/user/testLogin", port);
+                    String orderbackendUrl = String.format("http://localhost:%d/api/v1/orderbackend/testLogin", port);
+                    String productsUrl = String.format("http://localhost:%d/api/v1/products/testLogin", port);
 
                     String username = "lukechen";
                     String password = "1qaz@WSX";
 
                     // Base64 編碼 username:password
                     String auth = username + ":" + password;
-                    String encodedAuth = Base64.getEncoder()
-                            .encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+                    String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
                     String authHeader = "Basic " + encodedAuth;
 
                     // 設定 Header
@@ -75,6 +76,7 @@ class DemoApplicationTests {
 
                     // 呼叫 API
                     RestTemplate restTemplate = new RestTemplate();
+
                     ResponseEntity<String> permissionsResponse = restTemplate.exchange(
                             permissionsUrl,
                             HttpMethod.GET,
@@ -102,6 +104,34 @@ class DemoApplicationTests {
 
                     // 斷言
                     assert(userResponse.getStatusCode() == HttpStatus.OK);
+
+                    ResponseEntity<String> orderbackendResponse = restTemplate.exchange(
+                            orderbackendUrl,
+                            HttpMethod.GET,
+                            entity,
+                            String.class
+                    );
+
+                    // 驗證回應
+                    logger.info("orderbackend Response Status: {}", orderbackendResponse.getStatusCode());
+                    logger.info("orderbackend Response Body: {}", orderbackendResponse.getBody());
+
+                    // 斷言
+                    assert(orderbackendResponse.getStatusCode() == HttpStatus.OK);
+
+                    ResponseEntity<String> productsResponse = restTemplate.exchange(
+                            productsUrl,
+                            HttpMethod.GET,
+                            entity,
+                            String.class
+                    );
+
+                    // 驗證回應
+                    logger.info("products Response Status: {}", productsResponse.getStatusCode());
+                    logger.info("products Response Body: {}", productsResponse.getBody());
+
+                    // 斷言
+                    assert(productsResponse.getStatusCode() == HttpStatus.OK);
 
                     // 模擬你的業務邏輯
                     Thread.sleep(100);
