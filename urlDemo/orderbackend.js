@@ -1219,20 +1219,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 恢復出貨狀態
-    document.getElementById('btnShipmentsRollback').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            trackingNumber: document.getElementById('userTrackingNumber').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsRollback', data, token);
-            show_user(res);
-            tableFormatShipments(res)
-        } catch (err) {
-            show_user(err);
-        }
-    });
-
 });

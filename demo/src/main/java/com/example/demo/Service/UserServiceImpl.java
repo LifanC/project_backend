@@ -293,8 +293,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -485,8 +484,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -655,8 +653,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -803,8 +800,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -964,8 +960,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -998,7 +993,7 @@ public class UserServiceImpl implements UserService {
                                 String description = productsSelect.getFirst().get("description").toString();
                                 StringBuilder details = new StringBuilder();
                                 details.append(String.format(
-                                        "商品編號(%s) 商品名稱(%s) 數量(%s) 描述(%s)",
+                                        "商品編號(%s)名稱(%s)數量(%s)描述(%s)",
                                         productId, productsName, productQuantity, description
                                 ));
                                 dataMap.put("details" + (i + 1), details);
@@ -1105,8 +1100,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1271,8 +1265,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1437,8 +1430,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1461,22 +1453,30 @@ public class UserServiceImpl implements UserService {
                         logger.info("(確認訂單){}", orderItem);
                         String remark = "新增商品至購物車";
                         if (StringUtils.hasText(orderItem)) {
-                            userMapper.updateUserdataDetailIsActive(username);
-                            remark = "商品下單成功";
                             String[] list = orderItem.split(",");
+                            List<Boolean> negativeNumbers = new ArrayList<>();
                             for (int i = 0; i < list.length; i++) {
                                 String[] arr = list[i].split(":");
                                 List<Map<String, Object>> productsSelect = getProduct(new Product(new BigDecimal(arr[0])));
                                 String productId = productsSelect.getFirst().get("product_id").toString();
                                 String productsName = productsSelect.getFirst().get("products_name").toString();
+                                BigDecimal stock = new BigDecimal(productsSelect.getFirst().get("stock").toString());
                                 BigDecimal productQuantity = new BigDecimal(arr[1]);
                                 String description = productsSelect.getFirst().get("description").toString();
+                                BigDecimal negative = stock.subtract(productQuantity);
+                                negativeNumbers.add(negative.compareTo(BigDecimal.ZERO) < 0);
                                 StringBuilder details = new StringBuilder();
                                 details.append(String.format(
-                                        "商品編號(%s) 商品名稱(%s) 數量(%s) 描述(%s)",
-                                        productId, productsName, productQuantity, description
+                                        "商品編號(%s)名稱(%s)下單數量(%s)商品庫存量(%s)(%s)",
+                                        productId, productsName, productQuantity, stock, description
                                 ));
                                 dataMap.put("details" + (i + 1), details);
+                            }
+                            if (negativeNumbers.stream().anyMatch(Boolean.TRUE::equals)) {
+                                remark = "商品下單失敗-庫存量不夠";
+                            } else {
+                                userMapper.updateUserdataDetailIsActive(username);
+                                remark = "商品下單成功";
                             }
                         }
                         dataMap.put("remark", remark);
@@ -1572,8 +1572,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1710,8 +1709,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -1854,8 +1852,7 @@ public class UserServiceImpl implements UserService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -2216,17 +2213,11 @@ public class UserServiceImpl implements UserService {
                         } else {
                             throw new BadRequestException("(查詢出貨資訊)付款方法不存在 - " + shipmentsStatus);
                         }
-                        boolean otherBoolean = false;
-                        List<Map<String, Object>> shipmentsData = new ArrayList<>();
-                        if (includeOther.stream().allMatch(other -> other.equals("other"))) {
-                            otherBoolean = true;
-                        } else {
-                            shipments.setShipmentsStatuss(shipmentsStatusList);
-                            shipments.setPaymentsStatuss(paymentsStatusList);
-                            shipments.setPaymentsMethods(paymentsMethodList);
-                            shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
-                        }
-                        if (otherBoolean || shipmentsData.isEmpty()) {
+                        shipments.setShipmentsStatuss(shipmentsStatusList);
+                        shipments.setPaymentsStatuss(paymentsStatusList);
+                        shipments.setPaymentsMethods(paymentsMethodList);
+                        List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
+                        if (shipmentsData.isEmpty()) {
                             throw new ResourceNotFoundException(username + " - 空");
                         } else {
                             List<Map<String, Object>> data = new ArrayList<>();

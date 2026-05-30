@@ -30,7 +30,7 @@ public class SecretKey {
             SecureRandom random = new SecureRandom();
             // 產生 32 bytes = 256 bits
             // JWT HS256 最小要求就是 256 bits
-            byte[] bytes = new byte[32];
+            byte[] bytes = new byte[64];
             random.nextBytes(bytes);
             String secretNum = Base64.getEncoder().encodeToString(bytes);
             secretMapper.createSecret(secretNum);

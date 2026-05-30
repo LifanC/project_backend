@@ -2397,8 +2397,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -2452,9 +2451,9 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String paymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
                             String paymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
                             String ordersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
+                            String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
                             String shipped = Backend.STATUS_SHIPMENTS_SHIPPED.getBackend();
                             shipments.setStatus(shipped);
-                            orderbackendMapper.updateShipments(shipments);
                             List<Map<String, Object>> data = new ArrayList<>();
                             Map<String, Object> dataMap = new TreeMap<>();
                             dataMap.put("remark", "已出貨");
@@ -2471,12 +2470,18 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             BigDecimal B = new BigDecimal(paymentsAmount);
                             list.add("應付款金額:" + A.subtract(B));
                             String partial = Backend.STATUS_PAYMENTS_PARTIAL.getBackend();
-                            list.add(partial.equals(paymentsStatus)
+                            boolean statusBoolean = partial.equals(paymentsStatus);
+                            list.add(statusBoolean
                                     ? "--------未繳清金額--------"
                                     : "--------已繳清金額--------");
                             dataMap.put("details" + (1), list);
-                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(shipped));
+                            dataMap.put("state", (!statusBoolean)
+                                    ? StatusKey.shipmentsStatusKey.get(shipped)
+                                    : StatusKey.shipmentsStatusKey.get(preparing));
                             data.add(dataMap);
+                            if (!statusBoolean) {
+                                orderbackendMapper.updateShipments(shipments);
+                            }
                             HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
                                     .status(status)
@@ -2569,8 +2574,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);
@@ -2623,8 +2627,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String paymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
                             String ordersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
                             String delivered = Backend.STATUS_SHIPMENTS_DELIVERED.getBackend();
-                            shipments.setStatus(delivered);
-                            orderbackendMapper.updateShipments(shipments);
                             List<Map<String, Object>> data = new ArrayList<>();
                             Map<String, Object> dataMap = new TreeMap<>();
                             dataMap.put("remark", "已送達");
@@ -2643,6 +2645,19 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             dataMap.put("details" + (1), list);
                             dataMap.put("state", StatusKey.shipmentsStatusKey.get(delivered));
                             data.add(dataMap);
+                            shipments.setStatus(delivered);
+                            orderbackendMapper.updateShipments(shipments);
+                            Map<String, Object> productsData =
+                                    orderbackendMapper.selectProductsData(shipments).get(shipments.getTracking_number());
+                            if (productsData != null) {
+                                String productId = productsData.get("product_id").toString();
+                                BigDecimal stock = new BigDecimal(productsData.get("stock").toString());
+                                BigDecimal quantity = new BigDecimal(productsData.get("quantity").toString());
+                                BigDecimal priceDifference = stock.subtract(quantity);
+                                Product product = new Product(new BigDecimal(productId));
+                                product.setStock(priceDifference);
+                                productMapper.update(product);
+                            }
                             HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
                                     .status(status)
@@ -2666,162 +2681,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                 List<Object> messageList = List.of(
                         "帳號-" + username,
                         username + " - 已送達，資源忙碌，請重試"
-                );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
-                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
-                return ResponseEntity
-                        .status(status)
-                        .body(ApiResponse.api(
-                                status,
-                                data
-                        ));
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
-    }
-
-    @Override
-    @Transactional
-    @CheckRole(Permissions.ORDERBACKEND_ITEM_TOKEN)
-    public ResponseEntity<?> shipmentsRollback(ShipmentsTrackingNumberItemRequest request) {
-        final String username = request.getUsername();
-        final String token = request.getToken();
-        final String trackingNumber = request.getTrackingNumber().trim().toUpperCase();
-        try {
-            // 嘗試拿鎖，確保同一時間只有一個線程回源。
-            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
-                logger.info("orderbackend shipmentsRollback 拿鎖");
-                try {
-                    try {
-                        String refreshRedisKey = RedisKey.redisKey.get("refresh").replace("{1}", username);
-                        Boolean exists = stringRedisTemplate.hasKey(refreshRedisKey);
-                        if (Boolean.FALSE.equals(exists)) {
-                            logger.error("{} : (恢復狀態) Token 不存在或已過期", username);
-                            throw new BadRequestException(username + " - Token 不存在或已過期");
-                        }
-                        Claims accessClaims = tokenInRedis(refreshRedisKey, token);
-                        String usernameAccessJwt = accessClaims.getSubject();
-                        if (!username.equals(usernameAccessJwt)) {
-                            logger.error("(恢復狀態)使用者錯誤");
-                            throw new RuntimeException(username + " - (恢復狀態)使用者錯誤");
-                        }
-                        String accessRole = accessClaims.get("roles", String.class);
-                        String accessJti = accessClaims.getId();
-                        logger.info("{}(權限{}) : (恢復狀態)有效的 JWT token {}",
-                                usernameAccessJwt, accessRole, accessJti);
-                        String method = Context.get().get("method").toString();
-                        String permissionsContext = Context.get().get("permissions").toString();
-                        String descriptionContext = Context.get().get("description").toString();
-                        String roles = Context.get().get("roles").toString();
-                        logger.info("(恢復狀態)(使用者[{}])(方法名稱[{}])(使用者權限[{}])(方法權限[{}])([{}])",
-                                usernameAccessJwt, method, permissionsContext, descriptionContext, roles);
-
-                        String accessRedisKey = RedisKey.redisKey.get("access")
-                                .replace("{1}", accessJti)
-                                .replace("{2}", usernameAccessJwt);
-                        Boolean accessExists = stringRedisTemplate.hasKey(accessRedisKey);
-                        if (Boolean.FALSE.equals(accessExists)) {
-                            logger.error("{} : (恢復狀態) Token 已過期", usernameAccessJwt);
-                            throw new BadRequestException(username + " - Token 已過期");
-                        }
-                        UserData userData = new UserData(username);
-                        Map<String, Object> userSelect = getUserData(userData);
-                        if (userSelect == null) {
-                            logger.error("{} : (恢復狀態) 使用者不存在", username);
-                            throw new ResourceNotFoundException(username + " - 使用者不存在");
-                        }
-                        Shipments shipments = new Shipments();
-                        shipments.setTracking_number(trackingNumber);
-                        shipments.setQuotationsStatuss(
-                                List.of(
-                                        Backend.STATUS_QUOTATIONS_ACCEPTED.getBackend()
-                                )
-                        );
-                        shipments.setOrdersStatuss(
-                                List.of(
-                                        Backend.STATUS_ORDERS_CONFIRMED.getBackend()
-                                )
-                        );
-                        shipments.setShipmentsStatuss(
-                                List.of(
-                                        Backend.STATUS_SHIPMENTS_SHIPPED.getBackend()
-                                )
-                        );
-                        shipments.setPaymentsStatuss(
-                                List.of(
-                                        Backend.STATUS_PAYMENTS_PARTIAL.getBackend(),
-                                        Backend.STATUS_PAYMENTS_PAID.getBackend()
-                                )
-                        );
-                        shipments.setPaymentsMethods(
-                                List.of(
-                                        Backend.METHOD_PAYMENTS_CASH.getBackend(),
-                                        Backend.METHOD_PAYMENTS_CREDIT_CARD.getBackend(),
-                                        Backend.METHOD_PAYMENTS_TRANSFER.getBackend()
-                                )
-                        );
-                        List<Map<String, Object>> shipmentsData = orderbackendMapper.selectShipmentsData(shipments);
-                        if (shipmentsData.isEmpty()) {
-                            throw new ResourceNotFoundException("空");
-                        } else {
-                            String order_id = shipmentsData.getFirst().get("order_id").toString();
-                            String quotation_id = shipmentsData.getFirst().get("quotation_id").toString();
-                            String shipmentsUsername = shipmentsData.getFirst().get("username").toString();
-                            String tracking_number = shipmentsData.getFirst().get("tracking_number").toString();
-                            String paymentsStatus = shipmentsData.getFirst().get("payments_status").toString();
-                            String paymentsMethod = shipmentsData.getFirst().get("payments_method").toString();
-                            String paymentsAmount = shipmentsData.getFirst().get("payments_amount").toString();
-                            String ordersTotalPrice = shipmentsData.getFirst().get("orders_total_price").toString();
-                            String preparing = Backend.STATUS_SHIPMENTS_PENDING.getBackend();
-                            shipments.setStatus(preparing);
-                            orderbackendMapper.updateShipments(shipments);
-                            List<Map<String, Object>> data = new ArrayList<>();
-                            Map<String, Object> dataMap = new TreeMap<>();
-                            dataMap.put("remark", "恢復狀態");
-                            dataMap.put("useruser", shipmentsUsername);
-                            dataMap.put("orderId", order_id);
-                            dataMap.put("quotationsId", quotation_id);
-                            List<String> list = new ArrayList<>();
-                            list.add("編號:" + order_id + ":用戶:" + shipmentsUsername);
-                            list.add("追蹤號碼:" + tracking_number);
-                            list.add("付款狀態:" + StatusKey.paymentsStatusKey.get(paymentsStatus));
-                            list.add("付款方法:" + StatusKey.paymentsMethodKey.get(paymentsMethod));
-                            list.add("已付金額:" + paymentsAmount);
-                            list.add("需付款金額:" + ordersTotalPrice);
-                            BigDecimal A = new BigDecimal(ordersTotalPrice);
-                            BigDecimal B = new BigDecimal(paymentsAmount);
-                            list.add("應付款金額:" + A.subtract(B));
-                            dataMap.put("details" + (1), list);
-                            dataMap.put("state", StatusKey.shipmentsStatusKey.get(preparing));
-                            data.add(dataMap);
-                            HttpStatus status = HttpStatus.OK;
-                            return ResponseEntity
-                                    .status(status)
-                                    .body(ApiResponse.api(
-                                            status,
-                                            data
-                                    ));
-                        }
-                    } catch (JwtException e) {
-                        // JWT 不合法
-                        logger.error("{} : (恢復狀態)無效的 JWT token", username);
-                        throw new BadRequestException(username + " - 無效的 JWT token", e);
-                    }
-                } finally {
-                    lock.unlock();
-                }
-            } else {
-                // 沒拿到鎖的線程稍等一下再從快取讀
-                Thread.sleep(20);
-                logger.error("{} : shipmentsRollback 資源忙碌，請重試", username);
-                List<Object> messageList = List.of(
-                        "帳號-" + username,
-                        username + " - 恢復狀態，資源忙碌，請重試"
                 );
                 List<Map<String, Object>> data = List.of(Map.of("1", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;

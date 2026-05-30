@@ -321,4 +321,33 @@
         where order_id = #{order_id}
     </update>
 
+    <select id="selectProductsData" resultType="java.util.Map">
+        select shipments.tracking_number as tracking_number,
+               products.product_id as product_id,
+               products.stock as stock,
+               quotation_items.quantity as quantity
+        from "interviewworks_schema"."shipments" shipments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                shipments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id = quotations.quotation_id
+                 inner join "interviewworks_schema"."quotation_items" quotation_items
+                            on
+                                quotations.quotation_id = quotation_items.quotation_id
+                 inner join "interviewworks_schema"."products" products
+                            on
+                                quotation_items.product_id = products.product_id
+                 inner join "interviewworks_schema"."payments" payments
+                            on
+                                shipments.order_id = payments.order_id
+        where payments.status = 'paid'
+          and shipments.status in ('shipped', 'delivered')
+          and orders.status = 'confirmed'
+          and quotations.status = 'accepted'
+          and shipments.tracking_number = #{tracking_number}
+        order by shipments.order_id
+    </select>
+
 </mapper>

@@ -80,9 +80,9 @@ public class CommonAspect {
                     OrderRequest req = (OrderRequest) joinPoint.getArgs()[0];
                     String username = req.getUsername();
                     UserData userData = new UserData(username);
-                    Map<String, Object> userSelect;
                     String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                     String jsonUserOnly = stringRedisTemplate.opsForValue().get(userOnly);
+                    Map<String, Object> userSelect;
                     if (jsonUserOnly != null) {
                         userSelect = objectMapper.readValue(jsonUserOnly, new TypeReference<>() {});
                     } else {
@@ -95,9 +95,9 @@ public class CommonAspect {
                         logger.error("{} - 帳號不存在", username);
                         throw new ResourceNotFoundException(username + " - 帳號不存在");
                     }
-                    List<String> selectRoles;
                     String userRole = RedisKey.redisCommonAspectKey.get("userRole").replace("{1}", username);
                     String jsonRole = stringRedisTemplate.opsForValue().get(userRole);
+                    List<String> selectRoles;
                     if (jsonRole != null) {
                         selectRoles = objectMapper.readValue(jsonRole, new TypeReference<>() {});
                     } else {
@@ -114,7 +114,19 @@ public class CommonAspect {
                     boolean hasRole = selectRoles.stream().anyMatch(role -> role.equals(allowedRoles));
                     logger.info("指定權限： {}", allowedRoles);
                     logger.info("是否權限內： {}", (hasRole) ? "是" : "否");
-                    Map<String, Object> code = roleMapper.selectPermissionsCode(allowedRoles).get(allowedRoles);
+                    String userCode = RedisKey.redisCommonAspectKey.get("userCode")
+                            .replace("{1}", username)
+                            .replace("{2}", allowedRoles);
+                    String jsonCode = stringRedisTemplate.opsForValue().get(userCode);
+                    Map<String, Object> code;
+                    if (jsonCode != null) {
+                        code = objectMapper.readValue(jsonCode, new TypeReference<>() {});
+                    } else {
+                        code = roleMapper.selectPermissionsCode(allowedRoles).get(allowedRoles);
+                        String jsonMap = objectMapper.writeValueAsString(code);
+                        stringRedisTemplate.opsForValue().set(
+                                userCode, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
+                    }
                     String description = code.get("description").toString();
                     String permissions = userSelect.get("permissions").toString();
                     if (!hasRole) {

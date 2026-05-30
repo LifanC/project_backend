@@ -40,5 +40,4 @@ public interface OrderbackendService {
 
     ResponseEntity<?> shipmentsDelivered(@Valid ShipmentsTrackingNumberItemRequest request);
 
-    ResponseEntity<?> shipmentsRollback(@Valid ShipmentsTrackingNumberItemRequest request);
 }

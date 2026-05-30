@@ -181,14 +181,4 @@ public class OrderbackendController {
         return orderbackendService.shipmentsDelivered(request);
     }
 
-    @PostMapping("/shipmentsRollback")
-    public ResponseEntity<?> shipmentsRollback(
-            @Valid
-            @RequestBody
-            ShipmentsTrackingNumberItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return orderbackendService.shipmentsRollback(request);
-    }
-
 }

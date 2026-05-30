@@ -25,7 +25,8 @@ public class RedisKey {
 
     // <App>:<Domain>:<Purpose>:<ID>
     public static final Map<String, String> redisCommonAspectKey = Map.of(
-            "userRole", "commonAspect:list:role:{1}"
+            "userRole", "commonAspect:list:role:{1}",
+            "userCode", "commonAspect:map:code:{1}:{2}"
     );
 
     // <App>:<Domain>:<Purpose>:<ID>

@@ -51,4 +51,8 @@ public interface OrderbackendMapper {
     void createPayments(Payments payments);
 
     void updatePayments(Payments payments);
+
+    @MapKey("tracking_number")
+    Map<String, Map<String, Object>> selectProductsData(Shipments shipments);
+
 }
