@@ -6,6 +6,7 @@ import com.example.demo.Dto.Products.QueryProductsRequest;
 import com.example.demo.Dto.Products.UpdateProductsRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ProductsService {
     ResponseEntity<?> testLogin();
@@ -17,4 +18,6 @@ public interface ProductsService {
     ResponseEntity<?> update(@Valid UpdateProductsRequest request);
 
     ResponseEntity<?> delete(@Valid DeleteProductsRequest request);
+
+    ResponseEntity<?> uploadFile(MultipartFile request);
 }

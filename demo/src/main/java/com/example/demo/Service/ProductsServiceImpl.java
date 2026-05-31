@@ -18,10 +18,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.*;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.charset.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -87,7 +91,8 @@ public class ProductsServiceImpl implements ProductsService {
         List<Map<String, Object>> list = new ArrayList<>();
         String json = stringRedisTemplate.opsForValue().get(key);
         if (json != null) {
-            list = objectMapper.readValue(json, new TypeReference<>() {});
+            list = objectMapper.readValue(json, new TypeReference<>() {
+            });
         }
         return list;
     }
@@ -143,7 +148,7 @@ public class ProductsServiceImpl implements ProductsService {
                 // 沒拿到鎖的線程稍等一下再從快取讀
                 Thread.sleep(20);
                 logger.error("{} : insert 資源忙碌，請重試", products_name);
-				List<Map<String, Object>> data = List.of(Map.of("remark", "新增，資源忙碌，請重試"));
+                List<Map<String, Object>> data = List.of(Map.of("remark", "新增，資源忙碌，請重試"));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -399,4 +404,151 @@ public class ProductsServiceImpl implements ProductsService {
             }
         }
     }
+
+    @Override
+    public ResponseEntity<?> uploadFile(MultipartFile request) {
+        try {
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("Products uploadFile 拿鎖");
+                try {
+                    List<Map<String, Object>> data = new ArrayList<>();
+                    if (request.isEmpty()) {
+                        throw new ResourceNotFoundException("未選擇檔案");
+                    }
+
+                    String originaFileName = request.getOriginalFilename();
+                    if (originaFileName == null || !originaFileName.toLowerCase().endsWith(".csv")) {
+                        throw new BadRequestException("無效的.csv");
+                    }
+
+                    long size = request.getSize();
+                    String type = request.getContentType();
+                    logger.info("originaFileName: {}", originaFileName);
+                    logger.info("size: {}", size);
+                    logger.info("type: {}", type);
+
+                    byte[] bytes = request.getBytes();
+
+                    // 1️⃣ 檢查 BOM（放最前面）
+                    boolean hasBom =
+                            bytes.length >= 3 &&
+                                    (bytes[0] & 0xFF) == 0xEF &&
+                                    (bytes[1] & 0xFF) == 0xBB &&
+                                    (bytes[2] & 0xFF) == 0xBF;
+
+                    boolean isUtf8 = true;
+                    try {
+                        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
+                        decoder.onMalformedInput(CodingErrorAction.REPORT);
+                        decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+                        decoder.decode(ByteBuffer.wrap(bytes));
+                    } catch (Exception e) {
+                        isUtf8 = false;
+                    }
+
+                    // 2️⃣ UTF-8 驗證（包含 BOM 或純 UTF-8）
+                    if (!hasBom && !isUtf8) {
+                        throw new BadRequestException("只允許 UTF-8 CSV");
+                    }
+
+                    // 3️⃣ 如果有 BOM，要跳過 BOM 再讀
+                    int offset = hasBom ? 3 : 0;
+
+                    try (BufferedReader br = new BufferedReader(
+                            new InputStreamReader(
+                                    new ByteArrayInputStream(bytes, offset, bytes.length - offset),
+                                    StandardCharsets.UTF_8
+                            ))) {
+                        String line;
+                        int cnt = 0;
+
+                        List<Product> products = new ArrayList<>();
+                        while ((line = br.readLine()) != null) {
+                            cnt++;
+                            // 表頭
+                            if (cnt == 1) {
+                                continue;
+                            }
+                            Map<String, Object> dataMap = new TreeMap<>();
+                            String[] split = line.split(",");
+                            Boolean[] checks = new Boolean[split.length];
+                            List<String> list = new ArrayList<>();
+                            for (int i = 0; i < split.length; i++) {
+                                switch (i) {
+                                    case 0, 3:
+                                        checks[i] = true;
+                                        list.add(split[i]);
+                                        break;
+                                    case 1:
+                                        boolean bol1 = split[i].matches("^\\d+$");
+                                        checks[i] = bol1;
+                                        list.add(bol1 ? "金額正確" : "金額錯誤");
+                                        break;
+                                    case 2:
+                                        boolean bol2 = split[i].matches("^\\d+$");
+                                        checks[i] = bol2;
+                                        list.add(bol2 ? "庫存量正確" : "庫存量錯誤");
+                                        break;
+                                }
+                            }
+                            dataMap.put("remark", "上傳");
+                            logger.debug("第{}筆: {}", (cnt - 1), line);
+                            dataMap.put("directions", "第" + (cnt - 1) + "筆");
+                            dataMap.put("details" + (cnt - 1), list);
+                            if (Arrays.stream(checks).allMatch(Boolean.TRUE::equals)) {
+                                Product product = new Product();
+                                product.setProducts_name(split[0]);
+                                product.setPrice(new BigDecimal(split[1]));
+                                product.setStock(new BigDecimal(split[2]));
+                                product.setDescription(split[3]);
+                                products.add(product);
+                                dataMap.put("state", "上傳成功");
+                            } else {
+                                dataMap.put("state", "上傳失敗");
+                            }
+                            data.add(dataMap);
+                        }
+
+                        if (!products.isEmpty()) {
+                            productMapper.batchUpsert(products);
+                        }
+
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    HttpStatus status = HttpStatus.OK;
+                    return ResponseEntity
+                            .status(status)
+                            .body(ApiResponse.api(
+                                    status,
+                                    data
+                            ));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("uploadFile 資源忙碌，請重試");
+                List<Map<String, Object>> data = List.of(Map.of("remark", "上傳，資源忙碌，請重試"));
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                data
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+
+
 }

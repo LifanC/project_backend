@@ -60,5 +60,38 @@
         where product_id = #{product_id}
     </delete>
 
+    <insert id="batchUpsert">
+        MERGE INTO products t
+        USING (
+        VALUES
+        <foreach collection="products" item="item" separator=",">
+            (
+            #{item.products_name},
+            #{item.price},
+            #{item.stock},
+            #{item.description}
+            )
+        </foreach>
+        ) AS s(products_name, price, stock, description)
+            ON t.products_name = s.products_name
+            WHEN MATCHED THEN
+            UPDATE SET
+                price = s.price,
+                stock = s.stock,
+                description = s.description
+            WHEN NOT MATCHED THEN
+            INSERT (
+                products_name,
+                price,
+                stock,
+                description
+            )
+            VALUES (
+                s.products_name,
+                s.price,
+                s.stock,
+                s.description
+        )
+    </insert>
 
 </mapper>

@@ -20,14 +20,18 @@ const api = {
     },
     delete: (path, data = null) => {
         return resolveRequest('DELETE', path, data)
-    }
+    },
+    postfile: (path, data) => {
+        return resolveRequest('POST_FILE', path, data)
+    },
 };
 
 const methodMap = new Map([
     ['GET', getJSON],
     ['POST', postJSON],
     ['PUT', putJSON],
-    ['DELETE', deleteJSON]
+    ['DELETE', deleteJSON],
+    ['POST_FILE', post_fileJSON],
 ]);
 
 async function resolveRequest(method, path, data) {
@@ -226,6 +230,22 @@ async function deleteJSON(url, data) {
     }
 }
 
+// POST FILE JSON helper
+async function post_fileJSON(url, data) {
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            enctype: 'multipart/form-data',
+            body: data
+        });
+        const json = await res.json();
+        if (!res.ok) throw json;
+        return json;
+    } catch (err) {
+        return Promise.reject(err);
+    }
+}
+
 function tableFormat(res) {
     let htmlHead = "";
     htmlHead += "<thead>";
@@ -278,6 +298,141 @@ function tableFormat(res) {
             fields.forEach(key => {
                 html += `<td>${row[key] ?? ""}</td>`;
             });
+
+            html += "</tr>";
+        });
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('products_table', html);
+    document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
+}
+
+function tableFormatPreview(res) {
+    let htmlHead = "";
+    htmlHead += `<colgroup>
+                <col style="width: 200px;">
+                <col style="width: 200px;">
+                <col style="width: 200px;">
+            </colgroup>`;
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"檔案名稱"}</th>`;
+    htmlHead += `<th>${"檔案尺寸"}</th>`;
+    htmlHead += `<th>${"檔案類型"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.name}</td>`;
+    htmlHead += `<td>${res.size}</td>`;
+    htmlHead += `<td>${res.type}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('products_code').innerHTML = htmlHead;
+    const date = new Date(Date.now());
+    const formatted =
+        date.getFullYear() + "-" +
+        String(date.getMonth() + 1).padStart(2, "0") + "-" +
+        String(date.getDate()).padStart(2, "0") + " " +
+        String(date.getHours()).padStart(2, "0") + ":" +
+        String(date.getMinutes()).padStart(2, "0") + ":" +
+        String(date.getSeconds()).padStart(2, "0");
+    document.getElementById('products_timestamp').innerHTML = `<h3>${formatted}</h3>`;
+}
+
+function tableFormatUpload(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('products_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += `<colgroup>
+                    <col style="width: 200px;">
+                    <col style="width: 200px;">
+                    <col style="width: 200px;">
+                    <col style="width: 200px;">
+                </colgroup>`;
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "描述", "說明", "狀態"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        const fields = [
+            "remark",
+            "directions",
+        ];
+        html += "<tbody>";
+        res.data.forEach(row => {
+            html += "<tr>";
+
+            fields.forEach(key => {
+                html += `<td>${row[key] ?? ""}</td>`;
+            });
+
+            const keys = Object.keys(row);
+            const result = keys.filter(item => item.includes("details"));
+            html += `<td>`;
+            html += "<table>";
+            html += "<tbody>";
+            result.forEach(key => {
+                row[key].forEach(details => {
+                    html += "<tr>";
+                    html += `<td>${details ?? ""}</td>`;
+                    html += "</tr>";
+                });
+            });
+            html += "</tbody>";
+            html += "</table>";
+            html += `</td>`;
+
+            html += `<td>${row["state"] ?? ""}</td>`;
 
             html += "</tr>";
         });
@@ -383,6 +538,52 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await api.delete('products/delete', data);
             show(res);
             tableFormat(res);
+        } catch (err) {
+            show(err);
+        }
+    });
+
+    // 清除檔案
+    document.getElementById("clearFile").addEventListener('click', async () => {
+        document.getElementById("fileInput").value = "";
+    });
+
+    // 預覽
+    document.getElementById("previewBtn").addEventListener('click', async () => {
+        const fileInput = document.querySelector("#fileInput");
+        const file = fileInput.files[0];
+        let fileformData;
+        if (!file) {
+            const formData = new FormData();
+            formData.name = "未選擇檔案";
+            formData.size = 0;
+            formData.type = "";
+            fileformData = formData;
+        } else {
+            fileformData = file;
+        }
+        tableFormatPreview(fileformData);
+    });
+
+    // 上傳
+    document.getElementById("uploadBtn").addEventListener('click', async () => {
+        const fileInput = document.querySelector("#fileInput");
+        const file = fileInput.files[0];
+        if (!file) {
+            const formData = new FormData();
+            formData.name = "未選擇檔案";
+            formData.size = 0;
+            formData.type = "";
+            let fileformData = formData;
+            tableFormatPreview(fileformData);
+            return;
+        }
+        const data = new FormData();
+        data.append("file", file);
+        try {
+            const res = await api.postfile('products/uploadFile', data);
+            show(res);
+            tableFormatUpload(res);
         } catch (err) {
             show(err);
         }

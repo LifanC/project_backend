@@ -16,4 +16,6 @@ public interface ProductMapper {
     void update(Product product);
 
     void delete(Product product);
+
+    void batchUpsert(List<Product> products);
 }

@@ -58,14 +58,14 @@ function startAutoLogout() {
 }
 
 function checkLogin() {
-    const profiletoken = Cookie.get("profiletoken");
+    const profiletoken = Cookie.get("user_profiletoken");
     if (profiletoken) {
         startAutoLogout();
     }
 }
 
 function logout() {
-    Cookie.remove("profiletoken");
+    Cookie.remove("user_profiletoken");
     document.getElementById("token").value = ""
     clearTimeout(logoutTimer);
 }
@@ -1015,8 +1015,8 @@ function tableFormatPayments(res) {
 document.addEventListener('DOMContentLoaded', () => {
 
     checkLogin();
-    const profile = Cookie.get("profile");
-    const profiletoken = Cookie.get("profiletoken");
+    const profile = Cookie.get("user_profile");
+    const profiletoken = Cookie.get("user_profiletoken");
     if (profile) {
         document.getElementById("loginUser").value = profile.username
         document.getElementById("loginPass").value = profile.password
@@ -1036,7 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
             show_user(res);
             tableFormat(res);
 
-            Cookie.set("profile", data);
+            Cookie.set("user_profile", data);
         } catch (err) {
             show_user(err);
         }
@@ -1057,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (token) {
                         setInputValue('token', token);
 
-                        Cookie.set("profiletoken", { token });
+                        Cookie.set("user_profiletoken", { token });
                         startAutoLogout();
                     }
                 }
@@ -1078,8 +1078,8 @@ document.addEventListener('DOMContentLoaded', () => {
             show_user(res);
             tableFormat(res);
 
-            Cookie.remove("profile");
-            Cookie.remove("profiletoken");
+            Cookie.remove("user_profile");
+            Cookie.remove("user_profiletoken");
             clearTimeout(logoutTimer);
         } catch (err) {
             show_user(err);

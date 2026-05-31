@@ -58,14 +58,14 @@ function startAutoLogout() {
 }
 
 function checkLogin() {
-    const profiletoken = Cookie.get("profiletoken");
+    const profiletoken = Cookie.get("orderbackend_profiletoken");
     if (profiletoken) {
         startAutoLogout();
     }
 }
 
 function logout() {
-    Cookie.remove("profiletoken");
+    Cookie.remove("orderbackend_profiletoken");
     document.getElementById("token").value = ""
     clearTimeout(logoutTimer);
 }
@@ -932,8 +932,8 @@ function tableFormatShipments(res) {
 document.addEventListener('DOMContentLoaded', () => {
 
     checkLogin();
-    const profile = Cookie.get("profile");
-    const profiletoken = Cookie.get("profiletoken");
+    const profile = Cookie.get("orderbackend_profile");
+    const profiletoken = Cookie.get("orderbackend_profiletoken");
     if (profile) {
         document.getElementById("loginUser").value = profile.username
         document.getElementById("loginPass").value = profile.password
@@ -953,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
             show_user(res);
             tableFormat(res);
 
-            Cookie.set("profile", data);
+            Cookie.set("orderbackend_profile", data);
         } catch (err) {
             show_user(err);
         }
@@ -974,7 +974,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (token) {
                         setInputValue('token', token);
 
-                        Cookie.set("profiletoken", { token });
+                        Cookie.set("orderbackend_profiletoken", { token });
                         startAutoLogout();
                     }
                 }
@@ -995,8 +995,8 @@ document.addEventListener('DOMContentLoaded', () => {
             show_user(res);
             tableFormat(res);
 
-            Cookie.remove("profile");
-            Cookie.remove("profiletoken");
+            Cookie.remove("orderbackend_profile");
+            Cookie.remove("orderbackend_profiletoken");
             clearTimeout(logoutTimer);
         } catch (err) {
             show_user(err);
