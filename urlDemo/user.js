@@ -185,20 +185,10 @@ function starTableFormat(res) {
     html += "</tbody>";
 
     getTableById('user_table', html);
-    document.getElementById('user_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 function getTableById(id, html) {
     document.getElementById(id).innerHTML = html;
-}
-
-function escapeHTML(str) {
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 moveFocus('form');
@@ -398,7 +388,6 @@ function tableFormat(res) {
     }
 
     getTableById('user_table', html);
-    document.getElementById('user_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 // 商品
@@ -488,7 +477,6 @@ function tableFormatProduct(res) {
     }
 
     getTableById('product_table', html);
-    document.getElementById('product_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 // 購物車
@@ -579,7 +567,6 @@ function tableFormatCar(res) {
     }
 
     getTableById('car_table', html);
-    document.getElementById('car_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 // 查詢購物車
@@ -674,7 +661,6 @@ function tableFormatQueryCar(res) {
     }
 
     getTableById('car_table', html);
-    document.getElementById('car_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 // 報價
@@ -785,7 +771,6 @@ function tableFormatQuotationsProductId(res) {
     }
 
     getTableById('quotations_table', html);
-    document.getElementById('quotations_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 // 出貨
@@ -896,7 +881,6 @@ function tableFormatShipments(res) {
     }
 
     getTableById('shipments_table', html);
-    document.getElementById('shipments_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 // 付款
@@ -1009,10 +993,38 @@ function tableFormatPayments(res) {
     }
 
     getTableById('payments_table', html);
-    document.getElementById('payments_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    const e1 = document.getElementById("user_timestamp");
+    const e2 = document.getElementById("product_timestamp");
+    const e3 = document.getElementById("car_timestamp");
+    const e4 = document.getElementById("quotations_timestamp");
+    const e5 = document.getElementById("shipments_timestamp");
+    const e6 = document.getElementById("payments_timestamp");
+    const formatter = new Intl.DateTimeFormat("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    });
+    function updateTimestamp() {
+        const date = new Date();
+        e1.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+        e2.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+        e3.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+        e4.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+        e5.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+        e6.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+    }
+    // 先立即更新一次（避免空白）
+    updateTimestamp();
+    // 每秒更新
+    setInterval(updateTimestamp, 1000);
 
     checkLogin();
     const profile = Cookie.get("user_profile");

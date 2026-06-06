@@ -113,20 +113,10 @@ function starTableFormat(res) {
     html += "</tbody>";
 
     getTableById('permissions_table', html);
-    document.getElementById('permissions_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 function getTableById(id, html) {
     document.getElementById(id).innerHTML = html;
-}
-
-function escapeHTML(str) {
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 moveFocus('form');
@@ -269,10 +259,28 @@ function tableFormat(res) {
     html += "</tbody>";
 
     getTableById('permissions_table', html);
-    document.getElementById('permissions_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    const e1 = document.getElementById("permissions_timestamp");
+    const formatter = new Intl.DateTimeFormat("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    });
+    function updateTimestamp() {
+        const date = new Date();
+        e1.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+    }
+    // 先立即更新一次（避免空白）
+    updateTimestamp();
+    // 每秒更新
+    setInterval(updateTimestamp, 1000);
 
     // 註冊
     document.getElementById('btnRegister').addEventListener('click', async () => {

@@ -73,7 +73,7 @@ function isFetchNetworkError(err) {
     return err instanceof TypeError && err.message.includes('fetch');
 }
 
-testLogin()
+testLogin();
 async function testLogin() {
     const res = await api.get('products/testLogin', null);
     show(res);
@@ -117,20 +117,10 @@ function starTableFormat(res) {
     html += "</tbody>";
 
     getTableById('products_table', html);
-    document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 function getTableById(id, html) {
     document.getElementById(id).innerHTML = html;
-}
-
-function escapeHTML(str) {
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 moveFocus('form');
@@ -252,11 +242,12 @@ function tableFormat(res) {
     htmlHead += "<tr>";
     htmlHead += `<th>${"code"}</th>`;
     htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "</tr>";
     htmlHead += "<tr>";
     htmlHead += `<td>${res.code}</td>`;
     htmlHead += `<td>${res.status}</td>`;
     htmlHead += "</tr>";
-    htmlHead += "</tr></thead>";
+    htmlHead += "</thead>";
     document.getElementById('products_code').innerHTML = htmlHead;
 
     let statuss = [200];
@@ -274,7 +265,6 @@ function tableFormat(res) {
                 <col style="width: 80px;">
             </colgroup>`;
         html += "<thead><tr>";
-        let len = res.data.length;
         let names = ["備註", "編號", "名稱", "價錢", "庫存量", "描述", "新增日期", "更改日期"];
         names.forEach(key => {
             html += `<th>${key}</th>`;
@@ -340,7 +330,6 @@ function tableFormat(res) {
     }
 
     getTableById('products_table', html);
-    document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 function tableFormatPreview(res) {
@@ -362,15 +351,43 @@ function tableFormatPreview(res) {
     htmlHead += "</tr>";
     htmlHead += "</tr></thead>";
     document.getElementById('products_code').innerHTML = htmlHead;
-    const date = new Date(Date.now());
-    const formatted =
-        date.getFullYear() + "-" +
-        String(date.getMonth() + 1).padStart(2, "0") + "-" +
-        String(date.getDate()).padStart(2, "0") + " " +
-        String(date.getHours()).padStart(2, "0") + ":" +
-        String(date.getMinutes()).padStart(2, "0") + ":" +
-        String(date.getSeconds()).padStart(2, "0");
-    document.getElementById('products_timestamp').innerHTML = `<h3>${formatted}</h3>`;
+}
+
+function tableFormatPreviewData(res) {
+    let html = "";
+    // 表頭
+    html += `<colgroup>
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 80px;">
+                <col style="width: 360px;">
+            </colgroup>`;
+    html += "<thead><tr>";
+    let names = ["名稱", "價錢", "庫存量", "描述"];
+    names.forEach(key => {
+        html += `<th>${key}</th>`;
+    });
+    html += "</tr></thead>";
+    // 表身
+    const fields = [
+        "products_name",
+        "price",
+        "stock",
+        "description"
+    ];
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+
+        fields.forEach(key => {
+            html += `<td>${row[key] ?? ""}</td>`;
+        });
+
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('products_table', html);
 }
 
 function tableFormatUpload(res) {
@@ -397,7 +414,6 @@ function tableFormatUpload(res) {
                     <col style="width: 200px;">
                 </colgroup>`;
         html += "<thead><tr>";
-        let len = res.data.length;
         let names = ["備註", "描述", "說明", "狀態"];
         names.forEach(key => {
             html += `<th>${key}</th>`;
@@ -475,10 +491,28 @@ function tableFormatUpload(res) {
     }
 
     getTableById('products_table', html);
-    document.getElementById('products_timestamp').innerHTML = `<h3>${res.timestamp}</h3>`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    
+    const e1 = document.getElementById("products_timestamp");
+    const formatter = new Intl.DateTimeFormat("zh-TW", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+    });
+    function updateTimestamp() {
+        const date = new Date();
+        e1.innerHTML = `<h3>${formatter.format(date)}</h3>`;
+    }
+    // 先立即更新一次（避免空白）
+    updateTimestamp();
+    // 每秒更新
+    setInterval(updateTimestamp, 1000);
 
     // 新增
     document.getElementById('insert').addEventListener('click', async () => {
@@ -500,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 查詢
     document.getElementById('select').addEventListener('click', async () => {
         const data = {
-            product_id: document.getElementById('product_id_select').value
+            product_id: document.getElementById('product_id').value
         };
         try {
             const res = await api.post('products/select', data);
@@ -546,36 +580,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // 清除檔案
     document.getElementById("clearFile").addEventListener('click', async () => {
         document.getElementById("fileInput").value = "";
+        resetPreview();
     });
 
     // 預覽
     document.getElementById("previewBtn").addEventListener('click', async () => {
-        const fileInput = document.querySelector("#fileInput");
-        const file = fileInput.files[0];
-        let fileformData;
+        const file = await getValidCsvFile();
         if (!file) {
-            const formData = new FormData();
-            formData.name = "未選擇檔案";
-            formData.size = 0;
-            formData.type = "";
-            fileformData = formData;
-        } else {
-            fileformData = file;
+            return;
         }
-        tableFormatPreview(fileformData);
+        let text = await readFile(file);
+        text = text.replace(/^\uFEFF/, "");
+        const rows = text.trim().split(/\r?\n/);
+        const headers = rows[0].split(",");
+        const data = rows.slice(1).map(row => {
+            const values = row.split(",");
+            return headers.reduce((obj, h, i) => {
+                obj[h] = values[i];
+                return obj;
+            }, {});
+        });
+        tableFormatPreviewData({ data });
     });
+
+    function readFile(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.readAsText(file, 'utf-8');
+        });
+    }
 
     // 上傳
     document.getElementById("uploadBtn").addEventListener('click', async () => {
-        const fileInput = document.querySelector("#fileInput");
-        const file = fileInput.files[0];
+        const file = await getValidCsvFile();
         if (!file) {
-            const formData = new FormData();
-            formData.name = "未選擇檔案";
-            formData.size = 0;
-            formData.type = "";
-            let fileformData = formData;
-            tableFormatPreview(fileformData);
             return;
         }
         const data = new FormData();
@@ -588,5 +627,57 @@ document.addEventListener('DOMContentLoaded', () => {
             show(err);
         }
     });
+
+    const emptyData = [
+        {
+            products_name: "",
+            price: "0",
+            stock: "0",
+            description: ""
+        }
+    ];
+
+    function resetPreview(name = "") {
+        tableFormatPreview({
+            name,
+            size: 0,
+            type: ""
+        });
+
+        tableFormatPreviewData({
+            data: emptyData
+        });
+    }
+
+    async function getValidCsvFile() {
+        const file = document.querySelector("#fileInput").files[0];
+        if (!file) {
+            resetPreview("未選擇檔案");
+            return null;
+        }
+        tableFormatPreview({
+            name: file.name,
+            size: file.size,
+            type: file.type
+        });
+        const invalid = () => {
+            tableFormatPreviewData({ data: emptyData });
+            return null;
+        };
+        if (!file.name.toLowerCase().endsWith(".csv")) {
+            return invalid();
+        }
+        const rows = (await file.text())
+            .trim()
+            .split(/\r?\n/);
+        const columnCount = rows[0]?.split(",").length ?? 0;
+        if (
+            rows.length < 2 ||
+            !rows.every(row => row.split(",").length === columnCount)
+        ) {
+            return invalid();
+        }
+        return file;
+    }
 
 });
