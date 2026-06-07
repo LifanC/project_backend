@@ -363,7 +363,7 @@ public class ProductsServiceImpl implements ProductsService {
                     }
 
                     if (productsSelect.isEmpty()) {
-                        throw new ResourceNotFoundException("更改商品不存在");
+                        throw new ResourceNotFoundException("刪除商品不存在");
                     }
 
                     productMapper.delete(product);
@@ -411,7 +411,6 @@ public class ProductsServiceImpl implements ProductsService {
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
                 logger.info("Products uploadFile 拿鎖");
                 try {
-                    List<Map<String, Object>> data = new ArrayList<>();
                     if (request.isEmpty()) {
                         throw new ResourceNotFoundException("未選擇檔案");
                     }
@@ -420,6 +419,8 @@ public class ProductsServiceImpl implements ProductsService {
                     if (originaFileName == null || !originaFileName.toLowerCase().endsWith(".csv")) {
                         throw new BadRequestException("無效的.csv");
                     }
+
+                    List<Map<String, Object>> data = new ArrayList<>();
 
                     long size = request.getSize();
                     String type = request.getContentType();
@@ -460,59 +461,62 @@ public class ProductsServiceImpl implements ProductsService {
                                     StandardCharsets.UTF_8
                             ))) {
                         String line;
-                        int cnt = 0;
 
+                        int cnt = 0;
+                        final int batchSize = 1000;
                         List<Product> products = new ArrayList<>();
+                        int correct = 0;
+
+                        List<Map<String, Object>> data1 = new ArrayList<>();
+                        List<Map<String, Object>> data2 = new ArrayList<>();
                         while ((line = br.readLine()) != null) {
                             cnt++;
-                            // 表頭
-                            if (cnt == 1) {
-                                continue;
-                            }
-                            Map<String, Object> dataMap = new TreeMap<>();
+                            if (cnt == 1) continue; // 表頭
                             String[] split = line.split(",");
                             Boolean[] checks = new Boolean[split.length];
-                            List<String> list = new ArrayList<>();
-                            for (int i = 0; i < split.length; i++) {
-                                switch (i) {
-                                    case 0, 3:
-                                        checks[i] = true;
-                                        list.add(split[i]);
-                                        break;
-                                    case 1:
-                                        boolean bol1 = split[i].matches("^\\d+$");
-                                        checks[i] = bol1;
-                                        list.add(bol1 ? "金額正確" : "金額錯誤");
-                                        break;
-                                    case 2:
-                                        boolean bol2 = split[i].matches("^\\d+$");
-                                        checks[i] = bol2;
-                                        list.add(bol2 ? "庫存量正確" : "庫存量錯誤");
-                                        break;
-                                }
-                            }
-                            dataMap.put("remark", "上傳");
+                            checks[0] = true;
+                            checks[1] = split[1].matches("^\\d+$");
+                            checks[2] = split[2].matches("^\\d+$");
+                            checks[3] = true;
                             logger.debug("第{}筆: {}", (cnt - 1), line);
-                            dataMap.put("directions", "第" + (cnt - 1) + "筆");
-                            dataMap.put("details" + (cnt - 1), list);
                             if (Arrays.stream(checks).allMatch(Boolean.TRUE::equals)) {
+                                correct++;
                                 Product product = new Product();
                                 product.setProducts_name(split[0]);
                                 product.setPrice(new BigDecimal(split[1]));
                                 product.setStock(new BigDecimal(split[2]));
                                 product.setDescription(split[3]);
                                 products.add(product);
-                                dataMap.put("state", "上傳成功");
+                                if (products.size() == batchSize) {
+                                    productMapper.batchUpsert(products);
+                                    products.clear();
+                                }
                             } else {
-                                dataMap.put("state", "上傳失敗");
+                                Map<String, Object> dataMap2 = new TreeMap<>();
+                                dataMap2.put("remark", "上傳");
+                                dataMap2.put("directions", "第" + (cnt - 1) + "筆");
+                                dataMap2.put("details" + (cnt - 1), List.of(
+                                        split[0],
+                                        checks[1] ? "金額" : "金額錯誤",
+                                        checks[2] ? "庫存量" : "庫存量錯誤",
+                                        split[3]
+                                ));
+                                dataMap2.put("state", "上傳失敗");
+                                data2.add(dataMap2);
                             }
-                            data.add(dataMap);
                         }
-
                         if (!products.isEmpty()) {
                             productMapper.batchUpsert(products);
                         }
 
+                        Map<String, Object> dataMap1 = new TreeMap<>();
+                        dataMap1.put("remark", "上傳");
+                        dataMap1.put("directions", "正確新增筆數: " + correct + "筆");
+                        dataMap1.put("state", "上傳成功");
+                        data1.add(dataMap1);
+
+                        data.addAll(data1);
+                        data.addAll(data2);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }

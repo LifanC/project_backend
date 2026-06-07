@@ -577,12 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 清除檔案
-    document.getElementById("clearFile").addEventListener('click', async () => {
-        document.getElementById("fileInput").value = "";
-        resetPreview();
-    });
-
     // 預覽
     document.getElementById("previewBtn").addEventListener('click', async () => {
         const file = await getValidCsvFile();
@@ -626,6 +620,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             show(err);
         }
+    });
+
+    // 清除檔案
+    document.getElementById("clearFile").addEventListener('click', async () => {
+        document.getElementById("fileInput").value = "";
+        resetPreview();
     });
 
     const emptyData = [
