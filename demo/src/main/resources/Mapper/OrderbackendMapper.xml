@@ -137,6 +137,12 @@
           and quotation_id = #{quotation_id}
     </update>
 
+    <update id="updateUserdataDetailIsActiveNotifications">
+        update "interviewworks_schema"."userdata_details"
+        set is_active_notifications =  '0'
+        where username = #{username}
+    </update>
+
     <select id="selectQuotationsDataSend" resultType="java.util.Map">
         select
             userdata_details.username,

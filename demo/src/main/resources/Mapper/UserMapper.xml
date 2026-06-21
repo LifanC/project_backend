@@ -87,7 +87,7 @@
 
     <update id="updateUserdataDetailIsActive">
         update "interviewworks_schema"."userdata_details"
-        set is_active  = '1'
+        set is_active  = '1', is_active_notifications =  '1'
         where username = #{username}
     </update>
 

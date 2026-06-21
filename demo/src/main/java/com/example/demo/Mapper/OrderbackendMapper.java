@@ -33,6 +33,8 @@ public interface OrderbackendMapper {
 
     void updateQuotations(UserDataSend userDataDetails);
 
+    void updateUserdataDetailIsActiveNotifications(UserDataSend userDataDetails);
+
     @MapKey("username")
     Map<String, Map<String, Object>> selectQuotationsDataSend(UserDataSend userDataSend);
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.demo.Mapper.NotificationsMapper">
+
+    <select id="selectUserdataDetails" resultType="java.util.Map">
+        select
+            userdata_details.username || ' 送出報價單' as title
+        from "interviewworks_schema"."userdata_details" userdata_details
+        where userdata_details.is_active = '1'
+          and userdata_details.is_active_notifications = '1'
+    </select>
+
+    <select id="selectQuotations" resultType="java.util.Map">
+        select
+            '編號(' || quotations.quotation_id || ')' || quotations.username || ' 報價單通知' as title,
+            quotations.status as status
+        from "interviewworks_schema"."quotations" quotations
+        where quotations.status != 'rejected'
+          and username = #{username}
+    </select>
+
+</mapper>

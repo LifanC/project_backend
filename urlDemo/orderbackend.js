@@ -951,6 +951,53 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById("token").value = profiletoken.token
     }
 
+    let notificationInterval = null;
+    function startNotificationPolling() {
+        if (notificationInterval) {
+            return; // 避免重複建立多個 interval
+        }
+        loadNotifications();
+        notificationInterval = setInterval(
+            loadNotifications,
+            30000
+        );
+    }
+
+    function stopNotificationPolling() {
+
+        if (notificationInterval) {
+            clearInterval(notificationInterval);
+            notificationInterval = null;
+        }
+    }
+
+    async function loadNotifications() {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        let token = document.getElementById('token').value
+        const res = await api.post('notifications/unread', data, token);
+        const area = document.getElementById("notificationArea");
+        area.innerHTML = "";
+        area.innerHTML += `
+            <div>
+                ${res.data[0]['details']}
+            </div>
+        `;
+        if (res.data[1]['cnt'] > 0) {
+            let num = 0;
+            for (let index = 2; index < res.data.length; index++) {
+                const element = res.data[index];
+                area.innerHTML += `
+                    <div>
+                        ${(num + 1)}. ${element['details' + num]}
+                    </div>
+                `;
+                num++;
+            }
+        }
+    }
+
     // 取得 Token
     document.getElementById('btnTakeToken').addEventListener('click', async () => {
         const data = {
@@ -985,6 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         Cookie.set("orderbackend_profiletoken", { token });
                         startAutoLogout();
+                        startNotificationPolling();
                     }
                 }
             }
@@ -1007,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Cookie.remove("orderbackend_profile");
             Cookie.remove("orderbackend_profiletoken");
             clearTimeout(logoutTimer);
+            stopNotificationPolling();
         } catch (err) {
             show_user(err);
         }

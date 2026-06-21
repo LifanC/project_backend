@@ -1493,6 +1493,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             String statusSend = quotationsDataSend.get("status").toString();
                             if (Backend.STATUS_QUOTATIONS_ESTIMATE.getBackend().equals(statusSend)) {
                                 orderbackendMapper.updateQuotations(userDataDetails);
+                                orderbackendMapper.updateUserdataDetailIsActiveNotifications(userDataDetails);
                                 list.add("送出成功");
                                 dataMap.put("details" + (1), list);
                                 dataMap.put("state", StatusKey.quotationsStatusKey.get(send));

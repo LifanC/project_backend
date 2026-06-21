@@ -72,7 +72,8 @@ CREATE TABLE IF NOT EXISTS interviewworks_schema.userdata_details (
                                                         created_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                         updated_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                                         order_item varchar(100) NULL DEFAULT NULL::character varying,
-                                                        is_active bool NOT NULL DEFAULT false
+                                                        is_active bool NOT NULL DEFAULT false,
+                                                        is_active_notifications bool NOT NULL DEFAULT false
 );
 
 -- 建立觸發器
