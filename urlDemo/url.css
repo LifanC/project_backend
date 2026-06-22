@@ -42,7 +42,7 @@
   .form {
       display: flex;
       flex-direction: column;
-      width: 600px;
+      width: 800px;
   }
 
   .form input,
@@ -65,7 +65,7 @@
   .url-table {
       border-collapse: separate;
       border: 1px solid black;
-      width: 600px;
+      width: 800px;
   }
 
   .url-table td,

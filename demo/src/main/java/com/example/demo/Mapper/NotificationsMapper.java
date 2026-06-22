@@ -13,4 +13,16 @@ public interface NotificationsMapper {
 
     List<Map<String, Object>> selectQuotations(UserData userData);
 
+    List<Map<String, Object>> selectOrders();
+
+    List<Map<String, Object>> selectShipments(UserData userData);
+
+    List<Map<String, Object>> selectPayments(UserData userData);
+
+    List<Map<String, Object>> selectShipmentsOrderbackend();
+
+    List<Map<String, Object>> selectPaymentsOrderbackend();
+
+    List<Map<String, Object>> selectShipmentsUser(UserData userData);
+
 }

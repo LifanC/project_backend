@@ -190,12 +190,29 @@ public class NotificationsServiceImpl implements NotificationsService {
                             if (!getUserdataDetails.isEmpty()) {
                                 listAll.addAll(getUserdataDetails);
                             }
-                            data.add(Map.of("details", "\uD83D\uDD14 通知(" + listAll.size() + ")"));
-                            data.add(Map.of("cnt", listAll.size()));
-                            Map<String, Object> dataMap = new TreeMap<>();
-                            for (int i = 0; i < listAll.size(); i++) {
-                                dataMap.put("details" + (i), listAll.get(i).get("title"));
-                                data.add(dataMap);
+                            List<Map<String, Object>> getOrders = notificationsMapper.selectOrders();
+                            if (!getOrders.isEmpty()) {
+                                for (Map<String, Object> map : getOrders) {
+                                    String status = map.get("status").toString();
+                                    map.put("status", "狀態:" + StatusKey.ordersStatusKey.get(status));
+                                }
+                                listAll.addAll(getOrders);
+                            }
+                            List<Map<String, Object>> getShipmentsOrderbackend = notificationsMapper.selectShipmentsOrderbackend();
+                            if (!getShipmentsOrderbackend.isEmpty()) {
+                                for (Map<String, Object> map : getShipmentsOrderbackend) {
+                                    String status = map.get("status").toString();
+                                    map.put("status", "狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                                }
+                                listAll.addAll(getShipmentsOrderbackend);
+                            }
+                            List<Map<String, Object>> getPaymentsOrderbackend = notificationsMapper.selectPaymentsOrderbackend();
+                            if (!getPaymentsOrderbackend.isEmpty()) {
+                                for (Map<String, Object> map : getPaymentsOrderbackend) {
+                                    String status = map.get("status").toString();
+                                    map.put("status", "狀態:" + StatusKey.paymentsStatusKey.get(status));
+                                }
+                                listAll.addAll(getPaymentsOrderbackend);
                             }
                         } else {
                             // user
@@ -207,14 +224,38 @@ public class NotificationsServiceImpl implements NotificationsService {
                                 }
                                 listAll.addAll(getQuotations);
                             }
-                            data.add(Map.of("details", "\uD83D\uDD14 通知(" + listAll.size() + ")"));
-                            data.add(Map.of("cnt", listAll.size()));
-                            Map<String, Object> dataMap = new TreeMap<>();
-                            for (int i = 0; i < listAll.size(); i++) {
-                                dataMap.put("status" + (i), listAll.get(i).get("status"));
-                                dataMap.put("details" + (i), listAll.get(i).get("title"));
-                                data.add(dataMap);
+                            List<Map<String, Object>> getShipments = notificationsMapper.selectShipments(userData);
+                            if (!getShipments.isEmpty()) {
+                                for (Map<String, Object> map : getShipments) {
+                                    String status = map.get("status").toString();
+                                    map.put("status", "狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                                }
+                                listAll.addAll(getShipments);
                             }
+                            List<Map<String, Object>> getPayments = notificationsMapper.selectPayments(userData);
+                            if (!getPayments.isEmpty()) {
+                                for (Map<String, Object> map : getPayments) {
+                                    String status = map.get("status").toString();
+                                    map.put("status", "狀態:" + StatusKey.paymentsStatusKey.get(status));
+                                }
+                                listAll.addAll(getPayments);
+                            }
+                            List<Map<String, Object>> getShipmentsUser = notificationsMapper.selectShipmentsUser(userData);
+                            if (!getShipmentsUser.isEmpty()) {
+                                for (Map<String, Object> map : getShipmentsUser) {
+                                    String status = map.get("status").toString();
+                                    map.put("status", "狀態:" + StatusKey.shipmentsStatusKey.get(status));
+                                }
+                                listAll.addAll(getShipmentsUser);
+                            }
+                        }
+                        data.add(Map.of("details", "\uD83D\uDD14 通知(" + listAll.size() + ")"));
+                        data.add(Map.of("cnt", listAll.size()));
+                        Map<String, Object> dataMap = new TreeMap<>();
+                        for (int i = 0; i < listAll.size(); i++) {
+                            dataMap.put("status" + (i), listAll.get(i).get("status"));
+                            dataMap.put("details" + (i), listAll.get(i).get("title"));
+                            data.add(dataMap);
                         }
                         HttpStatus status = HttpStatus.OK;
                         return ResponseEntity

@@ -4,7 +4,8 @@
 
     <select id="selectUserdataDetails" resultType="java.util.Map">
         select
-            userdata_details.username || ' 送出報價單' as title
+            userdata_details.username || ' 送出報價單' as title,
+            '' as status
         from "interviewworks_schema"."userdata_details" userdata_details
         where userdata_details.is_active = '1'
           and userdata_details.is_active_notifications = '1'
@@ -12,10 +13,115 @@
 
     <select id="selectQuotations" resultType="java.util.Map">
         select
-            '編號(' || quotations.quotation_id || ')' || quotations.username || ' 報價單通知' as title,
+            '編號(' || quotations.quotation_id || ') ' || quotations.username || ' 報價單通知' as title,
             quotations.status as status
         from "interviewworks_schema"."quotations" quotations
-        where quotations.status != 'rejected'
+        where quotations.status in ('estimate', 'sent')
+          and username = #{username}
+    </select>
+
+    <select id="selectOrders" resultType="java.util.Map">
+        select
+            '編號(' || orders.order_id || ') ' || quotations.username || ' 訂單通知' as title,
+            orders.status as status
+        from "interviewworks_schema"."orders" orders
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id = quotations.quotation_id
+        where quotations.status in ('accepted')
+          and orders.status in ('pending')
+    </select>
+
+    <select id="selectShipments" resultType="java.util.Map">
+        select
+            '追蹤號碼(' || shipments.tracking_number || ') ' || quotations.username || ' 出貨單通知' as title,
+            shipments.status as status
+        from "interviewworks_schema"."shipments" shipments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                shipments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id  = quotations.quotation_id
+                 inner join "interviewworks_schema"."payments" payments
+                            on
+                                orders.order_id = payments.order_id
+        where shipments.status in ('preparing', 'shipped', 'delivered')
+          and payments.status in ('unpaid', 'partial')
+          and username = #{username}
+    </select>
+
+    <select id="selectPayments" resultType="java.util.Map">
+        select
+            '追蹤號碼(' || shipments.tracking_number || ') ' || quotations.username || ' 付款通知' as title,
+            payments.status as status
+        from "interviewworks_schema"."payments" payments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                payments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id  = quotations.quotation_id
+                 inner join "interviewworks_schema"."shipments" shipments
+                            on
+                                orders.order_id = shipments.order_id
+        where shipments.status in ('preparing', 'shipped', 'delivered')
+          and payments.status in ('unpaid', 'partial')
+          and username = #{username}
+    </select>
+
+    <select id="selectShipmentsOrderbackend" resultType="java.util.Map">
+        select
+            '追蹤號碼(' || shipments.tracking_number || ') ' || quotations.username || ' 出貨單通知' as title,
+            shipments.status as status
+        from "interviewworks_schema"."shipments" shipments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                shipments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id  = quotations.quotation_id
+                 inner join "interviewworks_schema"."payments" payments
+                            on
+                                orders.order_id = payments.order_id
+        where shipments.status in ('preparing', 'shipped')
+          and payments.status in ('partial')
+    </select>
+
+    <select id="selectPaymentsOrderbackend" resultType="java.util.Map">
+        select
+            '追蹤號碼(' || shipments.tracking_number || ') ' || quotations.username || ' 付款通知' as title,
+            payments.status as status
+        from "interviewworks_schema"."payments" payments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                payments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id  = quotations.quotation_id
+                 inner join "interviewworks_schema"."shipments" shipments
+                            on
+                                orders.order_id = shipments.order_id
+        where shipments.status in ('preparing', 'shipped')
+          and payments.status in ('paid')
+    </select>
+
+    <select id="selectShipmentsUser" resultType="java.util.Map">
+        select
+            '追蹤號碼(' || shipments.tracking_number || ') ' || quotations.username || ' 出貨單通知' as title,
+            shipments.status as status
+        from "interviewworks_schema"."shipments" shipments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                shipments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id  = quotations.quotation_id
+                 inner join "interviewworks_schema"."payments" payments
+                            on
+                                orders.order_id = payments.order_id
+        where shipments.status in ('shipped', 'delivered')
+          and payments.status in ('paid')
           and username = #{username}
     </select>
 

@@ -66,7 +66,8 @@ mybatis:
 # -----------------------------
 logging:
   config: classpath:log4j2.xml
-  level:
-    #這個指定你的dao層，也就是mapper文件的所在包
-    com.example.demo.Mapper: DEBUG
-    me.paulschwarz: DEBUG
+# 暫時隱藏
+#  level:
+#    #這個指定你的dao層，也就是mapper文件的所在包
+#    com.example.demo.Mapper: DEBUG
+#    me.paulschwarz: DEBUG

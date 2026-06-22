@@ -1065,11 +1065,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await api.post('notifications/unread', data, token);
         const area = document.getElementById("notificationArea");
         area.innerHTML = "";
+        if (res.data[0]['details'] === undefined) return;
         area.innerHTML += `
             <div>
                 ${res.data[0]['details']}
             </div>
         `;
+        if (res.data[1]['cnt'] === undefined) return;
         if (res.data[1]['cnt'] > 0) {
             let num = 0;
             for (let index = 2; index < res.data.length; index++) {
