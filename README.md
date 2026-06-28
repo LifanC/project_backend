@@ -254,11 +254,6 @@
           <td>/v1/orderbackend/shipmentsDelivered</td>
           <td>已送達</td>
       </tr>
-      <tr>
-          <td>POST</td>
-          <td>/v1/orderbackend/shipmentsRollback</td>
-          <td>恢復出貨狀態</td>
-      </tr>
   </table>
   <table border="1">
   Products
