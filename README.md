@@ -293,6 +293,24 @@
           <td>delete</td>
       </tr>
   </table>
+  <table border="1">
+  Notifications
+      <tr>
+          <th>Method</th>
+          <th>Path</th>
+          <th>說明</th>
+      </tr>
+      <tr>
+          <td>GET</td>
+          <td>/v1/notifications/testLogin</td>
+          <td>testLogin</td>
+      </tr>
+      <tr>
+          <td>POST</td>
+          <td>/v1/notifications/unread</td>
+          <td>unread</td>
+      </tr>
+  </table>
 
 Request：取token
 
