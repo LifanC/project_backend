@@ -1,6 +1,4 @@
-/mvnw text eol=lf
+mvnw text eol=lf
 *.cmd text eol=crlf
 
-demo/urlDemo/**/*.js linguist-detectable=false
-demo/urlDemo/**/*.html linguist-detectable=false
-demo/urlDemo/**/*.css linguist-detectable=false
+demo/urlDemo/* linguist-detectable=false
