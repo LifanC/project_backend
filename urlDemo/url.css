@@ -1,0 +1,117 @@
+  body {
+      font-family: monospace;
+      background: #f6f6f6;
+  }
+
+  section {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 12px;
+  }
+
+  h1,
+  h2,
+  h3 {
+      margin: 0 0 8px;
+  }
+
+  .permissions_pre {
+      background: #000;
+      color: #0f0;
+      padding: 8px;
+      height: 300px;
+      overflow: auto;
+  }
+
+  .user_products_pre {
+      background: #000;
+      color: #0f0;
+      padding: 8px;
+      height: 500px;
+      overflow: auto;
+  }
+
+  .products_pre {
+      background: #000;
+      color: #0f0;
+      padding: 8px;
+      height: 300px;
+      overflow: auto;
+  }
+
+  .form {
+      display: flex;
+      flex-direction: column;
+      width: 800px;
+  }
+
+  .form input,
+  .form textarea,
+  .form button,
+  .form select {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+  }
+
+  .form button:hover {
+      background: rgba(0, 0, 0, 0.2);
+  }
+
+  .form button:active {
+      transform: scale(0.96);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .url-table {
+      border-collapse: separate;
+      border: 1px solid black;
+      width: 800px;
+  }
+
+  .url-table td,
+  .url-table th {
+      border: 1px solid black;
+  }
+
+  .radio-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+  }
+
+  .radio-group input[type="radio"] {
+      width: auto;
+      margin: 0;
+  }
+
+  .radio-group label {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+  }
+
+  .container {
+      display: flex;
+      align-items: flex-start;
+  }
+
+  .left-panel,
+  .right-panel {
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-left: 1px solid #ccc;
+
+      position: sticky;
+      top: 10px;
+      height: fit-content;
+  }
+
+  .form select {
+      background: white;
+      cursor: pointer;
+  }
+
+  .form select:focus {
+      outline: none;
+      border-color: #333;
+  }

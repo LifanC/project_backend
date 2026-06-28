@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂單</title>
+</head>
+<link rel="stylesheet" href="/url.css">
+<script src="/jquery.min.js"></script>
+<script src="/moveFocus.js"></script>
+<script src="/user.js"></script>
+
+<body>
+    <div class="container">
+
+        <!-- 左邊功能區 -->
+        <div class="left-panel">
+            <div id="form" class="form">
+                <table class="url-table">
+                    <tr>
+                        <th>
+                            <h2>登入</h2>
+                        </th>
+                        <th colspan="2">
+                            <h2>功能</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">
+                            <input id="loginUser" placeholder="帳號" maxlength="10">
+                            <input id="loginPass" placeholder="密碼" maxlength="100">
+                        </td>
+                        <td>1</td>
+                        <td>
+                            <button id="btnTakeToken">取得 Token</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>
+                            <button id="btnValidate">驗證 Token</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="token" placeholder="Token">
+                        </td>
+                        <td>3</td>
+                        <td>
+                            <button id="btnLogout">登出</button>
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="user_code"></table>
+                <table class="url-table" id="user_table"></table>
+                <dav id="user_timestamp"></dav>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="2">
+                            <h2>商品</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            EX : 1 ~ 10 或 直接查詢
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="product_id_SelectCar1" placeholder="輸入商品編號1">
+                        </td>
+                        <td rowspan="2">
+                            <button id="productsCarSelect">查詢</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="product_id_SelectCar2" placeholder="輸入商品編號2">
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="product_code"></table>
+                <table class="url-table" id="product_table"></table>
+                <dav id="product_timestamp"></dav>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="3">
+                            <h2>購物車</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="product_id_CreateCar" placeholder="輸入商品編號">
+                        </td>
+                        <td rowspan="3">4</td>
+                        <td>輸入商品編號</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">
+                            <input id="product_quantity_CreateCar" placeholder="輸入商品數量">
+                        </td>
+                        <td>商品數量(同樣商品則增加)</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button id="btnCreateCar">新增購物車</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>直接查詢購物車</td>
+                        <td>5</td>
+                        <td>
+                            <button id="btnQueryCar">查詢購物車</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="product_id_UpdateCar" placeholder="輸入商品編號">
+                        </td>
+                        <td rowspan="3">6</td>
+                        <td>輸入商品編號</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="2">
+                            <input id="product_quantity_UpdateCar" placeholder="輸入商品數量">
+                        </td>
+                        <td>商品數量(同樣商品則減少)</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <button id="btnUpdateCar">更改購物車</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="product_id_DeleteCar" placeholder="輸入商品編號">
+                        </td>
+                        <td>7</td>
+                        <td>
+                            <button id="btnDeleteCar">刪除購物車</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>送出報價單</td>
+                        <td>8</td>
+                        <td>
+                            <button id="btnConfirm">確認訂單</button>
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="car_code"></table>
+                <table class="url-table" id="car_table"></table>
+                <dav id="car_timestamp"></dav>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="4">
+                            <h2>報價（quotations）</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>報價單編號</td>
+                        <td>9</td>
+                        <td colspan="2">
+                            <button id="quotationsProductId">查詢報價單編號</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="user_quotationsProduct" placeholder="輸入報價單編號">
+                        </td>
+                        <td>10</td>
+                        <td colspan="2">
+                            <button id="quotationsProduct">查詢報價單</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>確認金額</td>
+                        <td>11</td>
+                        <td>
+                            <button id="user_accepted">接受</button>
+                        </td>
+                        <td>
+                            <button id="user_rejected">拒絕</button>
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="quotations_code"></table>
+                <table class="url-table" id="quotations_table"></table>
+                <dav id="quotations_timestamp"></dav>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="4">
+                            <h2>出貨（shipments）</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="user_shipmentsId" placeholder="輸入訂單編號">
+                        </td>
+                        <td rowspan="6">12</td>
+                        <td rowspan="6">
+                            <button id="user_shipments">查詢出貨資訊</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="user_shipmentsTrackingNumber" placeholder="輸入追蹤號碼(共13碼)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="user_shipmentsDatePart" placeholder="輸入日期範圍(YYYYMM)">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select id="user_shipmentsStatus">
+                                <optgroup label="------------------------">
+                                    <option value="preparing">備貨中</option>
+                                    <option value="shipped">已出貨</option>
+                                    <option value="delivered">已送達</option>
+                                </optgroup>
+                                <optgroup label="------------------------">
+                                    <option value="other" selected>其他</option>
+                                </optgroup>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select id="user_paymentsStatus">
+                                <optgroup label="------------------------">
+                                    <option value="unpaid">未付</option>
+                                    <option value="partial">部分</option>
+                                    <option value="paid">已付</option>
+                                </optgroup>
+                                <optgroup label="------------------------">
+                                    <option value="other" selected>其他</option>
+                                </optgroup>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select id="user_paymentsMethod">
+                                <optgroup label="------------------------">
+                                    <option value="cash">現金</option>
+                                    <option value="credit_card">信用卡</option>
+                                    <option value="transfer">轉帳</option>
+                                </optgroup>
+                                <optgroup label="------------------------">
+                                    <option value="other" selected>其他</option>
+                                </optgroup>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="shipments_code"></table>
+                <table class="url-table" id="shipments_table"></table>
+                <dav id="shipments_timestamp"></dav>
+                <table class="url-table">
+                    <tr>
+                        <th colspan="3">
+                            <h2>付款（payments）</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="user_paymentsTrackingNumber" placeholder="輸入追蹤號碼(共13碼)">
+                        </td>
+                        <td rowspan="3">13</td>
+                        <td>
+                            <button id="user_payments">查詢付款資訊</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input id="user_paymentsAmount" placeholder="輸入付款金額">
+                        </td>
+                        <td rowspan="2">
+                            <button id="user_payMoney">付款</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <select id="user_paymentsPaymentsMethod">
+                                <optgroup label="------------------------">
+                                    <option value="cash">現金</option>
+                                    <option value="credit_card">信用卡</option>
+                                    <option value="transfer">轉帳</option>
+                                </optgroup>
+                                <optgroup label="------------------------">
+                                    <option value="other" selected>其他</option>
+                                </optgroup>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="payments_code"></table>
+                <table class="url-table" id="payments_table"></table>
+                <dav id="payments_timestamp"></dav>
+            </div>
+        </div>
+
+        <!-- 右邊說明文字 -->
+        <div class="right-panel">
+            <div id="notificationArea"></div>
+            <br>
+            <h3>操作說明</h3>
+            <ol>
+                <li>
+                    <dl>
+                        <dt>使用者需輸入帳號與密碼進行登入，最多可連續失敗 5 次。</dt>
+                        <dd>若連續登入失敗超過 5 次，系統將鎖定帳號 60 秒，期間無法再次登入。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>步驟一：取得Token</dt>
+                        <dd>使用者登入成功後，系統會核發一組 Token 作為後續操作的身份識別憑證。</dd>
+                    </dl>
+                    <dl>
+                        <dt>步驟二：驗證Token</dt>
+                        <dd>系統會先驗證原始 Token 的有效性，驗證通過後，再簽發一組暫時 Token 供特定作業使用。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>登出</dt>
+                        <dd>使用者登出時，系統會同時刪除該帳號的 Token 以及暫時 Token，以確保帳號安全。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>新增購物車</dt>
+                        <dd>用於建立新購物車資料。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢購物車</dt>
+                        <dd>可依條件查詢既有購物車資料。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>更改購物車</dt>
+                        <dd>用於修改既有購物車內容。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>刪除購物車</dt>
+                        <dd>用於刪除既有購物車，請謹慎操作，避免誤刪。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>送出報價單</dt>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢報價單編號</dt>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢報價單</dt>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>確認金額</dt>
+                        <dd>是否接受報價，接受、拒絕。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢出貨資訊</dt>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+                <li>
+                    <dl>
+                        <dt>查詢付款資訊</dt>
+                        <dd>付款。</dd>
+                        <dd>操作權限限制：僅限具有 GUEST 權限的使用者可執行。</dd>
+                    </dl>
+                </li>
+            </ol>
+        </div>
+    </div>
+    <section>
+        <pre id="user_result" class="user_products_pre"></pre>
+    </section>
+</body>
+
+</html>

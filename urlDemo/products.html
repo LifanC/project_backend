@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品</title>
+</head>
+<link rel="stylesheet" href="/url.css">
+<script src="/jquery.min.js"></script>
+<script src="/moveFocus.js"></script>
+<script src="/products.js"></script>
+
+<body>
+    <div class="container">
+
+        <!-- 左邊功能區 -->
+        <div class="left-panel">
+            <div id="form" class="form">
+                <table class="url-table">
+                    <tr>
+                        <th colspan="3">
+                            <h2>商品</h2>
+                        </th>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td colspan="2">
+                            <input id="products_name" placeholder="商品名稱">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td colspan="2">
+                            <input id="price" placeholder="價格">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td colspan="2">
+                            <input id="stock" placeholder="庫存量">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td colspan="2">
+                            <textarea id="description" placeholder="描述"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>請輸入完整資料</td>
+                        <td>
+                            <button id="insert">新增</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>
+                            <input id="product_id" placeholder="商品編號">
+                        </td>
+                        <td>
+                            <button id="select">查詢</button>
+                            <button id="update">更改</button>
+                            <button id="delete">刪除</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>
+                            <input type="file" id="fileInput">
+                        </td>
+                        <td>
+                            <button id="previewBtn">預覽</button>
+                            <button id="uploadBtn">上傳</button>
+                            <button id="clearFile">清除檔案</button>
+                        </td>
+                    </tr>
+                </table>
+                <table class="url-table" id="products_code"></table>
+                <table class="url-table" id="products_table"></table>
+                <dav id="products_timestamp"></dav>
+            </div>
+        </div>
+
+        <!-- 右邊說明文字 -->
+        <div class="right-panel">
+            <h3>操作說明</h3>
+            <ol>
+                <li>請先輸入商品名稱。</li>
+                <li>請先輸入商品價格。</li>
+                <li>請先輸入商品庫存量。</li>
+                <li>請先輸入商品描述。</li>
+                <li>請輸入完整資料。</li>
+                <li>請先輸入商品編號。</li>
+                <li>批次新增資料。</li>
+            </ol>
+        </div>
+    </div>
+    <section>
+        <h3>API Result</h3>
+        <pre id="result" class="products_pre"></pre>
+    </section>
+</body>
+
+</html>
