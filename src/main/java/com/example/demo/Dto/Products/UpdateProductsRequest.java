@@ -1,14 +1,27 @@
 package com.example.demo.Dto.Products;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+@JsonPropertyOrder(
+        {
+                "product_id",
+                "products_name",
+                "price",
+                "stock",
+                "description"
+        }
+)
+@Schema(description = "商品請求")
 public class UpdateProductsRequest {
 
+    @Schema(description = "商品編號", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "商品編號不可為空")
     @Pattern(
             regexp = "^\\d+$",
-            message = "價格不可包含英文、中文與小數"
+            message = "價格只能是正整數"
     )
     private String product_id;
 

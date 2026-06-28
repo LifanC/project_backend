@@ -143,7 +143,7 @@ function isFetchNetworkError(err) {
 
 testLogin()
 async function testLogin() {
-    const res = await api.get('user/testLogin', null);
+    const res = await api.get('login/testLogin', null);
     show_user(res);
     starTableFormat(res);
 }
@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
             password: document.getElementById('loginPass').value
         };
         try {
-            const res = await api.post('user/takeToken', data);
+            const res = await api.post('login/takeToken', data);
             show_user(res);
             tableFormat(res);
 
@@ -1109,7 +1109,7 @@ document.addEventListener('DOMContentLoaded', () => {
             username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('user/validate', data);
+            const res = await api.post('login/validate', data);
             show_user(res);
             tableFormat(res);
             if (res.data.length > 1) {
@@ -1136,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/logout', data, token);
+            const res = await api.post('login/logout', data, token);
             show_user(res);
             tableFormat(res);
 
@@ -1162,7 +1162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/productsCarSelect', data, token);
+            const res = await api.post('user/car/productsCarSelect', data, token);
             show_user(res);
             tableFormatProduct(res);
         } catch (err) {
@@ -1179,7 +1179,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/createCarItem', data, token);
+            const res = await api.post('user/car/createCarItem', data, token);
             show_user(res);
             tableFormatCar(res);
         } catch (err) {
@@ -1194,7 +1194,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/queryCarItem', data, token);
+            const res = await api.post('user/car/queryCarItem', data, token);
             show_user(res);
             tableFormatQueryCar(res);
         } catch (err) {
@@ -1211,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/updateCarItem', data, token);
+            const res = await api.post('user/car/updateCarItem', data, token);
             show_user(res);
             tableFormatCar(res);
         } catch (err) {
@@ -1227,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/deleteCarItem', data, token);
+            const res = await api.post('user/car/deleteCarItem', data, token);
             show_user(res);
             tableFormatQueryCar(res);
         } catch (err) {
@@ -1242,7 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/confirmItem', data, token);
+            const res = await api.post('user/car/confirmItem', data, token);
             show_user(res);
             tableFormatQueryCar(res);
         } catch (err) {
@@ -1257,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/quotationsProductId', data, token);
+            const res = await api.post('user/quotation/quotationsProductId', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
         } catch (err) {
@@ -1273,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/quotationsProduct', data, token);
+            const res = await api.post('user/quotation/quotationsProduct', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
         } catch (err) {
@@ -1289,7 +1289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/userAccepted', data, token);
+            const res = await api.post('user/quotation/userAccepted', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
         } catch (err) {
@@ -1305,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/userRejected', data, token);
+            const res = await api.post('user/quotation/userRejected', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
         } catch (err) {
@@ -1326,7 +1326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/userShipments', data, token);
+            const res = await api.post('user/shipment/userShipments', data, token);
             show_user(res);
             tableFormatShipments(res)
         } catch (err) {
@@ -1342,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/userPayments', data, token);
+            const res = await api.post('user/payment/userPayments', data, token);
             show_user(res);
             tableFormatPayments(res)
         } catch (err) {
@@ -1360,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('user/userPayMoney', data, token);
+            const res = await api.post('user/payment/userPayMoney', data, token);
             show_user(res);
             tableFormatPayments(res)
         } catch (err) {

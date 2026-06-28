@@ -8,12 +8,6 @@ public interface UserService {
 
     ResponseEntity<?> testLogin();
 
-    ResponseEntity<?> takeToken(@Valid UserRequest request);
-
-    ResponseEntity<?> validate(@Valid UserTokenValidateRequest request);
-
-    ResponseEntity<?> logout(@Valid QueryUserRequest request);
-
     ResponseEntity<?> productsCarSelect(@Valid QueryCarItemRequest request);
 
     ResponseEntity<?> createCarItem(@Valid CreateCarItemRequest request);

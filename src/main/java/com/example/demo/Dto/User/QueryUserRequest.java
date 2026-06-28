@@ -1,5 +1,15 @@
 package com.example.demo.Dto.User;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@JsonPropertyOrder(
+        {
+                "username",
+                "token"
+        }
+)
+@Schema(description = "後端")
 public class QueryUserRequest implements OrderRequest {
 
     private String username;

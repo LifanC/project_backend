@@ -2,11 +2,12 @@ package com.example.demo.Controller;
 
 import com.example.demo.Dto.User.*;
 import com.example.demo.Service.UserService;
-import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "User API", description = "使用者訂單相關功能")
 @RestController
 @RequestMapping("/v1/user")
 @Validated
@@ -22,162 +23,6 @@ public class UsersController {
     @GetMapping("/testLogin")
     public ResponseEntity<?> testLogin() {
         return userService.testLogin();
-    }
-
-    @PostMapping("/takeToken")
-    public ResponseEntity<?> takeToken(
-            @Valid
-            @RequestBody
-            UserRequest request) {
-        return userService.takeToken(request);
-    }
-
-    @PostMapping("/validate")
-    public ResponseEntity<?> validate(
-            @Valid
-            @RequestBody
-            UserTokenValidateRequest request) {
-        return userService.validate(request);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(
-            @Valid
-            @RequestBody
-            QueryUserRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.logout(request);
-    }
-
-    @PostMapping("/productsCarSelect")
-    public ResponseEntity<?> productsCarSelect(
-            @Valid
-            @RequestBody
-            QueryCarItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.productsCarSelect(request);
-    }
-
-    @PostMapping("/createCarItem")
-    public ResponseEntity<?> createCarItem(
-            @Valid
-            @RequestBody
-            CreateCarItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.createCarItem(request);
-    }
-
-    @PostMapping("/queryCarItem")
-    public ResponseEntity<?> queryCarItem(
-            @Valid
-            @RequestBody
-            QueryCarItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.queryCarItem(request);
-    }
-
-    @PostMapping("/updateCarItem")
-    public ResponseEntity<?> updateCarItem(
-            @Valid
-            @RequestBody
-            UpdateCarItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.updateCarItem(request);
-    }
-
-    @PostMapping("/deleteCarItem")
-    public ResponseEntity<?> deleteCarItem(
-            @Valid
-            @RequestBody
-            DeleteCarItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.deleteCarItem(request);
-    }
-
-    @PostMapping("/confirmItem")
-    public ResponseEntity<?> confirmItem(
-            @Valid
-            @RequestBody
-            ConfirmItemRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.confirmItem(request);
-    }
-
-    @PostMapping("/quotationsProductId")
-    public ResponseEntity<?> quotationsProductId(
-            @Valid
-            @RequestBody
-            QuotationsProductIdRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.quotationsProductId(request);
-    }
-
-    @PostMapping("/quotationsProduct")
-    public ResponseEntity<?> quotationsProduct(
-            @Valid
-            @RequestBody
-            QuotationsProductRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.quotationsProduct(request);
-    }
-
-    @PostMapping("/userAccepted")
-    public ResponseEntity<?> userAccepted(
-            @Valid
-            @RequestBody
-            QuotationsProductRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.userAccepted(request);
-    }
-
-    @PostMapping("/userRejected")
-    public ResponseEntity<?> userRejected(
-            @Valid
-            @RequestBody
-            QuotationsProductRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.userRejected(request);
-    }
-
-    @PostMapping("/userShipments")
-    public ResponseEntity<?> userShipments(
-            @Valid
-            @RequestBody
-            ShipmentsRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.userShipments(request);
-    }
-
-    @PostMapping("/userPayments")
-    public ResponseEntity<?> userPayments(
-            @Valid
-            @RequestBody
-            PaymentsRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.userPayments(request);
-    }
-
-    @PostMapping("/userPayMoney")
-    public ResponseEntity<?> userPayMoney(
-            @Valid
-            @RequestBody
-            PayMoneyRequest request,
-            @RequestHeader("Authorization") String authHeader) {
-        request.setAuthHeader(authHeader);
-        return userService.userPayMoney(request);
     }
 
 }

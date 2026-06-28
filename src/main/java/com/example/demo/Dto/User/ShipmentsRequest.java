@@ -1,5 +1,21 @@
 package com.example.demo.Dto.User;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@JsonPropertyOrder(
+        {
+                "username",
+                "token",
+                "orderId",
+                "trackingNumber",
+                "datePart",
+                "shipmentsStatus",
+                "paymentsStatus",
+                "paymentsMethod"
+        }
+)
+@Schema(description = "出貨")
 public class ShipmentsRequest implements OrderRequest {
 
     private String username;

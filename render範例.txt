@@ -15,3 +15,5 @@ https://project-backend-2olo.onrender.com
 
 https://project-frontend-exjf.onrender.com/permissions.html
 https://project-frontend-exjf.onrender.com/userUrl.html
+
+http://localhost:8080/api/swagger-ui/index.html

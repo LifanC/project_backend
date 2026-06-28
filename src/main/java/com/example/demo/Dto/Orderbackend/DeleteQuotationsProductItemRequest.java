@@ -1,14 +1,25 @@
 package com.example.demo.Dto.Orderbackend;
 
 import com.example.demo.Dto.User.OrderRequest;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
+@JsonPropertyOrder(
+        {
+                "username",
+                "token",
+                "useruser"
+        }
+)
+@Schema(description = "後端")
 public class DeleteQuotationsProductItemRequest implements OrderRequest {
 
     private String username;
 
     private String token;
 
+    @Schema(description = "用戶帳號不可為空", example = "test123", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "用戶帳號不可為空")
     private String useruser;
 

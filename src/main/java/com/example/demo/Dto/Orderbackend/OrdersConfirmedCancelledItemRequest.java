@@ -1,8 +1,19 @@
 package com.example.demo.Dto.Orderbackend;
 
 import com.example.demo.Dto.User.OrderRequest;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
+@JsonPropertyOrder(
+        {
+                "username",
+                "token",
+                "useruser",
+                "orderId"
+        }
+)
+@Schema(description = "後端")
 public class OrdersConfirmedCancelledItemRequest implements OrderRequest {
 
     private String username;
@@ -14,9 +25,11 @@ public class OrdersConfirmedCancelledItemRequest implements OrderRequest {
         return username;
     }
 
+    @Schema(description = "用戶帳號不可為空", example = "test123", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "用戶帳號不可為空")
     private String useruser;
 
+    @Schema(description = "訂單編號不可為空", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "訂單編號不可為空")
     private String orderId;
 

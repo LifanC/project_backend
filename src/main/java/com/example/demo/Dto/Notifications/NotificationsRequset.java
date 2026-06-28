@@ -1,9 +1,19 @@
 package com.example.demo.Dto.Notifications;
 
 import com.example.demo.Dto.User.OrderRequest;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@JsonPropertyOrder(
+        {
+                "username",
+                "token"
+        }
+)
+@Schema(description = "使用者請求")
 public class NotificationsRequset implements OrderRequest {
 
+    @Schema(description = "使用者帳號", example = "test123", requiredMode = Schema.RequiredMode.REQUIRED)
     private String username;
 
     private String token;

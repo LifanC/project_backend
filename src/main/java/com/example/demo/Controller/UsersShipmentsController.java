@@ -1,7 +1,7 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Dto.Notifications.NotificationsRequset;
-import com.example.demo.Service.NotificationsService;
+import com.example.demo.Dto.User.ShipmentsRequest;
+import com.example.demo.Service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,37 +10,35 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Notification API", description = "通知相關功能")
+@Tag(name = "User Shipment API", description = "使用者訂單相關功能")
 @RestController
-@RequestMapping("/v1/notifications")
+@RequestMapping("/v1/user/shipment")
 @Validated
-public class NotificationsController {
+public class UsersShipmentsController {
 
-    private final NotificationsService notificationsService;
+    private final UserService userService;
 
-    public NotificationsController(
-            NotificationsService notificationsService){
-        this.notificationsService = notificationsService;
+    public UsersShipmentsController(
+            UserService userService) {
+        this.userService = userService;
     }
 
     @Operation(summary = "1.測試登入", description = "驗證 API 是否正常運作")
     @GetMapping("/testLogin")
     public ResponseEntity<?> testLogin() {
-        return notificationsService.testLogin();
+        return userService.testLogin();
     }
 
-    @Operation(summary = "2.通知未讀", description = "通知使用者未讀資料")
-    @PostMapping("/unread")
-    public ResponseEntity<?> unread(
+    @Operation(summary = "2.查詢出貨資訊", description = " ")
+    @PostMapping("/userShipments")
+    public ResponseEntity<?> userShipments(
             @Valid
             @RequestBody
-            NotificationsRequset request,
+            ShipmentsRequest request,
             @Schema(description = "token", example = "token_abc123", requiredMode = Schema.RequiredMode.REQUIRED)
             @RequestHeader("Authorization") String authHeader) {
         request.setAuthHeader(authHeader);
-        return notificationsService.unread(request);
+        return userService.userShipments(request);
     }
-
-
 
 }

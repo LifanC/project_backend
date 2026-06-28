@@ -8,9 +8,14 @@ jwt:
 # Server 設定
 # -----------------------------
 server:
-  port: 8080
   servlet:
     context-path: /api
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 # -----------------------------
 # Spring Boot 通用設定

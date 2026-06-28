@@ -143,7 +143,7 @@ function isFetchNetworkError(err) {
 
 testLogin()
 async function testLogin() {
-    const res = await api.get('orderbackend/testLogin', null);
+    const res = await api.get('login/testLogin', null);
     show_user(res);
     starTableFormat(res);
 }
@@ -1007,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', () => {
             password: document.getElementById('loginPass').value
         };
         try {
-            const res = await api.post('orderbackend/takeToken', data);
+            const res = await api.post('login/takeToken', data);
             show_user(res);
             tableFormat(res);
 
@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
             username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('orderbackend/validate', data);
+            const res = await api.post('login/validate', data);
             show_user(res);
             tableFormat(res);
             if (res.data.length > 1) {
@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/logout', data, token);
+            const res = await api.post('login/logout', data, token);
             show_user(res);
             tableFormat(res);
 
@@ -1088,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/quotationsProductItem', data, token);
+            const res = await api.post('orderbackend/quotation/quotationsProductItem', data, token);
             show_user(res);
             tableFormatQuotationsProduct(res);
         } catch (err) {
@@ -1105,7 +1105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/confirmQuotationsProductItem', data, token);
+            const res = await api.post('orderbackend/quotation/confirmQuotationsProductItem', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
         } catch (err) {
@@ -1121,7 +1121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/deleteQuotationsProduct', data, token);
+            const res = await api.post('orderbackend/quotation/deleteQuotationsProduct', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
         } catch (err) {
@@ -1137,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/queryQuotationsProduct', data, token);
+            const res = await api.post('orderbackend/quotation/queryQuotationsProduct', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
         } catch (err) {
@@ -1154,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/sendQuotationsProduct', data, token);
+            const res = await api.post('orderbackend/quotation/sendQuotationsProduct', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
         } catch (err) {
@@ -1169,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersUser', data, token);
+            const res = await api.post('orderbackend/order/ordersUser', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
         } catch (err) {
@@ -1186,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersProduct', data, token);
+            const res = await api.post('orderbackend/order/ordersProduct', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
         } catch (err) {
@@ -1203,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersConfirmed', data, token);
+            const res = await api.post('orderbackend/order/ordersConfirmed', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
         } catch (err) {
@@ -1220,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/ordersCancelled', data, token);
+            const res = await api.post('orderbackend/order/ordersCancelled', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
         } catch (err) {
@@ -1239,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsTrackingNumber', data, token);
+            const res = await api.post('orderbackend/shipment/shipmentsTrackingNumber', data, token);
             show_user(res);
             tableFormatShipments(res)
         } catch (err) {
@@ -1255,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsShipped', data, token);
+            const res = await api.post('orderbackend/shipment/shipmentsShipped', data, token);
             show_user(res);
             tableFormatShipments(res)
         } catch (err) {
@@ -1271,7 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/shipmentsDelivered', data, token);
+            const res = await api.post('orderbackend/shipment/shipmentsDelivered', data, token);
             show_user(res);
             tableFormatShipments(res)
         } catch (err) {

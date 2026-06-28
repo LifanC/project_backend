@@ -1,7 +1,16 @@
 package com.example.demo.Dto.Orderbackend;
 
 import com.example.demo.Dto.User.OrderRequest;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import io.swagger.v3.oas.annotations.media.Schema;
 
+@JsonPropertyOrder(
+        {
+                "username",
+                "token"
+        }
+)
+@Schema(description = "後端")
 public class OrdersUserItemRequest implements OrderRequest {
 
     private String username;
