@@ -1,2 +1,6 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+
+urlDemo/**/*.js linguist-detectable=false
+urlDemo/**/*.html linguist-detectable=false
+urlDemo/**/*.css linguist-detectable=false
