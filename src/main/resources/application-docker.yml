@@ -3,7 +3,7 @@
 # Docker 仍會套用 application.yml 的 /api
 # -----------------------------
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 # -----------------------------
 # Redis 使用 Docker 環境變數
