@@ -18,4 +18,4 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
 # 不指定 profile !!!
-ENTRYPOINT ["sh","-c","java -Dserver.port=$PORT -jar app.jar"]
+ENTRYPOINT ["sh","-c","java", "-jar", "app.jar"]
