@@ -1,12 +1,13 @@
 https://render.com/
 
-jdbc:postgresql://dpg-d6g97jrh46gs73akpsfg-a:5432/interviewworks_85ge?currentSchema=interviewworks_schema
-postgresql://postgresrender:UPisjpYLnVSKnj8dYHwZlpX7fwy9IOLE@dpg-d6g97jrh46gs73akpsfg-a/interviewworks_85ge
-postgresql://postgresrender:UPisjpYLnVSKnj8dYHwZlpX7fwy9IOLE@dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com/interviewworks_85ge
+jdbc:postgresql://dpg-d91sre8js32c73a0s3vg-a:5432/interviewworks_rrch?currentSchema=interviewworks_schema
+postgresql://postgresrender:352RsgMBgcqwO5FBPJkfCYvVM8SPYzCS@dpg-d91sre8js32c73a0s3vg-a/interviewworks_rrch
+postgresql://postgresrender:352RsgMBgcqwO5FBPJkfCYvVM8SPYzCS@dpg-d91sre8js32c73a0s3vg-a.oregon-postgres.render.com/interviewworks_rrch
+PGPASSWORD=352RsgMBgcqwO5FBPJkfCYvVM8SPYzCS psql -h dpg-d91sre8js32c73a0s3vg-a.oregon-postgres.render.com -U postgresrender interviewworks_rrch
 
-URL:jdbc:postgresql://dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com:5432/interviewworks_85ge
-主機:dpg-d6g97jrh46gs73akpsfg-a.oregon-postgres.render.com
-數據庫:interviewworks_85ge
+URL:jdbc:postgresql://dpg-d91sre8js32c73a0s3vg-a.oregon-postgres.render.com:5432/interviewworks_rrch
+主機:dpg-d91sre8js32c73a0s3vg-a.oregon-postgres.render.com
+數據庫:interviewworks_rrch
 
 redis://red-d6ga30hr0fns73burdpg:6379
 

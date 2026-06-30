@@ -46,14 +46,6 @@ spring:
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
-  # Security 本機預設帳密
-  security:
-    user:
-      name: lukechen      # 登入帳號
-      password: 1qaz@WSX  # 登入密碼
-  aop:
-    proxy-target-class: true
-
 # -----------------------------
 # MyBatis 設定
 # -----------------------------
