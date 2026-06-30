@@ -14,7 +14,8 @@ redis://red-d6ga30hr0fns73burdpg:6379
 https://project-frontend-exjf.onrender.com
 https://project-backend-2olo.onrender.com
 
-https://project-frontend-exjf.onrender.com/permissions.html
-https://project-frontend-exjf.onrender.com/userUrl.html
+https://project-frontend-exjf.onrender.com/xxx.html
+https://project-backend-2olo.onrender.com/api/v1/xxx/testLogin
 
 http://localhost:8080/api/swagger-ui/index.html
+https://project-backend-2olo.onrender.com/api/swagger-ui/index.html
