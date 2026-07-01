@@ -73,26 +73,53 @@ public class ProductsServiceImpl implements ProductsService {
     @Override
     public ResponseEntity<?> testLogin() {
         logger.info("products/testLogin: Products is working!");
-        List<Map<String, Object>> data = new ArrayList<>();
-        Map<String, Object> dataMap = new TreeMap<>();
-        dataMap.put("status_name", "狀態");
-        dataMap.put("status", "Products is working!");
-        data.add(dataMap);
-        HttpStatus status = HttpStatus.OK;
-        return ResponseEntity
-                .status(status)
-                .body(ApiResponse.api(
-                        status,
-                        data
-                ));
+        try {
+            // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT
+            if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
+                logger.info("testLogin 拿鎖");
+                try {
+                    List<Map<String, Object>> data = new ArrayList<>();
+                    Map<String, Object> dataMap = new TreeMap<>();
+                    dataMap.put("status_name", "狀態");
+                    dataMap.put("status", "Products is working!");
+                    data.add(dataMap);
+                    HttpStatus status = HttpStatus.OK;
+                    return ResponseEntity
+                            .status(status)
+                            .body(ApiResponse.api(
+                                    status,
+                                    data
+                            ));
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 沒拿到鎖的線程稍等一下再從快取讀
+                Thread.sleep(20);
+                logger.error("testLogin，請重試");
+                List<Map<String, Object>> data = List.of(Map.of("remark", "testLogin，資源忙碌，請重試"));
+                HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
+                return ResponseEntity
+                        .status(status)
+                        .body(ApiResponse.api(
+                                status,
+                                data
+                        ));
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
     }
 
     private List<Map<String, Object>> getRedisMethodList(String key) {
         List<Map<String, Object>> list = new ArrayList<>();
         String json = stringRedisTemplate.opsForValue().get(key);
         if (json != null) {
-            list = objectMapper.readValue(json, new TypeReference<>() {
-            });
+            list = objectMapper.readValue(json, new TypeReference<>() {});
         }
         return list;
     }
