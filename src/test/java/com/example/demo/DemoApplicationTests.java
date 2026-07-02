@@ -1,12 +1,15 @@
 package com.example.demo;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -21,6 +24,9 @@ class DemoApplicationTests {
 
     @LocalServerPort
     private int port;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void contextLoads() throws InterruptedException {
@@ -54,16 +60,8 @@ class DemoApplicationTests {
                     startLatch.await(); // 等待一起開始
                     logger.info("{} {} - start request", index, Thread.currentThread().getName());
 
-                    String permissionsUrl = String.format("http://localhost:%d/api/v1/permissions/testLogin", port);
-                    String userUrl = String.format("http://localhost:%d/api/v1/user/testLogin", port);
-                    String orderbackendUrl = String.format("http://localhost:%d/api/v1/orderbackend/testLogin", port);
-                    String productsUrl = String.format("http://localhost:%d/api/v1/products/testLogin", port);
-
-                    String username = "lukechen";
-                    String password = "1qaz@WSX";
-
-                    // Base64 編碼 username:password
-                    String auth = username + ":" + password;
+                    // Base64 編碼
+                    String auth = "";
                     String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
                     String authHeader = "Basic " + encodedAuth;
 
@@ -72,58 +70,17 @@ class DemoApplicationTests {
                     headers.set("Authorization", authHeader);
                     headers.setContentType(MediaType.APPLICATION_JSON); // 如果 API 接收 JSON
 
-                    HttpEntity<String> entity = new HttpEntity<>(null, headers);
-
                     // 呼叫 API
                     RestTemplate restTemplate = new RestTemplate();
 
-                    ResponseEntity<String> permissionsResponse = restTemplate.exchange(
-                            permissionsUrl,
-                            HttpMethod.GET,
-                            entity,
-                            String.class
-                    );
-
-                    // 驗證回應
-                    logger.info("permissions Response Status: {}", permissionsResponse.getStatusCode());
-                    logger.info("permissions Response Body: {}", permissionsResponse.getBody());
-
-                    // 斷言
-                    assert(permissionsResponse.getStatusCode() == HttpStatus.OK);
-
-                    ResponseEntity<String> userResponse = restTemplate.exchange(
-                            userUrl,
-                            HttpMethod.GET,
-                            entity,
-                            String.class
-                    );
-
-                    // 驗證回應
-                    logger.info("user Response Status: {}", userResponse.getStatusCode());
-                    logger.info("user Response Body: {}", userResponse.getBody());
-
-                    // 斷言
-                    assert(userResponse.getStatusCode() == HttpStatus.OK);
-
-                    ResponseEntity<String> orderbackendResponse = restTemplate.exchange(
-                            orderbackendUrl,
-                            HttpMethod.GET,
-                            entity,
-                            String.class
-                    );
-
-                    // 驗證回應
-                    logger.info("orderbackend Response Status: {}", orderbackendResponse.getStatusCode());
-                    logger.info("orderbackend Response Body: {}", orderbackendResponse.getBody());
-
-                    // 斷言
-                    assert(orderbackendResponse.getStatusCode() == HttpStatus.OK);
-
-                    ResponseEntity<String> productsResponse = restTemplate.exchange(
+                    String productsUrl = String.format("http://localhost:%d/api/v1/products/testLogin", port);
+                    logger.info("productsUrl - {}", productsUrl);
+                    HttpEntity<ObjectNode> entity = new HttpEntity<>(headers);
+                    ResponseEntity<ObjectNode> productsResponse = restTemplate.exchange(
                             productsUrl,
                             HttpMethod.GET,
                             entity,
-                            String.class
+                            ObjectNode.class
                     );
 
                     // 驗證回應
@@ -132,6 +89,25 @@ class DemoApplicationTests {
 
                     // 斷言
                     assert(productsResponse.getStatusCode() == HttpStatus.OK);
+
+                    String productsUrlSelect = String.format("http://localhost:%d/api/v1/products/select", port);
+                    logger.info("productsUrlSelect - {}", productsUrlSelect);
+                    ObjectNode productInfo = objectMapper.createObjectNode()
+                            .put("product_id", "");
+                    HttpEntity<ObjectNode> entitySelect = new HttpEntity<>(productInfo, headers);
+                    ResponseEntity<ObjectNode> productsResponseSelect = restTemplate.exchange(
+                            productsUrlSelect,
+                            HttpMethod.POST,
+                            entitySelect,
+                            ObjectNode.class
+                    );
+
+                    // 驗證回應
+                    logger.info("products Response select Status: {}", productsResponseSelect.getStatusCode());
+                    logger.info("products Response select Body: {}", productsResponseSelect.getBody());
+
+                    // 斷言
+                    assert(productsResponseSelect.getStatusCode() == HttpStatus.OK);
 
                     // 模擬你的業務邏輯
                     Thread.sleep(100);
