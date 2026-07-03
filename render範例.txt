@@ -14,6 +14,10 @@ redis://red-d6ga30hr0fns73burdpg:6379
 https://project-frontend-exjf.onrender.com
 https://project-backend-2olo.onrender.com
 
+products
+permissions
+user
+orderbackend
 https://project-frontend-exjf.onrender.com/xxx.html
 https://project-backend-2olo.onrender.com/api/v1/xxx/testLogin
 
