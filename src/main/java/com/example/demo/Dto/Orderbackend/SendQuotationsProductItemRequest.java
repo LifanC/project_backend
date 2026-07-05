@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotBlank;
                 "username",
                 "token",
                 "useruser",
-                "userUserQuotationsId"
+                "userUserQuotationsId",
         }
 )
 @Schema(description = "後端")

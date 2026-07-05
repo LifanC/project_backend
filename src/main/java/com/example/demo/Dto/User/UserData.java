@@ -7,6 +7,7 @@ public class UserData {
     private String username;
     private String password;
     private String permissions;
+    private String orderItem;
 
     public UserData() {
     }
@@ -39,4 +40,11 @@ public class UserData {
         this.permissions = permissions;
     }
 
+    public String getOrderItem() {
+        return orderItem;
+    }
+
+    public void setOrderItem(String orderItem) {
+        this.orderItem = orderItem;
+    }
 }

@@ -1102,6 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             username: document.getElementById('loginUser').value,
             useruser: document.getElementById('userUserQuotations').value,
+            orderItem: document.getElementById('userOrderItem').value,
             userPercent: document.getElementById('userPercent').value
         };
         try {
@@ -1118,7 +1119,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotations').value
+            useruser: document.getElementById('userUserQuotations').value,
+            orderItem: document.getElementById('userOrderItem').value,
         };
         try {
             let token = document.getElementById('token').value
@@ -1134,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
         const data = {
             username: document.getElementById('loginUser').value,
-            useruser: document.getElementById('userUserQuotations').value
+            useruser: document.getElementById('userUserQuotations').value,
         };
         try {
             let token = document.getElementById('token').value

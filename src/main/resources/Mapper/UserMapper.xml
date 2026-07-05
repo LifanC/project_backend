@@ -82,6 +82,8 @@
                             on
                                 userdata.username = userdata_details.username
         where permissionsdata.use_permissions in ('GUEST', 'USER')
+          and userdata_details.is_active = '1'
+          and userdata_details.tracking_number is null
         order by
             case permissionsdata.use_permissions
                 when 'GUEST' then 1
@@ -149,6 +151,7 @@
             <if test="quotation_id != null and quotation_id != ''">
                 and quotations.quotation_id = #{quotation_id}
             </if>
+            and userdata_details.tracking_number is null
             and userdata_details.username = #{username}
             <if test="statuss != null and statuss.size() > 0">
                 and quotations.status in

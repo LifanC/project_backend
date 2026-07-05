@@ -9,7 +9,8 @@ import jakarta.validation.constraints.NotBlank;
         {
                 "username",
                 "token",
-                "useruser"
+                "useruser",
+                "orderItem",
         }
 )
 @Schema(description = "後端")
@@ -23,6 +24,10 @@ public class DeleteQuotationsProductItemRequest implements OrderRequest {
     @NotBlank(message = "用戶帳號不可為空")
     private String useruser;
 
+    @Schema(description = "銷售代號不可為空", example = "1:1,2:1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "銷售代號不可為空")
+    private String orderItem;
+
     @Override
     public String getUsername() {
         return username;
@@ -31,6 +36,7 @@ public class DeleteQuotationsProductItemRequest implements OrderRequest {
     public String getToken() {
         return token;
     }
+
 
     public void setAuthHeader(String authHeader) {
         String token = authHeader.replace("Bearer ", "");
@@ -43,4 +49,9 @@ public class DeleteQuotationsProductItemRequest implements OrderRequest {
     public String getUseruser() {
         return useruser;
     }
+
+    public String getOrderItem() {
+        return orderItem;
+    }
+
 }

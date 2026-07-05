@@ -850,6 +850,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         UserUser userUser = new UserUser(useruser);
+                        userUser.setOrderItem(orderItem);
                         List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
                         if (getUserUser.isEmpty()) {
                             logger.error("{} : (用戶商品報價) 用戶不存在", useruser);
@@ -950,6 +951,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
+        final String orderItem = request.getOrderItem();
         final String userPercent = request.getUserPercent();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
@@ -1007,6 +1009,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         UserUser userUser = new UserUser(useruser);
+                        userUser.setOrderItem(orderItem);
                         List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
                         if (getUserUser.isEmpty()) {
                             logger.error("{} : (確認報價) 用戶不存在", useruser);
@@ -1015,6 +1018,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         List<Map<String, Object>> data = new ArrayList<>();
 
                         UserData userDataDetails = new UserData(useruser);
+                        userDataDetails.setOrderItem(orderItem);
                         Map<String, Object> detailsData = getDetailsData(userDataDetails);
                         String order_item = detailsData.get("order_item").toString();
                         String[] order_items = order_item.split(",");
@@ -1139,6 +1143,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
+        final String orderItem = request.getOrderItem();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
             if (lock.tryLock(10, TimeUnit.MILLISECONDS)) {
@@ -1195,12 +1200,14 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             throw new ResourceNotFoundException(username + " - 使用者不存在");
                         }
                         UserUser userUser = new UserUser(useruser);
+                        userUser.setOrderItem(orderItem);
                         List<Map<String, Object>> getUserUser = orderbackendMapper.selectUserUser(userUser);
                         if (getUserUser.isEmpty()) {
                             logger.error("{} : (刪除報價) 用戶不存在", useruser);
                             throw new ResourceNotFoundException(useruser + " - 用戶不存在");
                         }
                         UserData userDataDetails = new UserData(useruser);
+                        userDataDetails.setOrderItem(orderItem);
                         List<Map<String, Object>> quotationsData = getQuotationsData(userDataDetails);
                         List<Map<String, Object>> data = new ArrayList<>();
                         for (int i = 0; i < quotationsData.size(); i++) {
@@ -2674,7 +2681,6 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             data.add(dataMap);
                             shipments.setStatus(delivered);
                             orderbackendMapper.updateShipments(shipments);
-                            orderbackendMapper.updateUserdataDetailIsActiveNotificationsShow(shipments);
                             Map<String, Object> productsData =
                                     orderbackendMapper.selectProductsData(shipments).get(shipments.getTracking_number());
                             if (productsData != null) {
@@ -2686,6 +2692,41 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                                 product.setStock(priceDifference);
                                 productMapper.update(product);
                             }
+                            shipments.setOrder_id(new BigDecimal(order_id));
+                            String useruser = shipmentsData.getFirst().get("username").toString();
+                            List<Map<String, Object>> orderItemDb = orderbackendMapper.orderItemDbData(useruser);
+                            List<Map<String, Object>> orderItemData = orderbackendMapper.selectOrderItemData(shipments);
+                            List<String> listSort2 = new ArrayList<>();
+                            for (Map<String, Object> map : orderItemData) {
+                                listSort2.add(map.get("order_item").toString());
+                            }
+                            Collections.sort(listSort2);
+                            boolean same = false;
+                            String sameOrderItem = "";
+                            for (Map<String, Object> map: orderItemDb) {
+                                String order_item = map.get("order_item").toString();
+                                String[] splits = order_item.split(",");
+                                if (orderItemData.size() == splits.length) {
+                                    List<String> listSort1 = new ArrayList<>(Arrays.stream(splits).toList());
+                                    Collections.sort(listSort1);
+                                    List<Boolean> ok = new ArrayList<>(Collections.nCopies(listSort1.size(), false));
+                                    for (int i = 0; i < listSort1.size(); i++) {
+                                        if (listSort1.get(i).equals(listSort2.get(i))) {
+                                            ok.set(i, true);
+                                        }
+                                    }
+                                    same = ok.stream().allMatch(Boolean.TRUE::equals);
+                                    if (same) {
+                                        sameOrderItem = order_item;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (same) {
+                                orderbackendMapper.updateUserdataDetailIsActiveNotificationsShow(
+                                        tracking_number, useruser, sameOrderItem);
+                            }
+
                             HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
                                     .status(status)

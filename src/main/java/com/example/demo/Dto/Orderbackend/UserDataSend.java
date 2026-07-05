@@ -10,6 +10,8 @@ public class UserDataSend {
 
     private String status;
 
+    private String orderItem;
+
     public UserDataSend() {
     }
 
@@ -39,5 +41,13 @@ public class UserDataSend {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getOrderItem() {
+        return orderItem;
+    }
+
+    public void setOrderItem(String orderItem) {
+        this.orderItem = orderItem;
     }
 }

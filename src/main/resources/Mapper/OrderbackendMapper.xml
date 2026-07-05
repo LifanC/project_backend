@@ -14,10 +14,13 @@
                                 userdata.username = permissionsdata.username
         <where>
             <if test="username != null and username != ''">
-                userdata_details.username = #{username}
+                and userdata_details.username = #{username}
+            </if>
+            <if test="orderItem != null and orderItem != ''">
+                and userdata_details.order_item = #{orderItem}
             </if>
             and userdata_details.is_active = '1'
-            and userdata_details.order_item = #{orderItem}
+            and userdata_details.tracking_number is null
         </where>
         order by userdata_details.updated_date desc
     </select>
@@ -28,8 +31,8 @@
             order_item
         from
             interviewworks_schema.userdata_details
-        where
-            userdata_details.is_active = '1'
+        where userdata_details.is_active = '1'
+          and userdata_details.order_item = #{orderItem}
           and userdata_details.username = #{username}
     </select>
 
@@ -81,6 +84,7 @@
                            on
                                userdata_details.username = quotations.username
         where userdata_details.is_active = '1'
+          and userdata_details.order_item = #{orderItem}
           and userdata_details.username = #{username}
     </select>
 
@@ -127,6 +131,7 @@
                            on
                                quotation_items.product_id = products.product_id
         where userdata_details.is_active = '1'
+          and userdata_details.tracking_number is null
           and userdata_details.username = #{username}
         order by quotations.quotation_id desc
     </select>
@@ -155,6 +160,9 @@
                            on
                                userdata_details.username = quotations.username
         where userdata_details.is_active = '1'
+        <if test="orderItem != null and orderItem != ''">
+            userdata_details.order_item = #{orderItem}
+        </if>
           and userdata_details.username = #{username}
           and quotations.quotation_id = #{quotation_id}
     </select>
@@ -357,10 +365,35 @@
         order by shipments.order_id
     </select>
 
+    <select id="selectOrderItemData" resultType="java.util.Map">
+        select
+            concat(product_id, ':', quantity) as order_item
+        from "interviewworks_schema".shipments shipments
+                 inner join "interviewworks_schema"."orders" orders
+                            on
+                                shipments.order_id = orders.order_id
+                 inner join "interviewworks_schema"."quotations" quotations
+                            on
+                                orders.quotation_id = quotations.quotation_id
+                 inner join "interviewworks_schema"."quotation_items" quotation_items
+                            on
+                                orders.quotation_id = quotation_items.quotation_id
+        where shipments.order_id = #{order_id}
+    </select>
+
+    <select id="orderItemDbData" resultType="java.util.Map">
+        select
+            order_item as order_item
+        from "interviewworks_schema"."userdata_details"
+        where userdata_details.username = #{username}
+    </select>
+
     <update id="updateUserdataDetailIsActiveNotificationsShow">
         update "interviewworks_schema"."userdata_details"
-        set tracking_number =  #{tracking_number}
-        where username = #{username}
+        set tracking_number = #{tracking_number},
+            is_active_notifications = '0'
+        where userdata_details.username = #{username}
+          and userdata_details.order_item = #{order_item}
     </update>
 
 </mapper>

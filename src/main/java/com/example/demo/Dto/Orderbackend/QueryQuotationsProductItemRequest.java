@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotBlank;
         {
                 "username",
                 "token",
-                "useruser"
+                "useruser",
         }
 )
 @Schema(description = "後端")
@@ -43,4 +43,5 @@ public class QueryQuotationsProductItemRequest implements OrderRequest {
     public String getUseruser() {
         return useruser;
     }
+
 }
