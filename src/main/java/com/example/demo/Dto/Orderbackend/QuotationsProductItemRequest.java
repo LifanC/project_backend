@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
                 "username",
                 "token",
                 "useruser",
+                "orderItem",
                 "userPercent"
         }
 )
@@ -25,6 +26,10 @@ public class QuotationsProductItemRequest implements OrderRequest {
     @Schema(description = "用戶帳號不可為空", example = "test123", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "用戶帳號不可為空")
     private String useruser;
+
+    @Schema(description = "銷售代號不可為空", example = "1:1,2:1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "銷售代號不可為空")
+    private String orderItem;
 
     @Pattern(
             regexp = "^[1-9]\\d?$",
@@ -51,6 +56,10 @@ public class QuotationsProductItemRequest implements OrderRequest {
 
     public String getUseruser() {
         return useruser;
+    }
+
+    public String getOrderItem() {
+        return orderItem;
     }
 
     public String getUserPercent() {

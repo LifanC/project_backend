@@ -71,11 +71,16 @@
         select concat('(',
                       permissionsdata.use_permissions,
                       ')',
-                      userdata.username) as fixed
+                      userdata.username,
+                      '          銷售代號',
+                      userdata_details.order_item) as fixed
         from "interviewworks_schema".userdata userdata
                  inner join "interviewworks_schema"."permissionsdata" permissionsdata
                             on
                                 userdata.username = permissionsdata.username
+                 inner join "interviewworks_schema"."userdata_details" userdata_details
+                            on
+                                userdata.username = userdata_details.username
         where permissionsdata.use_permissions in ('GUEST', 'USER')
         order by
             case permissionsdata.use_permissions

@@ -793,6 +793,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
         final String username = request.getUsername();
         final String token = request.getToken();
         final String useruser = request.getUseruser();
+        final String orderItem = request.getOrderItem();
         final String userPercent = request.getUserPercent();
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。
@@ -837,8 +838,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                         String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                         String json = stringRedisTemplate.opsForValue().get(userOnly);
                         if (json != null) {
-                            userSelect = objectMapper.readValue(json, new TypeReference<>() {
-                            });
+                            userSelect = objectMapper.readValue(json, new TypeReference<>() {});
                         } else {
                             userSelect = getUserData(userData);
                             String jsonMap = objectMapper.writeValueAsString(userSelect);

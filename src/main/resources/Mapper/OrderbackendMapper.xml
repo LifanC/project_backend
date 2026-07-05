@@ -17,6 +17,7 @@
                 userdata_details.username = #{username}
             </if>
             and userdata_details.is_active = '1'
+            and userdata_details.order_item = #{orderItem}
         </where>
         order by userdata_details.updated_date desc
     </select>

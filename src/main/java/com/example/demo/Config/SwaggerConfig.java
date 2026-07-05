@@ -25,17 +25,9 @@ public class SwaggerConfig {
     }
 
     @Bean
-    public GroupedOpenApi loginApi() {
-        return GroupedOpenApi.builder()
-                .group("C-login")
-                .pathsToMatch("/v1/login/*")
-                .build();
-    }
-
-    @Bean
     public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
-                .group("D-user")
+                .group("C-user")
                 .pathsToMatch("/v1/user/*")
                 .build();
     }
@@ -43,7 +35,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi userCarApi() {
         return GroupedOpenApi.builder()
-                .group("E-userCar")
+                .group("D-userCar")
                 .pathsToMatch("/v1/user/car/*")
                 .build();
     }
@@ -51,7 +43,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi userQuotationApi() {
         return GroupedOpenApi.builder()
-                .group("F-userQuotation")
+                .group("E-userQuotation")
                 .pathsToMatch("/v1/user/quotation/*")
                 .build();
     }
@@ -59,7 +51,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi userShipmentApi() {
         return GroupedOpenApi.builder()
-                .group("G-userShipment")
+                .group("F-userShipment")
                 .pathsToMatch("/v1/user/shipment/*")
                 .build();
     }
@@ -67,7 +59,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi userPaymentApi() {
         return GroupedOpenApi.builder()
-                .group("H-userPayment")
+                .group("G-userPayment")
                 .pathsToMatch("/v1/user/payment/*")
                 .build();
     }
@@ -75,7 +67,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi orderbackendApi() {
         return GroupedOpenApi.builder()
-                .group("I-orderbackend")
+                .group("H-orderbackend")
                 .pathsToMatch("/v1/orderbackend/*")
                 .build();
     }
@@ -83,7 +75,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi orderbackendQuotationApi() {
         return GroupedOpenApi.builder()
-                .group("J-orderbackendQuotation")
+                .group("I-orderbackendQuotation")
                 .pathsToMatch("/v1/orderbackend/quotation/*")
                 .build();
     }
@@ -91,7 +83,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi orderbackendOrderApi() {
         return GroupedOpenApi.builder()
-                .group("K-orderbackendOrder")
+                .group("J-orderbackendOrder")
                 .pathsToMatch("/v1/orderbackend/order/*")
                 .build();
     }
@@ -99,7 +91,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi orderbackendShipmentApi() {
         return GroupedOpenApi.builder()
-                .group("L-orderbackendShipment")
+                .group("K-orderbackendShipment")
                 .pathsToMatch("/v1/orderbackend/shipment/*")
                 .build();
     }
@@ -107,7 +99,7 @@ public class SwaggerConfig {
     @Bean
     public GroupedOpenApi notificationsApi() {
         return GroupedOpenApi.builder()
-                .group("M-notifications")
+                .group("L-notifications")
                 .pathsToMatch("/v1/notifications/*")
                 .build();
     }

@@ -1084,6 +1084,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = {
             username: document.getElementById('loginUser').value,
             useruser: document.getElementById('userUserQuotations').value,
+            orderItem: document.getElementById('userOrderItem').value,
             userPercent: document.getElementById('userPercent').value
         };
         try {
