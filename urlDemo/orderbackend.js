@@ -143,7 +143,7 @@ function isFetchNetworkError(err) {
 
 testLogin()
 async function testLogin() {
-    const res = await api.get('login/testLogin', null);
+    const res = await api.get('orderbackend/testLogin', null);
     show_user(res);
     starTableFormat(res);
 }
@@ -1007,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', () => {
             password: document.getElementById('loginPass').value
         };
         try {
-            const res = await api.post('login/takeToken', data);
+            const res = await api.post('orderbackend/takeToken', data);
             show_user(res);
             tableFormat(res);
 
@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
             username: document.getElementById('loginUser').value
         };
         try {
-            const res = await api.post('login/validate', data);
+            const res = await api.post('orderbackend/validate', data);
             show_user(res);
             tableFormat(res);
             if (res.data.length > 1) {
@@ -1050,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         try {
             let token = document.getElementById('token').value
-            const res = await api.post('login/logout', data, token);
+            const res = await api.post('orderbackend/logout', data, token);
             show_user(res);
             tableFormat(res);
 

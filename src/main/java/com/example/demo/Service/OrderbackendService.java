@@ -8,6 +8,12 @@ import org.springframework.http.ResponseEntity;
 public interface OrderbackendService {
     ResponseEntity<?> testLogin();
 
+    ResponseEntity<?> takeToken(@Valid UserRequest request);
+
+    ResponseEntity<?> validate(@Valid UserTokenValidateRequest request);
+
+    ResponseEntity<?> logout(@Valid QueryUserRequest request);
+
     ResponseEntity<?> queryUser(@Valid QueryUserRequest request);
 
     ResponseEntity<?> quotationsProductItem(@Valid QuotationsProductItemRequest request);
