@@ -82,15 +82,7 @@ public class CommonAspect {
                     UserData userData = new UserData(username);
                     String userOnly = RedisKey.redisUserKey.get("userOnly").replace("{1}", username);
                     String jsonUserOnly = stringRedisTemplate.opsForValue().get(userOnly);
-                    Map<String, Object> userSelect;
-                    if (jsonUserOnly != null) {
-                        userSelect = objectMapper.readValue(jsonUserOnly, new TypeReference<>() {});
-                    } else {
-                        userSelect = getUserData(userData);
-                        String jsonMap = objectMapper.writeValueAsString(userSelect);
-                        stringRedisTemplate.opsForValue().set(
-                                userOnly, jsonMap, expirationSecondsAddRndomNumber(), TimeUnit.SECONDS);
-                    }
+                    Map<String, Object> userSelect = getUserData(userData);
                     if (userSelect == null) {
                         logger.error("{} - 帳號不存在", username);
                         throw new ResourceNotFoundException(username + " - 帳號不存在");
