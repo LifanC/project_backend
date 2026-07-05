@@ -2674,6 +2674,7 @@ public class OrderbackendServiceImpl implements OrderbackendService {
                             data.add(dataMap);
                             shipments.setStatus(delivered);
                             orderbackendMapper.updateShipments(shipments);
+                            orderbackendMapper.updateUserdataDetailIsActiveNotificationsShow(shipments);
                             Map<String, Object> productsData =
                                     orderbackendMapper.selectProductsData(shipments).get(shipments.getTracking_number());
                             if (productsData != null) {

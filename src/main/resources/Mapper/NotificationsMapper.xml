@@ -9,6 +9,7 @@
         from "interviewworks_schema"."userdata_details" userdata_details
         where userdata_details.is_active = '1'
           and userdata_details.is_active_notifications = '1'
+          and userdata_details.tracking_number is null
     </select>
 
     <select id="selectQuotations" resultType="java.util.Map">

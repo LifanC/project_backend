@@ -57,4 +57,5 @@ public interface OrderbackendMapper {
     @MapKey("tracking_number")
     Map<String, Map<String, Object>> selectProductsData(Shipments shipments);
 
+    void updateUserdataDetailIsActiveNotificationsShow(Shipments shipments);
 }

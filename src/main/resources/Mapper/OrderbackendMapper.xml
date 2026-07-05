@@ -356,4 +356,10 @@
         order by shipments.order_id
     </select>
 
+    <update id="updateUserdataDetailIsActiveNotificationsShow">
+        update "interviewworks_schema"."userdata_details"
+        set tracking_number =  #{tracking_number}
+        where username = #{username}
+    </update>
+
 </mapper>
