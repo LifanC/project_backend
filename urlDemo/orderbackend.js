@@ -959,7 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadNotifications();
         notificationInterval = setInterval(
             loadNotifications,
-            30000
+            5000
         );
     }
 
