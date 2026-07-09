@@ -3,10 +3,8 @@ package com.example.demo.Controller;
 import com.example.demo.Dto.Permissions.PermissionRequest;
 import com.example.demo.Service.PermissionService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -57,14 +55,10 @@ public class PermissionsController {
     @Operation(summary = "5.刪除使用著", description = "刪除使用著資料")
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(
-            @RequestParam
-            @Schema(description = "刪除使用者帳號未輸入", example = "test123", requiredMode = Schema.RequiredMode.REQUIRED)
-            @NotBlank(message = "刪除帳號未輸入")
-            String username,
-            @Schema(description = "刪除使用者密碼未輸入", example = "test123", requiredMode = Schema.RequiredMode.REQUIRED)
-            @NotBlank(message = "刪除密碼未輸入")
-            String password) {
-        return permissionService.delete(username, password);
+            @Valid
+            @RequestBody
+            PermissionRequest request) {
+        return permissionService.delete(request);
     }
 
 }

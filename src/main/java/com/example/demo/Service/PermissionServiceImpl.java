@@ -370,7 +370,9 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional
-    public ResponseEntity<?> delete(final String username, final String password) {
+    public ResponseEntity<?> delete(PermissionRequest request) {
+        final String username = request.getUsername().trim();
+        final String password = request.getPassword().trim();
         Permission permission = new Permission(username);
         try {
             // 嘗試拿鎖，確保同一時間只有一個線程回源。只會用於SELECT

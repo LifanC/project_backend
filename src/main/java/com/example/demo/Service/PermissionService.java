@@ -14,5 +14,5 @@ public interface PermissionService {
 
     ResponseEntity<?> update(@Valid PermissionRequest request);
 
-    ResponseEntity<?> delete(String username, String password);
+    ResponseEntity<?> delete(@Valid PermissionRequest request);
 }

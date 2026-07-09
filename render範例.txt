@@ -23,3 +23,76 @@ https://project-backend-2olo.onrender.com/api/v1/xxx/testLogin
 
 http://localhost:8080/api/swagger-ui/index.html
 https://project-backend-2olo.onrender.com/api/swagger-ui/index.html
+
+
+需要提升的地方
+• 我已閱讀專案。以「跳槽面試作品」角度看，這個專案功能量是夠的：Spring Boot、MyBatis、PostgreSQL、Redis、JWT、Docker、Swagger、RBAC、訂單流程都有。但現在最大的問題是面試官會覺得「功能有做，但工程品質還不夠
+  穩」。建議先改下面幾項。
+
+  第一優先：安全與權限
+  問題：面試官會問「登入 API 為什麼也需要 @CheckRole？」
+  目前 takeToken 在 /C:/A_TestSpring/project_backend/src/main/java/com/example/demo/Service/UserServiceImpl.java:154 被 @CheckRole(Permissions.USER_ITEM_TOKEN) 保護，代表使用者還沒登入前，就要先通過角色檢查。
+  這在語意上很怪，也會讓登入流程難以解釋。
+
+  建議改法：
+  把登入、註冊、refresh token、logout、token 驗證整理成獨立 AuthService，權限檢查只套在真正需要登入後才能做的 API。
+
+  問題：RuntimeException 會變成 500，權限不足也可能回 500。
+  在 /C:/A_TestSpring/project_backend/src/main/java/com/example/demo/Aspect/CommonAspect.java:136 權限不足丟 RuntimeException，最後會被 /C:/A_TestSpring/project_backend/src/main/java/com/example/demo/
+  Exception/GlobalExceptionHandler.java:116 轉成 500 INTERNAL_SERVER_ERROR。這會被認為 API 錯誤碼設計不成熟。
+
+  建議改法：
+  新增 UnauthorizedException 回 401、ForbiddenException 回 403，不要用 RuntimeException 表達業務錯誤。
+
+  第二優先：Service 過大
+  問題：UserServiceImpl.java 與 OrderbackendServiceImpl.java 都超過 16 萬字元，面試官會直接問「你怎麼維護、怎麼測？」
+  目前登入、JWT、Redis、訂單、報價、出貨、付款、庫存更新都塞在同一層。
+
+  建議改法：
+  先拆成這幾個 service：
+  AuthService
+  TokenService
+  CartService
+  QuotationService
+  OrderService
+  ShipmentService
+  PaymentService
+  ProductInventoryService
+
+  這會是最有履歷價值的重構，因為你可以在面試說明「我把大型交易流程拆成清楚的 domain service，並補上測試」。
+
+  第三優先：測試品質
+  問題：目前測試用 Java assert，預設可能不會啟用。
+  在 /C:/A_TestSpring/project_backend/src/test/java/com/example/demo/DemoApplicationTests.java:91 使用 assert(...)，這不是 JUnit 的 Assertions.assertEquals。而且測試依賴真實 Spring context、DB、Redis，面試官會
+  覺得 CI 不穩。
+
+  建議改法：
+  補三種測試：
+  AuthServiceTest：登入成功、密碼錯誤、帳號鎖定、token 過期。
+  ProductControllerTest：用 MockMvc 測 API contract。
+  OrderFlowIntegrationTest：用 Testcontainers 跑 PostgreSQL/Redis，展示完整報價到付款流程。
+
+  第四優先：API 設計
+  問題：很多 protected API 把 token 放在 body，又同時有 Authorization header。
+  這會讓 API 使用方式不一致，也不符合常見 Bearer Token 設計。
+
+  建議改法：
+  統一成：
+  Authorization: Bearer <accessToken>
+  request body 只放業務資料，不放 token。
+
+  另外 /C:/A_TestSpring/project_backend/src/main/java/com/example/demo/Controller/PermissionsController.java:58 刪除使用者用 query param 傳 password，建議改成 request body，或更好的是只允許 admin token 操作，
+  不要求傳目標使用者密碼。
+
+  第五優先：履歷展示
+  問題：README 功能很多，但還不夠像「可被面試官快速理解的作品」。
+  現在 README 偏操作紀錄，缺少架構決策、資料流、測試方式、已解決的工程問題。
+
+  建議 README 加：
+  專案亮點：JWT + Redis blacklist、RBAC AOP、訂單狀態機、Docker Compose。
+  架構圖：Controller -> Service -> Mapper -> PostgreSQL / Redis。
+  核心流程：登入、報價轉訂單、出貨付款。
+  測試方式：mvn test、Docker 啟動、Swagger URL。
+  重構前後說明：這會很加分。
+
+  我建議下一步先做「第一階段改造」：不要大改全部，先重構 Auth/Token/Exception/error code，並補 3 到 5 個測試。這一段最容易在面試中講清楚，也最能改善專案觀感。
