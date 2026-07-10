@@ -1,7 +1,7 @@
-package com.example.demo.Controller;
+package com.example.demo.Controller.Orderbackend;
 
 import com.example.demo.Dto.Orderbackend.*;
-import com.example.demo.Service.OrderbackendService;
+import com.example.demo.Service.OrderbackendOrder.OrderbackendServiceOrder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class OrderbackendOrderController {
 
-    private final OrderbackendService orderbackendService;
+    private final OrderbackendServiceOrder orderbackendService;
 
     public OrderbackendOrderController(
-            OrderbackendService orderbackendService){
+            OrderbackendServiceOrder orderbackendService){
         this.orderbackendService = orderbackendService;
     }
 

@@ -1,7 +1,9 @@
 package com.example.demo.Controller;
 
-import com.example.demo.Dto.User.*;
-import com.example.demo.Service.UserService;
+import com.example.demo.Dto.User.QueryUserRequest;
+import com.example.demo.Dto.User.UserRequest;
+import com.example.demo.Dto.User.UserTokenValidateRequest;
+import com.example.demo.Service.LoginService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,23 +12,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "User API", description = "使用者訂單相關功能")
+@Tag(name = "Login API", description = "登入功能")
 @RestController
-@RequestMapping("/v1/user")
+@RequestMapping("/v1/login")
 @Validated
-public class UsersController {
+public class LoginController {
 
-    private final UserService userService;
+    private final LoginService loginService;
 
-    public UsersController(
-            UserService userService) {
-        this.userService = userService;
+    public LoginController(
+            LoginService loginService){
+        this.loginService = loginService;
     }
 
     @Operation(summary = "1.測試登入", description = "驗證 API 是否正常運作")
     @GetMapping("/testLogin")
     public ResponseEntity<?> testLogin() {
-        return userService.testLogin();
+        return loginService.testLogin();
     }
 
     @Operation(summary = "2.takeToken", description = "取Token")
@@ -35,7 +37,7 @@ public class UsersController {
             @Valid
             @RequestBody
             UserRequest request) {
-        return userService.takeToken(request);
+        return loginService.takeToken(request);
     }
 
     @Operation(summary = "3.validate", description = "驗證Token")
@@ -44,7 +46,7 @@ public class UsersController {
             @Valid
             @RequestBody
             UserTokenValidateRequest request) {
-        return userService.validate(request);
+        return loginService.validate(request);
     }
 
     @Operation(summary = "4.logout", description = "登出Token")
@@ -56,7 +58,7 @@ public class UsersController {
             @Schema(description = "token", example = "token_abc123", requiredMode = Schema.RequiredMode.REQUIRED)
             @RequestHeader("Authorization") String authHeader) {
         request.setAuthHeader(authHeader);
-        return userService.logout(request);
+        return loginService.logout(request);
     }
 
 }

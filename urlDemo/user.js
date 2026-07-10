@@ -66,7 +66,6 @@ function checkLogin() {
 
 function logout() {
     Cookie.remove("user_profiletoken");
-    document.getElementById("token").value = ""
     clearTimeout(logoutTimer);
 }
 
@@ -139,52 +138,6 @@ async function resolveRequest(method, path, data, token) {
 
 function isFetchNetworkError(err) {
     return err instanceof TypeError && err.message.includes('fetch');
-}
-
-testLogin()
-async function testLogin() {
-    const res = await api.get('user/testLogin', null);
-    show_user(res);
-    starTableFormat(res);
-}
-
-function starTableFormat(res) {
-    let htmlHead = "";
-    htmlHead += "<thead>";
-    htmlHead += "<tr>";
-    htmlHead += `<th>${"code"}</th>`;
-    htmlHead += `<th>${"status"}</th>`;
-    htmlHead += "</tr>";
-    htmlHead += "<tr>";
-    htmlHead += `<td>${res.code}</td>`;
-    htmlHead += `<td>${res.status}</td>`;
-    htmlHead += "</tr>";
-    htmlHead += "</thead>";
-    document.getElementById('user_code').innerHTML = htmlHead;
-
-    let html = "";
-    // 表頭
-    html += "<thead><tr>";
-    Object.keys(res.data[0]).forEach(key => {
-        if (key.includes("_name")) {
-            html += `<th>${res.data[0][key]}</th>`;
-        }
-    });
-    html += "</tr></thead>";
-    // 表身
-    html += "<tbody>";
-    res.data.forEach(row => {
-        html += "<tr>";
-        Object.keys(row).forEach(key => {
-            if (!key.includes("_name")) {
-                html += `<td>${row[key]}</td>`;
-            }
-        });
-        html += "</tr>";
-    });
-    html += "</tbody>";
-
-    getTableById('user_table', html);
 }
 
 function getTableById(id, html) {
@@ -300,94 +253,6 @@ async function deleteJSON(url, params, token) {
 function setInputValue(inputId, value) {
     const input = document.getElementById(inputId);
     input.value = value;
-}
-
-function tableFormat(res) {
-    let htmlHead = "";
-    htmlHead += "<thead>";
-    htmlHead += "<tr>";
-    htmlHead += `<th>${"code"}</th>`;
-    htmlHead += `<th>${"status"}</th>`;
-    htmlHead += "<tr>";
-    htmlHead += `<td>${res.code}</td>`;
-    htmlHead += `<td>${res.status}</td>`;
-    htmlHead += "</tr>";
-    htmlHead += "</tr></thead>";
-    document.getElementById('user_code').innerHTML = htmlHead;
-
-    let statuss = [200];
-    let html = "";
-    if (statuss.includes(res.status)) {
-        // 表頭
-        html += "<thead><tr>";
-        let len = res.data.length;
-        let names = ["備註", "帳號", "權限", "日期"];
-        names.forEach(key => {
-            html += `<th>${key}</th>`;
-        });
-        html += "</tr></thead>";
-
-        // 表身
-        const fields = [
-            "remark",
-            "username",
-            "permissions",
-            "created_date",
-        ];
-        html += "<tbody>";
-        for (let index = 0; index < res.data.length; index++) {
-            const row = res.data[index];
-            html += "<tr>";
-            if (index == 0) {
-                fields.forEach(key => {
-                    html += `<td>${row[key] ?? ""}</td>`;
-                });
-            } else {
-                if (row.token) {
-                    // 不加
-                }
-            }
-            html += "</tr>";
-        };
-        html += "</tbody>";
-    } else {
-        // 表頭
-        html += "<thead><tr>";
-        let len = res.data.length;
-        let names = ["備註"];
-        if (len > 1) {
-            names.push("錯誤")
-        }
-        names.forEach(key => {
-            html += `<th>${key}</th>`;
-        });
-        html += "</tr></thead>";
-        // 表身
-        html += "<tbody>";
-        html += "<tr>";
-        for (let index = 0; index < len; index++) {
-            const row = res.data[index];
-            if (index == 0) {
-                html += `<td>${row.remark ?? ""}</td>`;
-            } else {
-                if (row.error) {
-                    const err = row.error;
-                    const keys = Object.keys(err);
-                    html += `<td>`;
-                    keys.forEach(key => {
-                        html += `${err[key] ?? ""}<br/>`
-                    });
-                    html += `</td>`;
-                } else {
-                    html += `<td></td>`;
-                }
-            }
-        }
-        html += "</tr>";
-        html += "</tbody>";
-    }
-
-    getTableById('user_table', html);
 }
 
 // 商品
@@ -717,7 +582,6 @@ function tableFormatQuotationsProductId(res) {
             html += "<table>";
             html += "<tbody>";
             result.forEach(key => {
-                console.log('key', key)
                 row[key].forEach(details => {
                     html += "<tr>";
                     html += `<td>${details ?? ""}</td>`;
@@ -827,7 +691,6 @@ function tableFormatShipments(res) {
             html += "<table>";
             html += "<tbody>";
             result.forEach(key => {
-                console.log('key', key)
                 row[key].forEach(details => {
                     html += "<tr>";
                     html += `<td>${details ?? ""}</td>`;
@@ -938,7 +801,6 @@ function tableFormatPayments(res) {
             html += "<table>";
             html += "<tbody>";
             result.forEach(key => {
-                console.log('key', key)
                 row[key].forEach(details => {
                     html += "<tr>";
                     html += `<td>${details ?? ""}</td>`;
@@ -996,13 +858,8 @@ function tableFormatPayments(res) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-
-    const e1 = document.getElementById("user_timestamp");
-    const e2 = document.getElementById("product_timestamp");
-    const e3 = document.getElementById("car_timestamp");
-    const e4 = document.getElementById("quotations_timestamp");
-    const e5 = document.getElementById("shipments_timestamp");
-    const e6 = document.getElementById("payments_timestamp");
+    
+    const e1 = document.getElementById("timestamp");
     const formatter = new Intl.DateTimeFormat("zh-TW", {
         year: "numeric",
         month: "2-digit",
@@ -1015,11 +872,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTimestamp() {
         const date = new Date();
         e1.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e2.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e3.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e4.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e5.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e6.innerHTML = `<h3>${formatter.format(date)}</h3>`;
     }
     // 先立即更新一次（避免空白）
     updateTimestamp();
@@ -1027,141 +879,22 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTimestamp, 1000);
 
     checkLogin();
-    const profile = Cookie.get("user_profile");
-    const profiletoken = Cookie.get("user_profiletoken");
-    if (profile) {
-        document.getElementById("loginUser").value = profile.username
-        document.getElementById("loginPass").value = profile.password
-    }
-    if (profiletoken) {
-        document.getElementById("token").value = profiletoken.token
-    }
-
-    let notificationInterval = null;
-    function startNotificationPolling() {
-        if (notificationInterval) {
-            return; // 避免重複建立多個 interval
-        }
-        loadNotifications();
-        notificationInterval = setInterval(
-            loadNotifications,
-            30000
-        );
-    }
-
-    function stopNotificationPolling() {
-
-        if (notificationInterval) {
-            clearInterval(notificationInterval);
-            notificationInterval = null;
-        }
-    }
-
-    async function loadNotifications() {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        let token = document.getElementById('token').value
-        const res = await api.post('notifications/unread', data, token);
-        const area = document.getElementById("notificationArea");
-        area.innerHTML = "";
-        if (res.data[0]['details'] === undefined) return;
-        area.innerHTML += `
-            <div>
-                ${res.data[0]['details']}
-            </div>
-        `;
-        if (res.data[1]['cnt'] === undefined) return;
-        if (res.data[1]['cnt'] > 0) {
-            let num = 0;
-            for (let index = 2; index < res.data.length; index++) {
-                const element = res.data[index];
-                area.innerHTML += `
-                    <div>
-                        ${(num + 1)}. ${element['details' + num]};${element['status' + num]}
-                    </div>
-                `;
-                num++;
-            }
-        }
-    }
-
-    // 取得 Token
-    document.getElementById('btnTakeToken').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            password: document.getElementById('loginPass').value
-        };
-        try {
-            const res = await api.post('user/takeToken', data);
-            show_user(res);
-            tableFormat(res);
-
-            Cookie.set("user_profile", data);
-        } catch (err) {
-            show_user(err);
-        }
-    });
-
-    // 驗證 Token
-    document.getElementById('btnValidate').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            const res = await api.post('user/validate', data);
-            show_user(res);
-            tableFormat(res);
-            if (res.data.length > 1) {
-                if (res.data[1].token) {
-                    let token = res.data[1].token;
-                    if (token) {
-                        setInputValue('token', token);
-
-                        Cookie.set("user_profiletoken", { token });
-                        startAutoLogout();
-                        startNotificationPolling();
-                    }
-                }
-            }
-        } catch (err) {
-            show_user(err);
-        }
-    });
-
-    // 登出
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('user/logout', data, token);
-            show_user(res);
-            tableFormat(res);
-
-            Cookie.remove("user_profile");
-            Cookie.remove("user_profiletoken");
-            clearTimeout(logoutTimer);
-            stopNotificationPolling();
-        } catch (err) {
-            show_user(err);
-        }
-        setInputValue('token', "");
-    });
 
     // 查詢商品
     document.getElementById('productsCarSelect').addEventListener('click', async () => {
         let product_id_SelectCar1 = document.getElementById('product_id_SelectCar1').value;
         let product_id_SelectCar2 = document.getElementById('product_id_SelectCar2').value;
         let product_ids = [product_id_SelectCar1, product_id_SelectCar2];
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             product_id: document.getElementById('product_id_SelectCar1').value,
             product_ids: product_ids
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/car/productsCarSelect', data, token);
             show_user(res);
             tableFormatProduct(res);
@@ -1172,13 +905,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 新增購物車
     document.getElementById('btnCreateCar').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             product_id: document.getElementById('product_id_CreateCar').value,
             product_quantity: document.getElementById('product_quantity_CreateCar').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/car/createCarItem', data, token);
             show_user(res);
             tableFormatCar(res);
@@ -1189,11 +925,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢購物車
     document.getElementById('btnQueryCar').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value
+            username: loginUser
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/car/queryCarItem', data, token);
             show_user(res);
             tableFormatQueryCar(res);
@@ -1204,13 +943,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 更改購物車
     document.getElementById('btnUpdateCar').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             product_id: document.getElementById('product_id_UpdateCar').value,
             product_quantity: document.getElementById('product_quantity_UpdateCar').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/car/updateCarItem', data, token);
             show_user(res);
             tableFormatCar(res);
@@ -1221,12 +963,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 刪除購物車
     document.getElementById('btnDeleteCar').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             product_id: document.getElementById('product_id_DeleteCar').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/car/deleteCarItem', data, token);
             show_user(res);
             tableFormatQueryCar(res);
@@ -1237,11 +982,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 確認訂單
     document.getElementById('btnConfirm').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value
+            username: loginUser
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/car/confirmItem', data, token);
             show_user(res);
             tableFormatQueryCar(res);
@@ -1252,11 +1000,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢報價單編號
     document.getElementById('quotationsProductId').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value
+            username: loginUser
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/quotation/quotationsProductId', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
@@ -1267,12 +1018,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢報價單
     document.getElementById('quotationsProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             quotation_id: document.getElementById('user_quotationsProduct').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/quotation/quotationsProduct', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
@@ -1283,12 +1037,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 接受報價單
     document.getElementById('user_accepted').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             quotation_id: document.getElementById('user_quotationsProduct').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/quotation/userAccepted', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
@@ -1299,12 +1056,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 拒絕報價單
     document.getElementById('user_rejected').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             quotation_id: document.getElementById('user_quotationsProduct').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/quotation/userRejected', data, token);
             show_user(res);
             tableFormatQuotationsProductId(res);
@@ -1315,8 +1075,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢出貨資訊
     document.getElementById('user_shipments').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             orderId: document.getElementById('user_shipmentsId').value,
             trackingNumber: document.getElementById('user_shipmentsTrackingNumber').value,
             datePart: document.getElementById('user_shipmentsDatePart').value,
@@ -1325,7 +1089,6 @@ document.addEventListener('DOMContentLoaded', () => {
             paymentsMethod: document.getElementById('user_paymentsMethod').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/shipment/userShipments', data, token);
             show_user(res);
             tableFormatShipments(res)
@@ -1336,12 +1099,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢付款資訊
     document.getElementById('user_payments').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             trackingNumber: document.getElementById('user_paymentsTrackingNumber').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('user/payment/userPayments', data, token);
             show_user(res);
             tableFormatPayments(res)
@@ -1352,8 +1118,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 付款
     document.getElementById('user_payMoney').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             trackingNumber: document.getElementById('user_paymentsTrackingNumber').value,
             amount: document.getElementById('user_paymentsAmount').value,
             paymentsMethod: document.getElementById('user_paymentsPaymentsMethod').value

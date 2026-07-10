@@ -66,7 +66,6 @@ function checkLogin() {
 
 function logout() {
     Cookie.remove("orderbackend_profiletoken");
-    document.getElementById("token").value = ""
     clearTimeout(logoutTimer);
 }
 
@@ -139,52 +138,6 @@ async function resolveRequest(method, path, data, token) {
 
 function isFetchNetworkError(err) {
     return err instanceof TypeError && err.message.includes('fetch');
-}
-
-testLogin()
-async function testLogin() {
-    const res = await api.get('orderbackend/testLogin', null);
-    show_user(res);
-    starTableFormat(res);
-}
-
-function starTableFormat(res) {
-    let htmlHead = "";
-    htmlHead += "<thead>";
-    htmlHead += "<tr>";
-    htmlHead += `<th>${"code"}</th>`;
-    htmlHead += `<th>${"status"}</th>`;
-    htmlHead += "</tr>";
-    htmlHead += "<tr>";
-    htmlHead += `<td>${res.code}</td>`;
-    htmlHead += `<td>${res.status}</td>`;
-    htmlHead += "</tr>";
-    htmlHead += "</thead>";
-    document.getElementById('user_code').innerHTML = htmlHead;
-
-    let html = "";
-    // 表頭
-    html += "<thead><tr>";
-    Object.keys(res.data[0]).forEach(key => {
-        if (key.includes("_name")) {
-            html += `<th>${res.data[0][key]}</th>`;
-        }
-    });
-    html += "</tr></thead>";
-    // 表身
-    html += "<tbody>";
-    res.data.forEach(row => {
-        html += "<tr>";
-        Object.keys(row).forEach(key => {
-            if (!key.includes("_name")) {
-                html += `<td>${row[key]}</td>`;
-            }
-        });
-        html += "</tr>";
-    });
-    html += "</tbody>";
-
-    getTableById('user_table', html);
 }
 
 function getTableById(id, html) {
@@ -915,10 +868,7 @@ function tableFormatShipments(res) {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    const e1 = document.getElementById("user_timestamp");
-    const e2 = document.getElementById("quotations_timestamp");
-    const e3 = document.getElementById("order_timestamp");
-    const e4 = document.getElementById("shipments_timestamp");
+    const e1 = document.getElementById("timestamp");
     const formatter = new Intl.DateTimeFormat("zh-TW", {
         year: "numeric",
         month: "2-digit",
@@ -931,9 +881,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateTimestamp() {
         const date = new Date();
         e1.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e2.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e3.innerHTML = `<h3>${formatter.format(date)}</h3>`;
-        e4.innerHTML = `<h3>${formatter.format(date)}</h3>`;
     }
     // 先立即更新一次（避免空白）
     updateTimestamp();
@@ -1000,77 +947,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 取得 Token
-    document.getElementById('btnTakeToken').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value,
-            password: document.getElementById('loginPass').value
-        };
-        try {
-            const res = await api.post('orderbackend/takeToken', data);
-            show_user(res);
-            tableFormat(res);
-
-            Cookie.set("orderbackend_profile", data);
-        } catch (err) {
-            show_user(err);
-        }
-    });
-
-    // 驗證 Token
-    document.getElementById('btnValidate').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            const res = await api.post('orderbackend/validate', data);
-            show_user(res);
-            tableFormat(res);
-            if (res.data.length > 1) {
-                if (res.data[1].token) {
-                    let token = res.data[1].token;
-                    if (token) {
-                        setInputValue('token', token);
-
-                        Cookie.set("orderbackend_profiletoken", { token });
-                        startAutoLogout();
-                        startNotificationPolling();
-                    }
-                }
-            }
-        } catch (err) {
-            show_user(err);
-        }
-    });
-
-    // 登出
-    document.getElementById('btnLogout').addEventListener('click', async () => {
-        const data = {
-            username: document.getElementById('loginUser').value
-        };
-        try {
-            let token = document.getElementById('token').value
-            const res = await api.post('orderbackend/logout', data, token);
-            show_user(res);
-            tableFormat(res);
-
-            Cookie.remove("orderbackend_profile");
-            Cookie.remove("orderbackend_profiletoken");
-            clearTimeout(logoutTimer);
-            stopNotificationPolling();
-        } catch (err) {
-            show_user(err);
-        }
-        setInputValue('token', "");
-    });
-
     // 查用戶
     document.getElementById('btnQueryUser').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value
+            username: loginUser
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/queryUser', data, token);
             show_user(res);
             tableFormatQueryUser(res);
@@ -1081,14 +967,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢用戶商品報價
     document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserQuotations').value,
             orderItem: document.getElementById('userOrderItem').value,
             userPercent: document.getElementById('userPercent').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/quotation/quotationsProductItem', data, token);
             show_user(res);
             tableFormatQuotationsProduct(res);
@@ -1099,14 +988,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 確認報價單
     document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserQuotations').value,
             orderItem: document.getElementById('userOrderItem').value,
             userPercent: document.getElementById('userPercent').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/quotation/confirmQuotationsProductItem', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
@@ -1117,13 +1009,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 刪除報價單
     document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserQuotations').value,
             orderItem: document.getElementById('userOrderItem').value,
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/quotation/deleteQuotationsProduct', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
@@ -1134,12 +1029,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢報價單
     document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserQuotations').value,
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/quotation/queryQuotationsProduct', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
@@ -1150,13 +1048,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 送出報價單
     document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserQuotationsSend').value,
             userUserQuotationsId: document.getElementById('userUserQuotationsId').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/quotation/sendQuotationsProduct', data, token);
             show_user(res);
             tableFormatConfirmQuotationsProduct(res);
@@ -1167,11 +1068,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢用戶訂單名單
     document.getElementById('btnOrdersUser').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value
+            username: loginUser
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/order/ordersUser', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
@@ -1182,13 +1086,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢訂單
     document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserOrders').value,
             orderId: document.getElementById('userOrderId').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/order/ordersProduct', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
@@ -1199,13 +1106,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 確認訂單
     document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserOrders').value,
             orderId: document.getElementById('userOrderId').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/order/ordersConfirmed', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
@@ -1216,13 +1126,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 取消訂單
     document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserOrders').value,
             orderId: document.getElementById('userOrderId').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/order/ordersCancelled', data, token);
             show_user(res);
             tableFormatOrdersUser(res);
@@ -1233,15 +1146,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢用戶出貨名單
     document.getElementById('btnShipmentsUser').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             useruser: document.getElementById('userUserShipments').value,
             orderId: document.getElementById('userUserShipmentsId').value,
             trackingNumber: document.getElementById('userShipmentsTrackingNumber').value,
             datePart: document.getElementById('userShipmentsDatePart').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/shipment/shipmentsTrackingNumber', data, token);
             show_user(res);
             tableFormatShipments(res)
@@ -1252,12 +1168,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 已出貨
     document.getElementById('btnShipmentsShipped').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             trackingNumber: document.getElementById('userTrackingNumber').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/shipment/shipmentsShipped', data, token);
             show_user(res);
             tableFormatShipments(res)
@@ -1268,12 +1187,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 已送達
     document.getElementById('btnShipmentsDelivered').addEventListener('click', async () => {
+        const profile = Cookie.get("user_profile");
+        const profiletoken = Cookie.get("user_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value,
+            username: loginUser,
             trackingNumber: document.getElementById('userTrackingNumber').value
         };
         try {
-            let token = document.getElementById('token').value
             const res = await api.post('orderbackend/shipment/shipmentsDelivered', data, token);
             show_user(res);
             tableFormatShipments(res)

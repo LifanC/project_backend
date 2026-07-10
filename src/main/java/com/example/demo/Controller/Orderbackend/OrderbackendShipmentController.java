@@ -1,8 +1,8 @@
-package com.example.demo.Controller;
+package com.example.demo.Controller.Orderbackend;
 
 import com.example.demo.Dto.Orderbackend.ShipmentsItemRequest;
 import com.example.demo.Dto.Orderbackend.ShipmentsTrackingNumberItemRequest;
-import com.example.demo.Service.OrderbackendService;
+import com.example.demo.Service.OrderbackendShipment.OrderbackendServiceShipment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class OrderbackendShipmentController {
 
-    private final OrderbackendService orderbackendService;
+    private final OrderbackendServiceShipment orderbackendService;
 
     public OrderbackendShipmentController(
-            OrderbackendService orderbackendService){
+            OrderbackendServiceShipment orderbackendService){
         this.orderbackendService = orderbackendService;
     }
 

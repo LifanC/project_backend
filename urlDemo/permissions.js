@@ -217,7 +217,6 @@ async function deleteJSON(url, params) {
 }
 
 function tableFormat(res) {
-    console.log(res)
     let htmlHead = "";
     htmlHead += "<thead>";
     htmlHead += "<tr>";

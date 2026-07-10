@@ -1,7 +1,7 @@
-package com.example.demo.Controller;
+package com.example.demo.Controller.User;
 
 import com.example.demo.Dto.User.ShipmentsRequest;
-import com.example.demo.Service.UserService;
+import com.example.demo.Service.UserShipment.UserServiceShipment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class UsersShipmentsController {
 
-    private final UserService userService;
+    private final UserServiceShipment userService;
 
     public UsersShipmentsController(
-            UserService userService) {
+            UserServiceShipment userService) {
         this.userService = userService;
     }
 

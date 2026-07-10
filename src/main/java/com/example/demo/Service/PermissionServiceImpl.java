@@ -203,7 +203,7 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 註冊，資源忙碌，請重試"
                 );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("remark", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -271,7 +271,7 @@ public class PermissionServiceImpl implements PermissionService {
                 List<Object> messageList = List.of(
                         "查詢，資源忙碌，請重試"
                 );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("remark", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -350,7 +350,7 @@ public class PermissionServiceImpl implements PermissionService {
                         "權限 -" + permissions,
                         username + " - 更改權限，資源忙碌，請重試"
                 );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("remark", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)
@@ -427,7 +427,7 @@ public class PermissionServiceImpl implements PermissionService {
                         "帳號 -" + username,
                         username + " - 刪除權限，資源忙碌，請重試"
                 );
-                List<Map<String, Object>> data = List.of(Map.of("1", messageList));
+                List<Map<String, Object>> data = List.of(Map.of("remark", messageList));
                 HttpStatus status = HttpStatus.TOO_MANY_REQUESTS;
                 return ResponseEntity
                         .status(status)

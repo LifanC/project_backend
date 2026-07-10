@@ -1,8 +1,8 @@
-package com.example.demo.Controller;
+package com.example.demo.Controller.User;
 
 import com.example.demo.Dto.User.PayMoneyRequest;
 import com.example.demo.Dto.User.PaymentsRequest;
-import com.example.demo.Service.UserService;
+import com.example.demo.Service.UserPayment.UserServicePayment;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class UsersPaymentsController {
 
-    private final UserService userService;
+    private final UserServicePayment userService;
 
     public UsersPaymentsController(
-            UserService userService) {
+            UserServicePayment userService) {
         this.userService = userService;
     }
 
