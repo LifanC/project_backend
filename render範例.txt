@@ -11,6 +11,13 @@ URL:jdbc:postgresql://dpg-d91sre8js32c73a0s3vg-a.oregon-postgres.render.com:5432
 
 redis://red-d6ga30hr0fns73burdpg:6379
 
+docker run -it --rm redis:7-alpine sh
+apk add ca-certificates
+update-ca-certificates
+redis-cli --tls -u "rediss://red-d6ga30hr0fns73burdpg:BJqltclQ0fRmWOYONioAIHYzadPDOLXY@oregon-keyvalue.render.com:6379"
+PING會回傳PONG
+
+
 https://project-frontend-exjf.onrender.com
 https://project-backend-2olo.onrender.com
 

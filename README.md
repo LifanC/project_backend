@@ -139,6 +139,7 @@ Client → Spring Boot API → Service Layer → Redis / PostgreSQL
 - KEYS *
 - GET <key_name>
 - TTL <key_name> *查看 TTL (剩餘時間)*
+- FLUSHALL 全清
 
 ## 10. JWT 驗證流程: Token 驗證 → Redis 檢查 → 允許存取
 - *商業邏輯層 : Controller 只負責接收與回傳，Service 處理業務邏輯*
