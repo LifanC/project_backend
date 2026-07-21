@@ -17,6 +17,7 @@ public class EndpointLogger implements CommandLineRunner {
                                 
                                 \tLocal:      http://localhost:8080/api/swagger-ui/index.html
                                 \tLocal:      http://localhost:8080/api/v3/api-docs
+                                \tLocal:      http://localhost:15672/
                                 ----------------------------------------------------------"""
         );
     }

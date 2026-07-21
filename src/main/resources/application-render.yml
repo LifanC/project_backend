@@ -13,6 +13,11 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+  rabbitmq:
+    host: ${RABBIT_HOST}
+    port: ${RABBIT_PORT}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
 
 server:
   port: ${PORT:8080}

@@ -40,6 +40,12 @@ spring:
       timeout: 2000
       password: ${REDIS_PASSWORD}
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
   # 資料庫本機設定
   datasource:
     url: jdbc:postgresql://localhost:5432/interviewworks?currentSchema=interviewworks_schema

@@ -22,6 +22,11 @@ spring:
       database: 0
       timeout: 2000
       password: ${REDIS_PASSWORD}
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
   # Datasource 使用 Docker 環境變數
   datasource:
