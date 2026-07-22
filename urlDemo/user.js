@@ -1076,7 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let loginUser = (profile) ? profile.username : '';
     // socket
     const socket = new SockJS(
-        workingBase + "ws?username=" + encodeURIComponent(loginUser)
+        "ws?username=" + encodeURIComponent(loginUser)
     );
     const client = StompJs.Stomp.over(socket);
     client.connect(
