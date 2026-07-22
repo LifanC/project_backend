@@ -7,6 +7,7 @@ import com.example.demo.Common.RedisKey;
 import com.example.demo.Common.StatusKey;
 import com.example.demo.Dto.ApiResponse;
 import com.example.demo.Dto.Orderbackend.*;
+import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.Orders;
 import com.example.demo.Dto.User.UserData;
 import com.example.demo.Exception.BadRequestException;
@@ -538,6 +539,19 @@ public class OrderbackendServiceOrderImpl implements OrderbackendServiceOrder {
                                 List<String> list = new ArrayList<>();
                                 list.add("訂單狀態:" + StatusKey.ordersStatusKey.get(confirmed));
                                 dataMap.put("details" + (i + 1), list);
+                                String product_id = ordersData.get(i).get("product_id").toString();
+                                String quantity = ordersData.get(i).get("quantity").toString();
+                                Product product = new Product(new BigDecimal(product_id));
+                                Map<String, Object> getProduct = orderbackendMapper.selectProduct(product).get(product_id);
+                                if (getProduct == null) {
+                                    logger.error("{} : (確認訂單) 商品不存在", useruser);
+                                    throw new ResourceNotFoundException(useruser + " - 商品不存在");
+                                }
+                                String productStock = getProduct.get("stock").toString();
+                                BigDecimal A = new BigDecimal(productStock);
+                                BigDecimal B = new BigDecimal(quantity);
+                                product.setStock(A.subtract(B));
+                                orderbackendMapper.updateProducts(product);
                             }
                             orders.setStatus(confirmed);
                             orderbackendMapper.updateOrders(orders);
