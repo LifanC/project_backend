@@ -168,16 +168,21 @@
     </select>
 
     <select id="selectOrdersData" resultType="java.util.Map">
-        select distinct
+        select
             orders.order_id,
             orders.quotation_id,
             orders.status,
-            quotations.username
+            quotations.username,
+            quotation_items.product_id,
+            quotation_items.quantity
         from
             "interviewworks_schema"."orders" orders
                 inner join "interviewworks_schema"."quotations" quotations
                            on
                                orders.quotation_id = orders.quotation_id
+                inner join "interviewworks_schema"."quotation_items" quotation_items
+                           on
+                               quotations.quotation_id = quotation_items.quotation_id
         <where>
             <if test="order_id != null and order_id != ''">
                 and orders.order_id = #{order_id}
@@ -200,6 +205,21 @@
         </where>
         order by orders.order_id
     </select>
+
+    <select id="selectProduct" resultType="java.util.Map">
+        select
+            products.product_id,
+            products.stock
+        from "interviewworks_schema"."products" products
+        where product_id = #{product_id}
+        order by products.product_id
+    </select>
+
+    <update id="updateProducts">
+        update "interviewworks_schema"."products"
+        set stock = #{stock}
+        where product_id = #{product_id}
+    </update>
 
     <update id="updateOrders">
         update "interviewworks_schema"."orders"

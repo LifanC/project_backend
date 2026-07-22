@@ -1,6 +1,7 @@
 package com.example.demo.Mapper;
 
 import com.example.demo.Dto.Orderbackend.*;
+import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.Orders;
 import com.example.demo.Dto.User.UserData;
 import org.apache.ibatis.annotations.MapKey;
@@ -39,6 +40,11 @@ public interface OrderbackendMapper {
     Map<String, Map<String, Object>> selectQuotationsDataSend(UserDataSend userDataSend);
 
     List<Map<String, Object>> selectOrdersData(Orders orders);
+
+    @MapKey("product_id")
+    Map<String, Map<String, Object>> selectProduct(Product product);
+
+    void updateProducts(Product product);
 
     void updateOrders(Orders orders);
 
