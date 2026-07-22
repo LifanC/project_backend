@@ -140,6 +140,140 @@ function isFetchNetworkError(err) {
     return err instanceof TypeError && err.message.includes('fetch');
 }
 
+testLogin()
+async function testLogin() {
+    const res = await api.get('login/testLogin', null);
+    show_user(res);
+    starTableFormat(res);
+}
+
+function starTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "</tr>";
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</thead>";
+    document.getElementById('user_code').innerHTML = htmlHead;
+
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    Object.keys(res.data[0]).forEach(key => {
+        if (key.includes("_name")) {
+            html += `<th>${res.data[0][key]}</th>`;
+        }
+    });
+    html += "</tr></thead>";
+    // 表身
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+        Object.keys(row).forEach(key => {
+            if (!key.includes("_name")) {
+                html += `<td>${row[key]}</td>`;
+            }
+        });
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('user_table', html);
+}
+
+function loginTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('user_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "日期"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+            "created_date",
+        ];
+        html += "<tbody>";
+        for (let index = 0; index < res.data.length; index++) {
+            const row = res.data[index];
+            html += "<tr>";
+            if (index == 0) {
+                fields.forEach(key => {
+                    html += `<td>${row[key] ?? ""}</td>`;
+                });
+            } else {
+                if (row.token) {
+                    // 不加
+                }
+            }
+            html += "</tr>";
+        };
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('user_table', html);
+}
+
 function getTableById(id, html) {
     document.getElementById(id).innerHTML = html;
 }
@@ -879,6 +1013,170 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTimestamp, 1000);
 
     checkLogin();
+    const profile = Cookie.get("user_profile");
+    const profiletoken = Cookie.get("user_profiletoken");
+    if (profile) {
+        document.getElementById("loginUser").value = profile.username
+        document.getElementById("loginPass").value = profile.password
+    }
+    if (profiletoken) {
+        document.getElementById("token").value = profiletoken.token
+    }
+
+    let notificationInterval = null;
+    function startNotificationPolling() {
+        if (notificationInterval) {
+            return; // 避免重複建立多個 interval
+        }
+        loadNotifications();
+        notificationInterval = setInterval(
+            loadNotifications,
+            5000
+        );
+    }
+
+    function stopNotificationPolling() {
+
+        if (notificationInterval) {
+            clearInterval(notificationInterval);
+            notificationInterval = null;
+        }
+    }
+
+    async function loadNotifications() {
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
+        const data = {
+            username: loginUser
+        };
+        const res = await api.post('notifications/unread', data, token);
+        const area = document.getElementById("notificationArea");
+        area.innerHTML = "";
+        if (res.data[0]['details'] === undefined) return;
+        area.innerHTML += `
+            <div>
+                ${res.data[0]['details']}
+            </div>
+        `;
+        if (res.data[1]['cnt'] === undefined) return;
+        if (res.data[1]['cnt'] > 0) {
+            let num = 0;
+            for (let index = 2; index < res.data.length; index++) {
+                const element = res.data[index];
+                area.innerHTML += `
+                    <div>
+                        ${(num + 1)}. ${element['details' + num]};${element['status' + num]}
+                    </div>
+                `;
+                num++;
+            }
+        }
+    }
+
+    let loginUser = (profile) ? profile.username : '';
+    // socket
+    const socket = new SockJS(
+        workingBase + "ws?username=" + encodeURIComponent(loginUser)
+    );
+    const client = StompJs.Stomp.over(socket);
+    client.connect(
+        {},
+        function () {
+            const profile = Cookie.get("user_profile");
+            let loginUser = (profile) ? profile.username : '';
+
+            console.log("WebSocket connected");
+
+
+            client.subscribe(
+                "/user/queue/notifications",
+                function(message) {
+
+
+                    const notification =
+                        JSON.parse(message.body);
+
+
+                    console.log(
+                        "收到個人通知:",
+                        notification
+                    );
+
+
+                    alert(
+                        notification.title +
+                        "\n" +
+                        notification.content
+                    );
+                }
+            );
+
+        }
+    );
+
+    // 取得 Token
+    document.getElementById('btnTakeToken').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            password: document.getElementById('loginPass').value
+        };
+        try {
+            const res = await api.post('login/takeToken', data);
+            show_user(res);
+            loginTableFormat(res);
+
+            Cookie.set("user_profile", data);
+        } catch (err) {
+            show_user(err);
+        }
+    });
+
+    // 驗證 Token
+    document.getElementById('btnValidate').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            const res = await api.post('login/validate', data);
+            show_user(res);
+            loginTableFormat(res);
+            if (res.data.length > 1) {
+                if (res.data[1].token) {
+                    let token = res.data[1].token;
+                    if (token) {
+                        setInputValue('token', token);
+
+                        Cookie.set("user_profiletoken", { token });
+                        startAutoLogout();
+                        // startNotificationPolling();
+                    }
+                }
+            }
+        } catch (err) {
+            show_user(err);
+        }
+    });
+
+    // 登出
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('login/logout', data, token);
+            show_user(res);
+            loginTableFormat(res);
+
+            Cookie.remove("user_profile");
+            Cookie.remove("user_profiletoken");
+            clearTimeout(logoutTimer);
+            stopNotificationPolling();
+        } catch (err) {
+            show_user(err);
+        }
+        setInputValue('token', "");
+    });
 
     // 查詢商品
     document.getElementById('productsCarSelect').addEventListener('click', async () => {

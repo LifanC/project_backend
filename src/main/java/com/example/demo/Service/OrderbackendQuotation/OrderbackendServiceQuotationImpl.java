@@ -6,6 +6,7 @@ import com.example.demo.Common.Context;
 import com.example.demo.Common.RedisKey;
 import com.example.demo.Common.StatusKey;
 import com.example.demo.Dto.ApiResponse;
+import com.example.demo.Dto.Notifications.NotificationMessage;
 import com.example.demo.Dto.Orderbackend.*;
 import com.example.demo.Dto.Products.Product;
 import com.example.demo.Dto.User.UserData;
@@ -18,6 +19,7 @@ import com.example.demo.Mapper.ProductMapper;
 import com.example.demo.Mapper.SecretMapper;
 import com.example.demo.Mapper.UserMapper;
 import com.example.demo.Security.Annotation.CheckRole;
+import com.example.demo.Service.Rabbitmq.RabbitService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -59,6 +61,7 @@ public class OrderbackendServiceQuotationImpl implements OrderbackendServiceQuot
     private final OrderbackendMapper orderbackendMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final RabbitService rabbitService;
 
     public OrderbackendServiceQuotationImpl(
             SecretMapper secretMapper,
@@ -66,13 +69,15 @@ public class OrderbackendServiceQuotationImpl implements OrderbackendServiceQuot
             ProductMapper productMapper,
             OrderbackendMapper orderbackendMapper,
             StringRedisTemplate stringRedisTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            RabbitService rabbitService) {
         this.secretMapper = secretMapper;
         this.userMapper = userMapper;
         this.productMapper = productMapper;
         this.orderbackendMapper = orderbackendMapper;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
+        this.rabbitService = rabbitService;
     }
 
     /*
@@ -516,6 +521,12 @@ public class OrderbackendServiceQuotationImpl implements OrderbackendServiceQuot
                                 quotations.setStatus(state);
                                 quotations.setTotal_price(totalPrice);
                                 orderbackendMapper.createQuotations(quotations);
+
+                                NotificationMessage notificationMessage = new NotificationMessage(useruser);
+                                notificationMessage.setTitle("報價建立");
+                                notificationMessage.setContent("報價單建立成功");
+                                notificationMessage.setType("quotation");
+                                rabbitService.quotationCreate(notificationMessage);
                             } catch (DataIntegrityViolationException e) {
                                 logger.warn("confirmQuotationsProductItem 新增報價資料不合法，username={}", username);
                                 throw new IsViolationException(username + " - 新增報價資料不合法", e);

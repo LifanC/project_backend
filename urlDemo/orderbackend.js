@@ -140,6 +140,140 @@ function isFetchNetworkError(err) {
     return err instanceof TypeError && err.message.includes('fetch');
 }
 
+testLogin()
+async function testLogin() {
+    const res = await api.get('login/testLogin', null);
+    show_user(res);
+    starTableFormat(res);
+}
+
+function starTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "</tr>";
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</thead>";
+    document.getElementById('user_code').innerHTML = htmlHead;
+
+    let html = "";
+    // 表頭
+    html += "<thead><tr>";
+    Object.keys(res.data[0]).forEach(key => {
+        if (key.includes("_name")) {
+            html += `<th>${res.data[0][key]}</th>`;
+        }
+    });
+    html += "</tr></thead>";
+    // 表身
+    html += "<tbody>";
+    res.data.forEach(row => {
+        html += "<tr>";
+        Object.keys(row).forEach(key => {
+            if (!key.includes("_name")) {
+                html += `<td>${row[key]}</td>`;
+            }
+        });
+        html += "</tr>";
+    });
+    html += "</tbody>";
+
+    getTableById('user_table', html);
+}
+
+function loginTableFormat(res) {
+    let htmlHead = "";
+    htmlHead += "<thead>";
+    htmlHead += "<tr>";
+    htmlHead += `<th>${"code"}</th>`;
+    htmlHead += `<th>${"status"}</th>`;
+    htmlHead += "<tr>";
+    htmlHead += `<td>${res.code}</td>`;
+    htmlHead += `<td>${res.status}</td>`;
+    htmlHead += "</tr>";
+    htmlHead += "</tr></thead>";
+    document.getElementById('user_code').innerHTML = htmlHead;
+
+    let statuss = [200];
+    let html = "";
+    if (statuss.includes(res.status)) {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註", "帳號", "權限", "日期"];
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+
+        // 表身
+        const fields = [
+            "remark",
+            "username",
+            "permissions",
+            "created_date",
+        ];
+        html += "<tbody>";
+        for (let index = 0; index < res.data.length; index++) {
+            const row = res.data[index];
+            html += "<tr>";
+            if (index == 0) {
+                fields.forEach(key => {
+                    html += `<td>${row[key] ?? ""}</td>`;
+                });
+            } else {
+                if (row.token) {
+                    // 不加
+                }
+            }
+            html += "</tr>";
+        };
+        html += "</tbody>";
+    } else {
+        // 表頭
+        html += "<thead><tr>";
+        let len = res.data.length;
+        let names = ["備註"];
+        if (len > 1) {
+            names.push("錯誤")
+        }
+        names.forEach(key => {
+            html += `<th>${key}</th>`;
+        });
+        html += "</tr></thead>";
+        // 表身
+        html += "<tbody>";
+        html += "<tr>";
+        for (let index = 0; index < len; index++) {
+            const row = res.data[index];
+            if (index == 0) {
+                html += `<td>${row.remark ?? ""}</td>`;
+            } else {
+                if (row.error) {
+                    const err = row.error;
+                    const keys = Object.keys(err);
+                    html += `<td>`;
+                    keys.forEach(key => {
+                        html += `${err[key] ?? ""}<br/>`
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td></td>`;
+                }
+            }
+        }
+        html += "</tr>";
+        html += "</tbody>";
+    }
+
+    getTableById('user_table', html);
+}
+
 function getTableById(id, html) {
     document.getElementById(id).innerHTML = html;
 }
@@ -919,10 +1053,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadNotifications() {
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
+        let loginUser = (profile) ? profile.username : '';
+        let token = (profiletoken) ? profiletoken.token : '';
         const data = {
-            username: document.getElementById('loginUser').value
+            username: loginUser
         };
-        let token = document.getElementById('token').value
         const res = await api.post('notifications/unread', data, token);
         const area = document.getElementById("notificationArea");
         area.innerHTML = "";
@@ -947,10 +1084,74 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 取得 Token
+    document.getElementById('btnTakeToken').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value,
+            password: document.getElementById('loginPass').value
+        };
+        try {
+            const res = await api.post('login/takeToken', data);
+            show_user(res);
+            loginTableFormat(res);
+
+            Cookie.set("orderbackend_profile", data);
+        } catch (err) {
+            show_user(err);
+        }
+    });
+
+    // 驗證 Token
+    document.getElementById('btnValidate').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            const res = await api.post('login/validate', data);
+            show_user(res);
+            loginTableFormat(res);
+            if (res.data.length > 1) {
+                if (res.data[1].token) {
+                    let token = res.data[1].token;
+                    if (token) {
+                        setInputValue('token', token);
+
+                        Cookie.set("orderbackend_profiletoken", { token });
+                        startAutoLogout();
+                        // startNotificationPolling();
+                    }
+                }
+            }
+        } catch (err) {
+            show_user(err);
+        }
+    });
+
+    // 登出
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+        const data = {
+            username: document.getElementById('loginUser').value
+        };
+        try {
+            let token = document.getElementById('token').value
+            const res = await api.post('login/logout', data, token);
+            show_user(res);
+            loginTableFormat(res);
+
+            Cookie.remove("orderbackend_profile");
+            Cookie.remove("orderbackend_profiletoken");
+            clearTimeout(logoutTimer);
+            stopNotificationPolling();
+        } catch (err) {
+            show_user(err);
+        }
+        setInputValue('token', "");
+    });
+
     // 查用戶
     document.getElementById('btnQueryUser').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -967,8 +1168,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢用戶商品報價
     document.getElementById('btnQuotationsProduct').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -988,8 +1189,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 確認報價單
     document.getElementById('btnConfirmQuotationsProduct').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1009,8 +1210,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 刪除報價單
     document.getElementById('btnDeleteQuotationsProduct').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1029,8 +1230,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢報價單
     document.getElementById('btnQueryQuotationsProduct').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1048,8 +1249,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 送出報價單
     document.getElementById('btnSendQuotationsProduct').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1068,8 +1269,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢用戶訂單名單
     document.getElementById('btnOrdersUser').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1086,8 +1287,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢訂單
     document.getElementById('btnOrdersProduct').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1106,8 +1307,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 確認訂單
     document.getElementById('btnOrdersConfirmed').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1126,8 +1327,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 取消訂單
     document.getElementById('btnOrdersCancelled').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1146,8 +1347,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 查詢用戶出貨名單
     document.getElementById('btnShipmentsUser').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1168,8 +1369,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 已出貨
     document.getElementById('btnShipmentsShipped').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {
@@ -1187,8 +1388,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 已送達
     document.getElementById('btnShipmentsDelivered').addEventListener('click', async () => {
-        const profile = Cookie.get("user_profile");
-        const profiletoken = Cookie.get("user_profiletoken");
+        const profile = Cookie.get("orderbackend_profile");
+        const profiletoken = Cookie.get("orderbackend_profiletoken");
         let loginUser = (profile) ? profile.username : '';
         let token = (profiletoken) ? profiletoken.token : '';
         const data = {

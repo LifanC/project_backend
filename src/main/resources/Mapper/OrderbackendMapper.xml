@@ -112,7 +112,6 @@
     <select id="quotationsItemsProductsData" resultType="java.util.Map">
         select
             quotations.quotation_id,
-            userdata_details.username,
             quotations.status,
             quotation_items.quantity,
             quotation_items.price,
@@ -120,19 +119,14 @@
             products.products_name,
             products.description
         from
-            "interviewworks_schema"."userdata_details" userdata_details
-                inner join "interviewworks_schema"."quotations" quotations
-                           on
-                               userdata_details.username = quotations.username
+            "interviewworks_schema"."quotations" quotations
                 inner join "interviewworks_schema"."quotation_items" quotation_items
                            on
                                quotations.quotation_id = quotation_items.quotation_id
                 inner join "interviewworks_schema"."products" products
                            on
                                quotation_items.product_id = products.product_id
-        where userdata_details.is_active = '1'
-          and userdata_details.tracking_number is null
-          and userdata_details.username = #{username}
+        where quotations.status = 'estimate'
         order by quotations.quotation_id desc
     </select>
 

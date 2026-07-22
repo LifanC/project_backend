@@ -1,6 +1,9 @@
 package com.example.demo.Service.Rabbitmq;
 
+import com.example.demo.Dto.Notifications.NotificationMessage;
+
 public interface RabbitService {
 
-    void send(String test);
+    void quotationCreate(NotificationMessage message);
+
 }

@@ -16,6 +16,7 @@ import com.example.demo.Mapper.OrderbackendMapper;
 import com.example.demo.Mapper.SecretMapper;
 import com.example.demo.Mapper.UserMapper;
 import com.example.demo.Security.Annotation.CheckRole;
+import com.example.demo.Service.Rabbitmq.RabbitService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -55,18 +56,21 @@ public class OrderbackendServiceOrderImpl implements OrderbackendServiceOrder {
     private final OrderbackendMapper orderbackendMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
+    private final RabbitService rabbitService;
 
     public OrderbackendServiceOrderImpl(
             SecretMapper secretMapper,
             UserMapper userMapper,
             OrderbackendMapper orderbackendMapper,
             StringRedisTemplate stringRedisTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            RabbitService rabbitService) {
         this.secretMapper = secretMapper;
         this.userMapper = userMapper;
         this.orderbackendMapper = orderbackendMapper;
         this.stringRedisTemplate = stringRedisTemplate;
         this.objectMapper = objectMapper;
+        this.rabbitService = rabbitService;
     }
 
     /*
@@ -588,7 +592,6 @@ public class OrderbackendServiceOrderImpl implements OrderbackendServiceOrder {
                             payments.setPayments_method(cash);
                             orderbackendMapper.createPayments(payments);
                             data.add(dataMap);
-
                             HttpStatus status = HttpStatus.OK;
                             return ResponseEntity
                                     .status(status)
