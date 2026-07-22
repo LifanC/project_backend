@@ -1,10 +1,7 @@
 package com.example.demo.Config.Rabbit;
 
 import com.example.demo.Common.RabbitKey;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
@@ -18,7 +15,9 @@ public class RabbitConfig {
     @Bean
     public Queue quotationQueueCreate() {
         String quotationQueueCreateName = String.format(RabbitKey.rabbitKey.get("quotation_create"), "queue");
-        return new Queue(quotationQueueCreateName);
+        return QueueBuilder
+                .durable(quotationQueueCreateName)
+                .build();
     }
 
     @Bean

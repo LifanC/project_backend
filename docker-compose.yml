@@ -56,6 +56,8 @@ services:
 
   rabbitmq:
     image: rabbitmq:management
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
     container_name: rabbitmq-container
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
